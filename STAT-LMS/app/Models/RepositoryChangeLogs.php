@@ -31,7 +31,7 @@ class RepositoryChangeLogs extends Model
 
     public function material()
     {
-        return $this->belongsTo(rr_materials::class, 'rr_material_id');
+        return $this->belongsTo(RrMaterials::class, 'rr_material_id');
     }
 
     public function targetUser()

@@ -25,4 +25,14 @@ class RrMaterialParents extends Model
         'publication_date' => 'date',
         'adviser' => 'array',
     ];
+
+    public function authorUser()
+    {
+        return $this->belongsTo(User::class, 'author_user_id');
+    }
+
+    public function materials()
+    {
+        return $this->hasMany(RrMaterials::class, 'material_parent_id');
+    }
 }

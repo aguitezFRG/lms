@@ -50,4 +50,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function materialAccessEvents()
+    {
+        return $this->hasMany(MaterialAccessEvents::class, 'user_id');
+    }
 }

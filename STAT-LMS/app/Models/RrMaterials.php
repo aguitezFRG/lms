@@ -25,16 +25,16 @@ class RrMaterials extends Model
 
     public function parent()
     {
-        return $this->belongsTo(rr_material_parents::class, 'material_parent_id');
+        return $this->belongsTo(RrMaterialParents::class, 'material_parent_id');
     }
 
     public function accessEvents()
     {
-        return $this->hasMany(material_access_events::class, 'rr_material_id');
+        return $this->hasMany(MaterialAccessEvents::class, 'rr_material_id');
     }
 
     public function changeLogs()
     {
-        return $this->hasMany(repository_change_logs::class, 'rr_material_id');
+        return $this->hasMany(RepositoryChangeLogs::class, 'rr_material_id');
     }
 }
