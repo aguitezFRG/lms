@@ -9,54 +9,89 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Enums\FiltersResetActionPosition;
+use Filament\Tables\Filters\Filter;
+
 class UsersTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('name')
-                    ->searchable(),
-                TextColumn::make('email')
-                    ->label('Email address')
-                    ->searchable(),
-                TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('role')
-                    ->searchable(),
-                TextColumn::make('f_name')
-                    ->searchable(),
-                TextColumn::make('m_name')
-                    ->searchable(),
+                TextColumn::make('id')
+                    ->label('UUID')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->limit(16, end: '...'),
+
                 TextColumn::make('l_name')
-                    ->searchable(),
-                TextColumn::make('std_number')
-                    ->searchable(),
-                TextColumn::make('revoked_at')
-                    ->dateTime()
+                    ->label('Last Name')
+                    ->searchable()
                     ->sortable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('f_name')
+                    ->label('First Name')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('m_name')
+                    ->label('Middle Name')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->sortable(),
+
+                TextColumn::make('std_number')
+                    ->label('Student Number')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('email')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('role')
+                    ->badge()
+                    ->colors([
+                        'primary' => 'student',
+                        'success' => 'faculty',
+                        'warning' => 'staff/custodian',
+                        'danger' => 'it',
+                        'info' => 'committee',
+                    ])
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'student' => 'Student',
+                        'faculty' => 'Faculty',
+                        'staff/custodian' => 'Staff/Custodian',
+                        'it' => 'IT',
+                        'committee' => 'Committee',
+                        default => ucfirst($state),
+                    }),
             ])
             ->filters([
-                //
-            ])
-            ->recordActions([
+                SelectFilter::make('role')
+                    ->label('Role')
+                    ->options([
+                        'student' => 'Student',
+                        'faculty' => 'Faculty',
+                        'staff/custodian' => 'Staff/Custodian',
+                        'it' => 'IT',
+                        'committee' => 'Committee',
+                    ])
+                    ->multiple()
+                    ->searchable(),
+            ], layout: FiltersLayout::AboveContentCollapsible)
+            ->filtersApplyAction(
+                fn ($action) => $action->color('success')
+            )
+            ->filtersResetActionPosition(FiltersResetActionPosition::Footer)
+            ->actions([
                 ViewAction::make(),
                 EditAction::make(),
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
