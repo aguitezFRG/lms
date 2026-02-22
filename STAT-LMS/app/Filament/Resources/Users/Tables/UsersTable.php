@@ -24,17 +24,19 @@ class UsersTable
                     ->label('UUID')
                     ->searchable()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->toggleable(isToggledHiddenByDefault: false)
                     ->limit(16, end: '...'),
 
                 TextColumn::make('l_name')
                     ->label('Last Name')
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false)
                     ->sortable(),
 
                 TextColumn::make('f_name')
                     ->label('First Name')
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
 
                 TextColumn::make('m_name')
@@ -46,14 +48,17 @@ class UsersTable
                 TextColumn::make('std_number')
                     ->label('Student Number')
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
 
                 TextColumn::make('email')
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false)
                     ->sortable(),
 
                 TextColumn::make('role')
                     ->badge()
+                    ->toggleable(isToggledHiddenByDefault: false)
                     ->colors([
                         'primary' => 'student',
                         'success' => 'faculty',
