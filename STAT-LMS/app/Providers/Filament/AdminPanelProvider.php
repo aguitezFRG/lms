@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\AdminLogin;
+
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -28,9 +30,14 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->viteTheme('resources/css/filament/admin/theme.css')
-            ->login()
+            ->login(AdminLogin::class)
             ->colors([
-                'primary' => Color::Red,
+                'primary' => Color::hex('#7B1113'), // UP Maroon
+                'success' => Color::hex('#014421'), // UP Forest Green
+                'warning' => Color::hex('#F3AA2C'), // UP Yellow/Gold
+                'danger' => Color::Rose, // Kept distinct for destructive actions (like delete)
+                'info' => Color::hex('#014421'), // Using UP Green for informational alerts
+                'gray' => Color::Slate,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
