@@ -21,13 +21,29 @@ class RrMaterialParentsResource extends Resource
 {
     protected static ?string $model = RrMaterialParents::class;
 
+    // Sidebar Icon
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    // protected static ?string $recordTitleAttribute = 'RR Materials';
-
+    // Sidebar Label
     protected static ?string $navigationLabel = 'RR Materials';
 
+    // Sidebar Grouping
     protected static string | UnitEnum | null $navigationGroup = 'Repository';
+
+    // Header Breadcrumb
+    protected static ?string $breadcrumb = 'Reading Room Materials';
+
+    // Method Titles
+    public static function getLabel(): string
+    {
+        return 'Material Parent';
+    }
+
+    // Infolist Title
+    public static function getPluralLabel(): string
+    {
+        return 'Material Catalog';
+    }
 
     public static function form(Schema $schema): Schema
     {

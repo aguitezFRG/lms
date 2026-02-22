@@ -24,6 +24,21 @@ class UserResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'Users';
 
+    // Header Breadcrumb
+    protected static ?string $breadcrumb = 'Users';
+
+    // Method Titles
+    public static function getLabel(): string
+    {
+        return 'User';
+    }
+
+    // Infolist Title
+    public static function getPluralLabel(): string
+    {
+        return 'Users';
+    }
+
     public static function form(Schema $schema): Schema
     {
         return UserForm::configure($schema);
