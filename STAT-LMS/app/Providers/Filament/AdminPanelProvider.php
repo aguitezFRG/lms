@@ -32,10 +32,10 @@ class AdminPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->login(AdminLogin::class)
             ->colors([
-                'primary' => Color::hex('#7B1113'), // UP Maroon
+                'primary' => Color::hex('#8D1436'), // UP Maroon
                 'success' => Color::hex('#014421'), // UP Forest Green
                 'warning' => Color::hex('#F3AA2C'), // UP Yellow/Gold
-                'danger' => Color::Rose, // Kept distinct for destructive actions (like delete)
+                'danger' => Color::hex('#8D1436'), // UP Maroon for danger as well to maintain consistency
                 'info' => Color::hex('#014421'), // Using UP Green for informational alerts
                 'gray' => Color::Slate,
             ])
