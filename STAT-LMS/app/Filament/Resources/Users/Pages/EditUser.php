@@ -16,8 +16,14 @@ class EditUser extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            ViewAction::make(),
-            DeleteAction::make(),
+            ViewAction::make()
+                ->label('View')
+                ->color('success'),
+
+            DeleteAction::make()
+                ->label('Remove')
+                ->modalHeading('Confirm Removal') // Changes the text inside the pop-up
+                ->color('danger'), // Keeps it red for safety
         ];
     }
 
