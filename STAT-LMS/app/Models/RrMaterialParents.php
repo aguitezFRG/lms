@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class RrMaterialParents extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuids;
 
     protected $fillable = [
         'material_type',
@@ -24,11 +25,13 @@ class RrMaterialParents extends Model
     protected $casts = [
         'publication_date' => 'date',
         'adviser' => 'array',
+        'keywords' => 'array',
+        'sdgs' => 'array',
     ];
 
     public function authorUser()
     {
-        return $this->belongsTo(User::class, 'author_user_id');
+        return $this->belongsTo(User::class, 'author', 'name');
     }
 
     public function materials()
