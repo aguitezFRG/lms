@@ -15,11 +15,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // 1. Create your mandatory Super Admin
+        \App\Models\User::factory()->superAdmin()->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // 2. Create 10 random users for testing
+        \App\Models\User::factory(10)->create();
     }
 }
