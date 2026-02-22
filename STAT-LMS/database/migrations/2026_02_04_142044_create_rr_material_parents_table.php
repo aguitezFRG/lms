@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('keywords');
             $table->string('sdgs')->nullable();
             $table->date('publication_date');
-            $table->foreignUuid('author')->constrained('users');
+            $table->string('author')->comment('Stores user UUID or name');
             $table->json('adviser')->nullable();
             $table->integer('access_level');
             $table->timestamps();
