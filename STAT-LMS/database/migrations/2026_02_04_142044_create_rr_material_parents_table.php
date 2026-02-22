@@ -12,14 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('rr_material_parents', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->integer('material_type');
             $table->string('title');
             $table->string('abstract');
             $table->string('keywords');
             $table->string('sdgs')->nullable();
             $table->date('publication_date');
-            $table->foreignId('author')->constrained('users');
+            $table->foreignUuid('author')->constrained('users');
             $table->json('adviser')->nullable();
             $table->integer('access_level');
             $table->timestamps();

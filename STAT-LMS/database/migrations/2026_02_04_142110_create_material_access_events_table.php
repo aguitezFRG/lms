@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('material_access_events', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('rr_material_id')->constrained('rr_materials');
-            $table->foreignId('approver_id')->constrained('users');
+            $table->uuid('id')->primary();
+            $table->foreignUuid('user_id')->constrained('users');
+            $table->foreignUuid('rr_material_id')->constrained('rr_materials');
+            $table->foreignUuid('approver_id')->constrained('users');
             $table->string('event_type');
             $table->string('status');
             $table->timestamp('due_at')->nullable();

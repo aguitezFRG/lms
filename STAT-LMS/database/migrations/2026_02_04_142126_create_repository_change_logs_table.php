@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('repository_change_logs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('editor_id')->constrained('users');
-            $table->foreignId('rr_material_id')->constrained('rr_materials')->nullable();
-            $table->foreignId('target_user_id')->constrained('users')->nullable();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('editor_id')->constrained('users');
+            $table->foreignUuid('rr_material_id')->constrained('rr_materials')->nullable();
+            $table->foreignUuid('target_user_id')->constrained('users')->nullable();
             $table->string('table_changed');
             $table->string('change_type');
             $table->json('change_made')->nullable();
