@@ -27,9 +27,24 @@ class RrMaterialsResource extends Resource
 
     // protected static ?string $recordTitleAttribute = 'RR Material Copies';
 
-    protected static ?string $navigationLabel = 'RR Material Copy';
+    protected static ?string $navigationLabel = 'Material Copy';
 
     protected static string | UnitEnum | null $navigationGroup = 'Repository';
+
+    // Header Breadcrumb
+    protected static ?string $breadcrumb = 'Reading Room Materials';
+
+    // Method Titles
+    public static function getLabel(): string
+    {
+        return 'Material Copy';
+    }
+
+    // Infolist Title
+    public static function getPluralLabel(): string
+    {
+        return 'Material Copies';
+    }
 
     public static function form(Schema $schema): Schema
     {
