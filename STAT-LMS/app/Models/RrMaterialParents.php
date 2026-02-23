@@ -30,12 +30,12 @@ class RrMaterialParents extends Model
         'sdgs' => 'array',
     ];
 
-    public function authorUser()
+    protected function authorUser()
     {
         return $this->belongsTo(User::class, 'author', 'name');
     }
 
-    public function materials()
+    protected function materials()
     {
         return $this->hasMany(RrMaterials::class, 'material_parent_id');
     }
