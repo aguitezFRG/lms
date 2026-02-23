@@ -6,16 +6,17 @@ use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Actions\RestoreAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Actions\Action;
 
 use Filament\Tables\Enums\FiltersResetActionPosition;
 use Filament\Tables\Filters\Filter;
-
-use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Filters\TrashedFilter;
 
 class RrMaterialParentsTable
 {
@@ -23,6 +24,7 @@ class RrMaterialParentsTable
     {
         return $table
             ->columns([
+
                 TextColumn::make('id')
                     ->label('UUID')
                     ->searchable()
@@ -34,7 +36,6 @@ class RrMaterialParentsTable
                     ->searchable()
                     ->limit(50)
                     ->sortable(),
-
 
                 TextColumn::make('author')
                     ->label('Author')
@@ -86,22 +87,24 @@ class RrMaterialParentsTable
                         5 => 'Others',
                     ])
                     ->multiple(),
-            ], layout: FiltersLayout::AboveContentCollapsible)
-            ->filtersApplyAction(
-                fn (Action $action) => $action->color('success') // UP Forest Green!
-            )
+                TrashedFilter::make(),
+            ])
             ->filtersApplyAction(
                 fn ($action) => $action->color('success')
             )
-            ->filtersResetActionPosition(FiltersResetActionPosition::Footer)
             ->actions([
                 ViewAction::make(),
                 EditAction::make(),
+                RestoreAction::make()
+                    ->visible(fn ($record) => $record && $record->trashed()),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    RestoreBulkAction::make()
+                        ->visible(fn ($record) => $record && $record->trashed()),
                 ]),
             ]);
     }
+
 }

@@ -4,15 +4,17 @@ namespace App\Filament\Resources\Users\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Actions\RestoreAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Enums\FiltersResetActionPosition;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\TrashedFilter;
 
 class UsersTable
 {
@@ -87,18 +89,22 @@ class UsersTable
                     ])
                     ->multiple()
                     ->searchable(),
-            ], layout: FiltersLayout::AboveContentCollapsible)
+                TrashedFilter::make(),
+            ])
             ->filtersApplyAction(
                 fn ($action) => $action->color('success')
             )
-            ->filtersResetActionPosition(FiltersResetActionPosition::Footer)
             ->actions([
                 ViewAction::make(),
                 EditAction::make(),
+                RestoreAction::make()
+                    ->visible(fn ($record) => $record && $record->trashed())   ,
             ])
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    RestoreBulkAction::make()
+                        ->visible(fn ($record) => $record && $record->trashed()),
                 ]),
             ]);
     }
