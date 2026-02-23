@@ -29,8 +29,18 @@ class RrMaterialParentsInfolist
                             TextEntry::make('publication_date')->date('F d, Y'),
                             TextEntry::make('access_level')
                                 ->badge()
-                                ->color(fn ($state) => $state === 1 ? 'success' : 'danger')
-                                ->formatStateUsing(fn ($state) => $state === 1 ? 'Public' : 'Restricted'),
+                                ->color(fn (int $state): string => match ($state) {
+                                1 => 'success', // Public (UP Forest Green)
+                                2 => 'danger',  // Restricted (Red)
+                                3 => 'gray',    // Confidential (Black/Dark Gray)
+                                default => 'gray',
+                            })
+                            ->formatStateUsing(fn (int $state): string => match ($state) {
+                                1 => 'Public',
+                                2 => 'Restricted',
+                                3 => 'Confidential',
+                                default => 'Unknown',
+                            }),
                         ]),
                     ]),
 
