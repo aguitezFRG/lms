@@ -88,19 +88,25 @@ class RrMaterialsTable
                 TrashedFilter::make(),
             ])
             ->actions([
-                BulkActionGroup::make([
+                ActionGroup::make([
                     ViewAction::make(),
-                    EditAction::make(),
+                    EditAction::make()
+                        ->color('warning'),
                     RestoreAction::make()
-                        ->visible(fn ($record) => $record && $record->trashed()),
-                ]),
+                        ->visible(fn ($record) => $record && $record->trashed())
+                        ->color('success'),
+                    DeleteAction::make()
+                        ->visible(fn ($record) => $record && !$record->trashed())
+                        ->color('danger'),
+                ])
+                ->color('gray'),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    // Bulk Soft Delete / Restore
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->color('danger'),
                     RestoreBulkAction::make()
-                        ->visible(fn ($record) => $record && $record->trashed()),
+                        ->color('success'),
                 ]),
             ]);
     }

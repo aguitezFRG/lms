@@ -4,12 +4,18 @@ namespace App\Filament\Resources\RrMaterialParents\Tables;
 
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\EditAction;
+
+
 use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
 use Filament\Actions\RestoreAction;
+use Filament\Actions\DeleteAction;
+
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Actions\Action;
@@ -93,16 +99,26 @@ class RrMaterialParentsTable
                 fn ($action) => $action->color('success')
             )
             ->actions([
-                ViewAction::make(),
-                EditAction::make(),
-                RestoreAction::make()
-                    ->visible(fn ($record) => $record && $record->trashed()),
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make()
+                        ->color('warning'),
+                    RestoreAction::make()
+                        ->visible(fn ($record) => $record && $record->trashed())
+                        ->color('success'),
+                    DeleteAction::make()
+                        ->visible(fn ($record) => $record && !$record->trashed())
+                        ->color('danger'),
+                ],
+                )->color('gray'),
             ])
             ->bulkActions([
+                // TODO: Make the bulk actions only show for the appropriate records
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->color('danger'),
                     RestoreBulkAction::make()
-                        ->visible(fn ($record) => $record && $record->trashed()),
+                        ->color('success'),
                 ]),
             ]);
     }

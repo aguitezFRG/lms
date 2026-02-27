@@ -2,12 +2,17 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Actions\EditAction;
+
+
 use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\RestoreAction;
+
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -95,16 +100,26 @@ class UsersTable
                 fn ($action) => $action->color('success')
             )
             ->actions([
-                ViewAction::make(),
-                EditAction::make(),
-                RestoreAction::make()
-                    ->visible(fn ($record) => $record && $record->trashed())   ,
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make()
+                        ->color('warning'),
+                    RestoreAction::make()
+                        ->visible(fn ($record) => $record && $record->trashed())
+                         ->color('success'),
+                    DeleteAction::make()
+                        ->visible(fn ($record) => $record && !$record->trashed())
+                        ->color('danger'),
+                ])
+                ->color('gray'),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    // TODO: Make the bulk actions only show for the appropriate records
+                    DeleteBulkAction::make()
+                        ->color('danger'),
                     RestoreBulkAction::make()
-                        ->visible(fn ($record) => $record && $record->trashed()),
+                        ->color('success'),
                 ]),
             ]);
     }
