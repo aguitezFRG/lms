@@ -19,6 +19,9 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
+use Illuminate\Support\Facades\Auth;
+use App\Enums\UserRole;
+
 class RrMaterialsResource extends Resource
 {
     protected static ?string $model = RrMaterials::class;
@@ -84,5 +87,20 @@ class RrMaterialsResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $user = auth()->user();
+        $query = parent::getEloquentQuery();
+
+        if (!$user) return $query->whereRaw('1 = 0'); // Deny all if not logged in
+
+        $userLevel = UserRole::from($user->role)->getAccessLevel();
+
+        // Filter based on the access_level of the related Parent material
+        return $query->whereHas('parent', function (Builder $query) use ($userLevel) {
+            $query->where('access_level', '<=', $userLevel);
+        });
     }
 }

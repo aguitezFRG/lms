@@ -16,8 +16,12 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+
+use Illuminate\Support\Facades\Auth;
+use App\Enums\UserRole;
 
 class RrMaterialParentsResource extends Resource
 {
@@ -85,5 +89,23 @@ class RrMaterialParentsResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $user = Auth::user();
+        $query = parent::getEloquentQuery();
+
+        // If there is no user, or for some reason the role is missing,
+        // we default to the most restrictive view (Level 1).
+        if (!$user) {
+            return $query->where('access_level', '<=', 1);
+        }
+
+        $userLevel = UserRole::from($user->role)->getAccessLevel();
+
+        // Apply the global scope: User level must be greater than or
+        // equal to the material's required access level.
+        return $query->where('access_level', '<=', $userLevel);
     }
 }
