@@ -7,6 +7,8 @@ use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Actions\Action;
 
+use App\Enums\UserRole;
+
 class ViewRrMaterials extends ViewRecord
 {
     protected static string $resource = RrMaterialsResource::class;
@@ -33,16 +35,14 @@ class ViewRrMaterials extends ViewRecord
         }
 
         $user = auth()->user();
+        if (!$user) {
+            return false; // Not logged in, deny access
+        }
+
+        $user_access_level = UserRole::from($user->role)->getAccessLevel();
         $accessLevel = (int) $record->parent->access_level;
 
-        return match ($accessLevel) {
-            1 => in_array($user->role, config('api.level_1_access_roles')),
-
-            2 => in_array($user->role, config('api.level_2_access_roles')),
-
-            3 => in_array($user->role, config('api.level_3_access_roles')),
-
-            default => false,
-        };
+        // 2. User's access level must be greater than or equal to the material's access level
+        return $user_access_level >= $accessLevel;
     }
 }
