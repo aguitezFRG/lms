@@ -9,7 +9,11 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class User extends Authenticatable
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
+use Illuminate\Support\Facades\Log;
+
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasUuids, SoftDeletes;
@@ -56,5 +60,13 @@ class User extends Authenticatable
     public function materialAccessEvents()
     {
         return $this->hasMany(MaterialAccessEvents::class, 'user_id');
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Log::info('Checking access for user: ' . $this->email . ' with role: ' . $this->role);
+        // Log::info('Panel name: ' . $panel->getId());
+        // return in_array($this->role, ['committee', 'it']);
+        return $panel->getId() === 'admin' && in_array($this->role, ['committee', 'it']);
     }
 }
