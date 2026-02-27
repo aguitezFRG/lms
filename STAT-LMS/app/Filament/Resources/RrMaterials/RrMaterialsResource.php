@@ -23,7 +23,7 @@ class RrMaterialsResource extends Resource
 {
     protected static ?string $model = RrMaterials::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBookOpen;
 
     // protected static ?string $recordTitleAttribute = 'RR Material Copies';
 

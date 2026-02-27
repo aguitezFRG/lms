@@ -24,7 +24,7 @@ class RrMaterialParentsResource extends Resource
     protected static ?string $model = RrMaterialParents::class;
 
     // Sidebar Icon
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingLibrary;
 
     // Sidebar Label
     protected static ?string $navigationLabel = 'RR Materials';
