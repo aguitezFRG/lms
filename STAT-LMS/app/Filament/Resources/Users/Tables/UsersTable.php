@@ -21,6 +21,8 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TrashedFilter;
 
+use App\Enums\UserRole;
+
 class UsersTable
 {
     public static function configure(Table $table): Table
@@ -66,13 +68,7 @@ class UsersTable
                 TextColumn::make('role')
                     ->badge()
                     ->toggleable(isToggledHiddenByDefault: false)
-                    ->colors([
-                        'primary' => 'student',
-                        'success' => 'faculty',
-                        'warning' => 'staff/custodian',
-                        'danger' => 'it',
-                        'info' => 'committee',
-                    ])
+                    ->color(fn (string $state) => UserRole::from($state)->getColor())
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'student' => 'Student',
                         'faculty' => 'Faculty',
