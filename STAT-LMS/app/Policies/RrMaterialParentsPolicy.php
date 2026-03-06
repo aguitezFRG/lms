@@ -17,7 +17,7 @@ class RrMaterialParentsPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->role !== UserRole::STUDENT->value;
     }
 
     /**
@@ -25,6 +25,10 @@ class RrMaterialParentsPolicy
      */
     public function view(User $user, RrMaterialParents $rrMaterialParents): bool
     {
+        if ($user->role === UserRole::STUDENT->value) {
+            return false;
+        }
+
         $user_access_level = UserRole::from($user->role)->getAccessLevel();
 
         return $user_access_level >= $rrMaterialParents->access_level || $user->id === $rrMaterialParents->user_id;
@@ -35,7 +39,7 @@ class RrMaterialParentsPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->role !== UserRole::STUDENT->value;
     }
 
     /**
