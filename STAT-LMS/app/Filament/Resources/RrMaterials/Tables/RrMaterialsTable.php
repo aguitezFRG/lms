@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RrMaterials\Tables;
 
+use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -18,6 +19,11 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+
+use App\Models\MaterialAccessEvents;
+use App\Enums\MaterialEventType;
+
+use Filament\Notifications\Notification;
 
 class RrMaterialsTable
 {
@@ -90,6 +96,26 @@ class RrMaterialsTable
             ->actions([
                 ActionGroup::make([
                     ViewAction::make(),
+                    Action::make('requestCopy')
+                        ->label(fn ($record) => $record?->is_digital ? 'Request Copy' : 'Borrow Copy')
+                        ->icon(fn ($record) => $record?->is_digital ? 'heroicon-o-paper-airplane' : 'heroicon-o-book-open')
+                        ->color('info')
+                        ->visible(fn ($record) => $record && !$record->trashed())
+                        ->action(function ($record) {
+                            $eventType = $record->is_digital
+                                ? MaterialEventType::REQUEST
+                                : MaterialEventType::BORROW;
+
+                            MaterialAccessEvents::create([
+                                'user_id' => auth()->id(),
+                                'rr_material_id' => $record->id,
+                                'status' => 'pending',
+                                'event_type' => $eventType,
+                            ]);
+
+                            $message = $record->is_digital ? 'Copy Request  Submitted' : 'Borrow Request Submitted';
+                            Notification::make()->title($message)->success()->send();
+                        }),
                     EditAction::make()
                         ->color('warning'),
                     RestoreAction::make()
@@ -98,6 +124,7 @@ class RrMaterialsTable
                     DeleteAction::make()
                         ->visible(fn ($record) => $record && !$record->trashed())
                         ->color('danger'),
+
                 ])
                 ->color('gray'),
             ])
