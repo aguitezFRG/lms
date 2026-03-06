@@ -13,11 +13,44 @@ class RrMaterialsInfolist
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Copy Details')
+            Section::make('Material Details')
                 ->columnSpanFull()
                 ->components([
                     TextEntry::make('parent.title')
                         ->label('Parent Resource'),
+
+                    TextEntry::make('parent.abstract')
+                        ->label('Abstract')
+                        ->prose()
+                        ->markdown(),
+
+                    Grid::make(3)->schema([
+                        TextEntry::make('parent.publication_date')
+                            ->label('Published')
+                            ->date('F d, Y'),
+
+                        TextEntry::make('parent.author')
+                            ->label('Primary Author')
+                            ->formatStateUsing(fn ($record) => $record->parent->authorUser?->name ?? $record->parent->author),
+
+                        TextEntry::make('parent.adviser')
+                            ->label('Adviser(s)')
+                            ->badge()
+                            ->color('success')
+                            ->separator(', '),
+                    ]),
+
+                    Grid::make(3)->schema([
+                        TextEntry::make('parent.keywords')
+                            ->badge()
+                            ->separator(', '),
+
+                        TextEntry::make('parent.sdgs')
+                            ->label('SDGs')
+                            ->badge()
+                            ->color('warning')
+                            ->separator(', '),
+                    ]),
 
                     Grid::make(2)->schema([
                         TextEntry::make('is_digital')
@@ -48,53 +81,7 @@ class RrMaterialsInfolist
                         ->badge()
                         ->color(fn ($state) => $state ? 'success' : 'danger')
                         ->formatStateUsing(fn ($state) => $state ? 'Available' : 'Restricted'),
-
-                    TextEntry::make('file_name')
-                        ->label('File Reference')
-                        ->placeholder('No digital file attached'),
-                ])->columns(2),
-
-            Section::make('Parent Material Details')
-                    ->description('Click to view full bibliographic metadata')
-                    ->collapsible()
-                    ->collapsed()
-                    ->columnSpanFull()
-                    ->icon('heroicon-m-information-circle')
-                    ->schema([
-                        TextEntry::make('parent.abstract')
-                            ->label('Abstract')
-                            ->columnSpanFull()
-                            ->prose()
-                            ->markdown(),
-
-                        Grid::make(3)->schema([
-                            TextEntry::make('parent.publication_date')
-                                ->label('Published')
-                                ->date('F d, Y'),
-
-                            TextEntry::make('parent.author')
-                                ->label('Primary Author')
-                                ->formatStateUsing(fn ($record) => $record->parent->authorUser?->name ?? $record->parent->author),
-
-                            TextEntry::make('parent.adviser')
-                                ->label('Adviser(s)')
-                                ->badge()
-                                ->color('success')
-                                ->separator(', '),
-                        ]),
-
-                        Grid::make(3)->schema([
-                            TextEntry::make('parent.keywords')
-                                ->badge()
-                                ->separator(', '),
-
-                            TextEntry::make('parent.sdgs')
-                                ->label('SDGs')
-                                ->badge()
-                                ->color('warning')
-                                ->separator(', '),
-                        ]),
-                    ]),
+                ]),
 
             Section::make('System Metadata')
                 ->columnSpanFull()
