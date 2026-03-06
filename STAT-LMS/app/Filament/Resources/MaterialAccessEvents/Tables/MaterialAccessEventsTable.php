@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MaterialAccessEvents\Tables;
 
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -14,6 +15,10 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
 use App\Enums\MaterialEventType;
+
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\Select;
 
 class MaterialAccessEventsTable
 {
@@ -46,25 +51,48 @@ class MaterialAccessEventsTable
                     ->sortable(),
 
                 TextColumn::make('approver.name')
-                    ->label('Approved by')
+                    ->label('Updated By')
                     ->searchable()
                     ->sortable()
-                    ->formatStateUsing(fn ($state) => $state ?: "---")
+                    ->default('-----------')
                     ->toggleable(isToggledHiddenByDefault: false),
             ])
             ->filters([
                 TrashedFilter::make(),
+                Filter::make('Status')
+                    ->schema([
+                        Select::make('status')
+                            ->options([
+                                'pending' => 'Pending',
+                                'approved' => 'Approved',
+                                'rejected' => 'Rejected',
+                                'revoked' => 'Revoked',
+                            ])
+                    ])
+                    ->query (function (Builder $query, array $data): Builder{
+                        return $query->when(
+                            filled($data['status']),
+                            fn (Builder $query) => $query->where('status', $data['status'])
+                        );
+                    }),
+
             ])
-            ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
-                ]),
+            ->actions([
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make()
+                        ->visible(fn ($record) => $record->status !== 'no action')
+                        ->mutateFormDataUsing(fn ($data) => array_merge($data, ['approver_id' => auth()->id()]))
+                        ->color('warning'),
+                ])
+                ->color('gray')
             ]);
+            // ->bulkActions([
+            //     BulkActionGroup::make([
+            //         DeleteBulkAction::make(),
+            //         ForceDeleteBulkAction::make(),
+            //         RestoreBulkAction::make(),
+            //     ]),
+            // ]);
     }
 }
