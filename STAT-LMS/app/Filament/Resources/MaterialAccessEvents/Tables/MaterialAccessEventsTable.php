@@ -13,51 +13,44 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
+use App\Enums\MaterialEventType;
+
 class MaterialAccessEventsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('user_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('rr_material_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('approver_id')
-                    ->numeric()
-                    ->sortable(),
+                TextColumn::make('user.name')
+                    ->label('User')
+                    ->searchable()
+                    ->sortable()
+                    ->limit(20),
+
+                TextColumn::make('material.parent.title')
+                    ->label('Title')
+                    ->searchable()
+                    ->sortable()
+                    ->limit(30),
+
                 TextColumn::make('event_type')
-                    ->searchable(),
+                    ->label('Type')
+                    ->searchable()
+                    ->sortable()
+                    ->color(fn (string $state) => MaterialEventType::from($state)->getColor())
+                    ->formatStateUsing(fn (string $state) => MaterialEventType::from($state)->getLabel()),
+
                 TextColumn::make('status')
-                    ->searchable(),
-                TextColumn::make('due_at')
-                    ->dateTime()
+                    ->label('Status')
+                    ->searchable()
                     ->sortable(),
-                TextColumn::make('returned_at')
-                    ->dateTime()
-                    ->sortable(),
-                IconColumn::make('is_overdue')
-                    ->boolean(),
-                TextColumn::make('created_at')
-                    ->dateTime()
+
+                TextColumn::make('approver.name')
+                    ->label('Approved by')
+                    ->searchable()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('approved_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('completed_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->formatStateUsing(fn ($state) => $state ?: "---")
+                    ->toggleable(isToggledHiddenByDefault: false),
             ])
             ->filters([
                 TrashedFilter::make(),
