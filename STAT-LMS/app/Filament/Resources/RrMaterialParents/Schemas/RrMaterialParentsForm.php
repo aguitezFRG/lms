@@ -20,7 +20,7 @@ class RrMaterialParentsForm
         return $schema
             ->components([
                 Section::make('Material Details')
-                ->components([
+                    ->components([
                         TextInput::make('id')
                             ->label('RR Material Parent ID (UUID)')
                             ->disabled()
