@@ -58,8 +58,8 @@ class MaterialAccessEventsResource extends Resource
         return [
             'index' => ListMaterialAccessEvents::route('/'),
             // 'create' => CreateMaterialAccessEvents::route('/create'),
-            // 'view' => ViewMaterialAccessEvents::route('/{record}'),
-            // 'edit' => EditMaterialAccessEvents::route('/{record}/edit'),
+            'view' => ViewMaterialAccessEvents::route('/{record}'),
+            'edit' => EditMaterialAccessEvents::route('/{record}/edit'),
         ];
     }
 
