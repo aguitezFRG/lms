@@ -23,6 +23,7 @@ class MaterialAccessEventsForm
                     ->columnSpanFull()
                     ->schema([
                         ToggleButtons::make('status')
+                            ->inline()
                             ->label('Status')
                             ->options([
                                 'approved' => 'Approve',
