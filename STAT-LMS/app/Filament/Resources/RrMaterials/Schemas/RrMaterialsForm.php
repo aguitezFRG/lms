@@ -44,6 +44,9 @@ class RrMaterialsForm
                     // DIGITAL UPLOAD BLOCK
                     FileUpload::make('file_name')
                         ->label('Digital File (PDF)')
+                        ->acceptedFileTypes(['application/pdf'])
+                        ->rules(['mimes:pdf'])
+                        ->maxSize(10240)
                         ->visible(fn (Get $get) => $get('is_digital'))
                         ->required(fn (Get $get) => $get('is_digital'))
                         ->disk('local') // Ensures it's stored in /storage/app (private)
