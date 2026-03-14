@@ -2,8 +2,13 @@
 
 namespace App\Filament\Resources\RepositoryChangeLogs\Schemas;
 
+use App\Enums\RepositoryChangeType;
+use App\Models\RepositoryChangeLogs;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
 
 class RepositoryChangeLogsInfolist
 {
@@ -11,25 +16,85 @@ class RepositoryChangeLogsInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('editor_id')
-                    ->numeric(),
-                TextEntry::make('rr_material_id')
-                    ->numeric(),
-                TextEntry::make('target_user_id')
-                    ->numeric(),
-                TextEntry::make('table_changed'),
-                TextEntry::make('change_type'),
-                TextEntry::make('change_made')
-                    ->placeholder('-')
-                    ->columnSpanFull(),
-                TextEntry::make('changed_at')
-                    ->dateTime(),
-                TextEntry::make('created_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('updated_at')
-                    ->dateTime()
-                    ->placeholder('-'),
+                Section::make('Change Overview')
+                    ->columnSpanFull()
+                    ->components([
+                        Grid::make(3)
+                            ->components([
+                                TextEntry::make('editor_id')
+                                    ->label('Editor')
+                                    ->tooltip(fn (RepositoryChangeLogs $record) => $record->editor?->name),
+
+                                TextEntry::make('table_changed')
+                                    ->label('Table Changed')
+                                    ->badge(),
+
+                                TextEntry::make('change_type')
+                                    ->label('Change Type')
+                                    ->badge()
+                                    ->color(fn (string $state) => RepositoryChangeType::from($state)->getColor()),
+                            ]),
+
+                        Grid::make(3)
+                            ->components([
+                                TextEntry::make('rr_material_id')
+                                    ->label('Related Material')
+                                    ->placeholder('N/A')
+                                    ->tooltip(fn (RepositoryChangeLogs $record) => $record->material?->parent?->title),
+
+                                TextEntry::make('target_user_id')
+                                    ->label('Target User')
+                                    ->placeholder('N/A')
+                                    ->tooltip(fn (RepositoryChangeLogs $record) => $record->targetUser?->name),
+
+                                TextEntry::make('changed_at')
+                                    ->label('Changed At')
+                                    ->datetime('F d, Y h:i A'),
+                            ]),
+                    ]),
+
+                Section::make('Change Details')
+                ->columnSpanFull()
+                ->components([
+                    TextEntry::make('change_made')
+                        ->label('Changes Made')
+                        ->state(fn ($record) => $record->getRawOriginal('change_made'))
+                        ->formatStateUsing(function ($state) {
+                            if (!$state) return 'No changes recorded.';
+
+                            $data = is_string($state) ? json_decode($state, true) : $state;
+
+                            if (!is_array($data)) return 'No changes recorded.';
+
+                            $rows = collect($data)
+                                ->except(['id', 'created_at', 'updated_at'])
+                                ->map(fn ($value, $key) =>
+                                    "<tr>
+                                        <td class='px-4 py-2 font-mono text-sm font-medium text-gray-700 dark:text-gray-300 w-1/4'>{$key}</td>
+                                        <td class='px-4 py-2 text-sm text-danger-600 dark:text-danger-400 w-3/8'>" . ($value['old'] ?? '<span class="italic text-gray-400">null</span>') . "</td>
+                                        <td class='px-4 py-2 text-sm text-success-600 dark:text-success-400 w-3/8'>" . ($value['new'] ?? '<span class="italic text-gray-400">null</span>') . "</td>
+                                    </tr>"
+                                )
+                                ->join('');
+
+                            return "
+                                <table class='w-full border-collapse'>
+                                    <thead>
+                                        <tr class='border-b border-gray-200 dark:border-gray-700'>
+                                            <th class='px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4'>Field</th>
+                                            <th class='px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-3/8'>Old Value</th>
+                                            <th class='px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-3/8'>New Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class='divide-y divide-gray-100 dark:divide-gray-800'>
+                                        {$rows}
+                                    </tbody>
+                                </table>
+                            ";
+                        })
+                        ->html()
+                        ->columnSpanFull(),
+                    ]),
             ]);
     }
 }
