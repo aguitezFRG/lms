@@ -7,6 +7,11 @@ use Illuminate\Support\ServiceProvider;
 use App\Models\MaterialAccessEvents;
 use App\Observers\MaterialAccessEventsObserver;
 
+use App\Observers\RepositoryChangeLogsObserver;
+use App\Models\User;
+use App\Models\RrMaterialParents;
+use App\Models\RrMaterials;
+
 use Filament\Actions\Action;
 
 use Illuminate\Support\Facades\Log;
@@ -36,5 +41,12 @@ class AppServiceProvider extends ServiceProvider
                 default => null,
             };
         });
+
+
+        RrMaterials::observe(RepositoryChangeLogsObserver::class);
+        RrMaterialParents::observe(RepositoryChangeLogsObserver::class);
+        MaterialAccessEvents::observe(RepositoryChangeLogsObserver::class);
+        User::observe(RepositoryChangeLogsObserver::class);
+
     }
 }
