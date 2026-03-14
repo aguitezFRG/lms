@@ -20,6 +20,9 @@ use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Select;
 
+use Filament\Actions\Action;
+use App\Models\MaterialAccessEvents;
+
 class MaterialAccessEventsTable
 {
     public static function configure(Table $table): Table
@@ -82,7 +85,9 @@ class MaterialAccessEventsTable
                     ViewAction::make(),
                     EditAction::make()
                         ->visible(fn ($record) => $record->status !== 'no action')
-                        ->mutateFormDataUsing(fn ($data) => array_merge($data, ['approver_id' => auth()->id()]))
+                        ->mutateFormDataUsing(fn (array $data) => array_merge($data, [
+                            'approver_id' => auth()->id(),
+                        ]))
                         ->color('warning'),
                 ])
                 ->color('gray')
