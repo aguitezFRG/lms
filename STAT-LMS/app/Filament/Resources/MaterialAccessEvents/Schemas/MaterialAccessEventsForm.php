@@ -46,14 +46,22 @@ class MaterialAccessEventsForm
                     ->schema([
                         DatePicker::make('due_at')
                             ->label('Due Date')
-                            ->minDate(now()->addDays(1))
-                            ->rules(['date', 'after:today'])
-                            ->formatStateUsing(fn ($state) => $state ?? now()->addDays(14)->toDateString()),
+                            ->minDate(now()->addDays(1)->startOfDay())
+                            ->rules(['date', 'after_or_equal:' . now()->addDays(1)->toDateString()])
+                            ->formatStateUsing(fn ($state) => $state ?? now()->addDays(14)->toDateString())
+                            ->live()
+                            ->afterStateUpdated(fn ($state, callable $set) =>
+                                $set('due_at', $state ? $state . ' 23:59:59' : null)
+                            ),
 
                         DatePicker::make('returned_at')
                             ->label('Returned At')
-                            ->minDate(now()->addDays(1))
-                            ->rules(['date', 'after:today']),
+                            ->minDate(now()->addDays(1)->startOfDay())
+                            ->rules(['date', 'after_or_equal:' . now()->addDays(1)->toDateString()])
+                            ->live()
+                            ->afterStateUpdated(fn ($state, callable $set) =>
+                                $set('due_at', $state ? $state . ' 23:59:59' : null)
+                            ),
                     ])
                     ->columns(1)
                     ->visible(fn (callable $get) => $get('status') === 'approved'),

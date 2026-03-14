@@ -10,6 +10,8 @@ use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Actions\Action;
 
+use Illuminate\Support\Facades\Log;
+
 class EditMaterialAccessEvents extends EditRecord
 {
     protected static string $resource = MaterialAccessEventsResource::class;
@@ -29,7 +31,7 @@ class EditMaterialAccessEvents extends EditRecord
         $data['approver_id'] = auth()->id();
 
         if (!empty($data['due_at'])) {
-            $data['due_at'] = $data['due_at'] . ' 23:59:59';
+            $data['due_at'] = \Carbon\Carbon::parse($data['due_at'])->endOfDay()->toDateTimeString();
         }
 
         return $data;
