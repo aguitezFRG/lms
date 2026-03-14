@@ -23,7 +23,7 @@ class MaterialAccessEventsResource extends Resource
 {
     protected static ?string $model = MaterialAccessEvents::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
     // protected static ?string $recordTitleAttribute = 'Material Access Logs';
 
