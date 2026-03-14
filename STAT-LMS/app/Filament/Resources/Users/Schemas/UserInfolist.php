@@ -14,6 +14,7 @@ class UserInfolist
         return $schema
             ->components([
                 Section::make('User Profile')
+                    ->columnSpanFull()
                     ->components([
                         TextEntry::make('id')
                             ->label('UUID')
@@ -56,7 +57,8 @@ class UserInfolist
                             }),
                     ])->columns(2),
 
-                    Section::make('Account Details')
+                Section::make('Account Details')
+                    ->columnSpanFull()  
                     ->components([
                         TextEntry::make('created_at')
                             ->label('Account Created')
