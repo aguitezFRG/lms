@@ -94,13 +94,13 @@ class RrMaterialsResource extends Resource
         $user = auth()->user();
         $query = parent::getEloquentQuery();
 
-        if (!$user) return $query->whereRaw('1 = 0'); // Deny all if not logged in
+        if (!$user) return $query->whereNull('id'); // cleaner than whereRaw
 
         $userLevel = UserRole::from($user->role)->getAccessLevel();
 
         // Filter based on the access_level of the related Parent material
         return $query->whereHas('parent', function (Builder $query) use ($userLevel) {
-            $query->where('access_level', '<=', $userLevel);
+            $query->where('access_level', '<=', (int) $userLevel);
         });
     }
 }
