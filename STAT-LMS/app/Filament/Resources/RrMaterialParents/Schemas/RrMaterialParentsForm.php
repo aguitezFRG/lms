@@ -20,6 +20,7 @@ class RrMaterialParentsForm
         return $schema
             ->components([
                 Section::make('Material Details')
+                    ->columnSpanFull()
                     ->components([
                         TextInput::make('id')
                             ->label('RR Material Parent ID (UUID)')
@@ -57,6 +58,7 @@ class RrMaterialParentsForm
                     ])->columns(2),
 
                 Section::make('Authors & Metadata')
+                    ->columnSpanFull()
                     ->components([
                         TextInput::make('author')
                             ->label('Author')

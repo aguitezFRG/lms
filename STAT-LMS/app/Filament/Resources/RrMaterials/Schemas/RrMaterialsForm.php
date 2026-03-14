@@ -17,6 +17,7 @@ class RrMaterialsForm
     {
         return $schema->schema([
             Section::make('Copy Specification')
+                ->columnSpanFull()
                 ->schema([
                     Select::make('material_parent_id')
                         ->label('Parent Material')
@@ -38,6 +39,7 @@ class RrMaterialsForm
                 ])->columns(3),
 
             Section::make('Repository Information')
+                ->columnSpanFull()
                 ->schema([
                     // DIGITAL UPLOAD BLOCK
                     FileUpload::make('file_name')
