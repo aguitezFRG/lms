@@ -7,43 +7,74 @@ use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
+
+use App\Enums\MaterialEventType;
+
 class MaterialAccessEventsInfolist
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema
             ->components([
-                TextEntry::make('user_id')
-                    ->numeric(),
-                TextEntry::make('rr_material_id')
-                    ->numeric(),
-                TextEntry::make('approver_id')
-                    ->numeric(),
-                TextEntry::make('event_type'),
-                TextEntry::make('status'),
-                TextEntry::make('due_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('returned_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                IconEntry::make('is_overdue')
-                    ->boolean(),
-                TextEntry::make('created_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('updated_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('approved_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('completed_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('deleted_at')
-                    ->dateTime()
-                    ->visible(fn (MaterialAccessEvents $record): bool => $record->trashed()),
+                Section::make('Request Overview')
+                    ->columnSpanFull()
+                    ->components([
+                        TextEntry::make('user_id')
+                            ->label('Requested By')
+                            ->tooltip(fn (MaterialAccessEvents $record) => $record->user?->name ?? 'N/A'),
+
+                        TextEntry::make('rr_material_id')
+                            ->label('Requested Material')
+                            ->tooltip(fn (MaterialAccessEvents $record) => $record->material?->parent?->title ?? 'N/A'),
+
+                        TextEntry::make('approver_id')
+                            ->label('Edited By')
+                            ->placeholder('N/A')
+                            ->tooltip(fn (MaterialAccessEvents $record) => $record->approver?->name ?? 'N/A'),
+
+                        TextEntry::make('event_type')
+                            ->label('Event Type')
+                            ->color(fn (string $state) => MaterialEventType::from($state)->getColor())
+                            ->formatStateUsing(fn (string $state) => MaterialEventType::from($state)->getLabel()),
+                    ])
+                    ->columns(2),
+
+                Section::make('Request Details')
+                    ->columnSpanFull()
+                    ->components([
+                        TextEntry::make('status')
+                            ->label('Request Status'),
+
+                        TextEntry::make('approved_at')
+                            ->label('Approved At')
+                            ->placeholder('N/A')
+                            ->datetime('F d, Y h:i A'),
+
+                        TextEntry::make('due_at')
+                            ->label('Due At')
+                            ->placeholder('N/A')
+                            ->datetime('F d, Y h:i A'),
+
+                        TextEntry::make('returned_at')
+                            ->label('Returned At')
+                            ->placeholder('N/A')
+                            ->datetime('F d, Y h:i A'),
+
+                        TextEntry::make('completed_at')
+                            ->label('Completed At')
+                            ->placeholder('N/A')
+                            ->datetime('F d, Y h:i A'),
+
+                        TextEntry::make('is_overdue')
+                            ->label('Overdue')
+                            ->icon(fn (bool $state) => $state ? 'heroicon-m-x-circle' : 'heroicon-m-check-circle')
+                            ->iconColor(fn (bool $state) => $state ? 'danger' : 'success')
+                            ->formatStateUsing(fn (bool $state) => $state ? 'Overdue' : 'Not Overdue')
+                            ->color(fn (bool $state) => $state ? 'danger' : 'success'),
+                    ])
+                    ->columns(3),
             ]);
     }
 }
