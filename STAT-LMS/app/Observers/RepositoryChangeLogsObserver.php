@@ -8,10 +8,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class RepositoryChangeLogsObserver
 {
+
+    protected function filterAttributes(Model $model, array $attributes): array
+    {
+        $excluded = $model->excludedFromChangeLogs ?? [];
+
+        return collect($attributes)
+            ->except($excluded)
+            ->toArray();
+    }
+
     /**
      * Handle the RepositoryChangeLogs "created" event.
      */
-    public function created(Model $model): void
+    public function created(Model $model, array $attributes): void
     {
         RepositoryChangeLogs::create([
             'editor_id'      => auth()->id(),
@@ -19,7 +29,7 @@ class RepositoryChangeLogsObserver
             'target_user_id' => $this->getTargetUserId($model),
             'table_changed'  => $model->getTable(),
             'change_type'    => RepositoryChangeType::CREATE->value,
-            'change_made'    => collect($model->getAttributes())
+            'change_made'    => collect($this->filterAttributes($model, $model->getAttributes()))
                 ->mapWithKeys(fn ($value, $key) => [
                     $key => ['old' => null, 'new' => $value]
                 ])->toArray(),
@@ -41,9 +51,9 @@ class RepositoryChangeLogsObserver
             'target_user_id' => $this->getTargetUserId($model),
             'table_changed'  => $model->getTable(),
             'change_type'    => RepositoryChangeType::UPDATE->value,
-            'change_made'    => collect($new)
+            'change_made'    => collect($this->filterAttributes($model, $model->getAttributes()))
                 ->mapWithKeys(fn ($value, $key) => [
-                    $key => ['old' => $old[$key] ?? null, 'new' => $value]
+                    $key => ['old' => null, 'new' => $value]
                 ])->toArray(),
             'changed_at'     => now(),
         ]);
@@ -60,9 +70,9 @@ class RepositoryChangeLogsObserver
             'target_user_id' => $this->getTargetUserId($model),
             'table_changed'  => $model->getTable(),
             'change_type'    => RepositoryChangeType::DELETE->value,
-            'change_made'    => collect($model->getAttributes())
+            'change_made'    => collect($this->filterAttributes($model, $model->getAttributes()))
                 ->mapWithKeys(fn ($value, $key) => [
-                    $key => ['old' => $value, 'new' => null]
+                    $key => ['old' => null, 'new' => $value]
                 ])->toArray(),
             'changed_at'     => now(),
         ]);
@@ -79,7 +89,7 @@ class RepositoryChangeLogsObserver
             'target_user_id' => $this->getTargetUserId($model),
             'table_changed'  => $model->getTable(),
             'change_type'    => RepositoryChangeType::RESTORE->value,
-            'change_made'    => collect($model->getAttributes())
+            'change_made'    => collect($this->filterAttributes($model, $model->getAttributes()))
                 ->mapWithKeys(fn ($value, $key) => [
                     $key => ['old' => null, 'new' => $value]
                 ])->toArray(),
@@ -90,17 +100,17 @@ class RepositoryChangeLogsObserver
     /**
      * Handle the RepositoryChangeLogs "force deleted" event.
      */
-    public function forceDeleted(RepositoryChangeLogs $repositoryChangeLogs): void
+    public function forceDeleted(Model $model): void
     {
         RepositoryChangeLogs::create([
             'editor_id'      => auth()->id(),
-            'rr_material_id' => $this->getMaterialId($repositoryChangeLogs),
-            'target_user_id' => $this->getTargetUserId($repositoryChangeLogs),
-            'table_changed'  => $repositoryChangeLogs->getTable(),
+            'rr_material_id' => $this->getMaterialId($model),
+            'target_user_id' => $this->getTargetUserId($model),
+            'table_changed'  => $model->getTable(),
             'change_type'    => RepositoryChangeType::DELETE->value,
-            'change_made'    => collect($repositoryChangeLogs->getAttributes())
+            'change_made'    => collect($this->filterAttributes($model, $model->getAttributes()))
                 ->mapWithKeys(fn ($value, $key) => [
-                    $key => ['old' => $value, 'new' => null]
+                    $key => ['old' => null, 'new' => $value]
                 ])->toArray(),
             'changed_at'     => now(),
         ]);

@@ -62,11 +62,18 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(MaterialAccessEvents::class, 'user_id');
     }
 
+    public array $excludedFromChangeLogs =[
+        'password',
+        'remember_token',
+    ];
+
     public function canAccessPanel(Panel $panel): bool
     {
         // Log::info('Checking access for user: ' . $this->email . ' with role: ' . $this->role);
         // Log::info('Panel name: ' . $panel->getId());
         // return in_array($this->role, ['committee', 'it']);
-        return $panel->getId() === 'admin' && in_array($this->role, ['committee', 'it']);
+        // return $panel->getId() === 'admin' && in_array($this->role, ['committee', 'it']);
+
+        return true; // For now, allow all access. Implement proper checks later.
     }
 }
