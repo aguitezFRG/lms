@@ -8,13 +8,15 @@ use App\Filament\Resources\User\Catalogs\Pages\ListCatalogs;
 use App\Filament\Resources\User\Catalogs\Pages\ViewCatalog;
 use App\Models\RrMaterialParents;
 use BackedEnum;
-use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+
+use Filament\Facades\Filament;
 
 class CatalogResource extends Resource
 {
@@ -24,11 +26,18 @@ class CatalogResource extends Resource
 
     protected static ?string $navigationLabel = 'Catalog';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Repository';
-
     protected static ?int $navigationSort = 2;
 
     protected static ?string $breadcrumb = 'Material Catalog';
+
+    /**
+     * Only register navigation when running inside the user panel.
+     * Prevents the admin panel's discoverResources() from picking this up.
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return Filament::getCurrentPanel()?->getId() === 'user';
+    }
 
     public static function getLabel(): string
     {
@@ -63,6 +72,22 @@ class CatalogResource extends Resource
         $userLevel = UserRole::from($user->role)->getAccessLevel();
 
         return $query->where('access_level', '<=', $userLevel);
+    }
+
+    /**
+     * Always resolve URLs within the user panel so Filament doesn't fall
+     * through to RrMaterialParentsResource in the admin panel, which shares
+     * the same model.
+     */
+    public static function getUrl(
+        ?string $name = null,
+        array $parameters = [],
+        bool $isAbsolute = true,
+        ?string $panel = null,
+        ?Model $tenant = null,
+        bool $shouldGuessMissingParameters = false,
+    ): string {
+        return parent::getUrl($name, $parameters, $isAbsolute, $panel ?? 'user', $tenant, $shouldGuessMissingParameters);
     }
 
     public static function getPages(): array

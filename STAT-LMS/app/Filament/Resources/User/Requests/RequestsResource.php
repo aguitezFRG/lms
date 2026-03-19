@@ -15,6 +15,8 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
+use Filament\Facades\Filament;
+
 class RequestsResource extends Resource
 {
     protected static ?string $model = MaterialAccessEvents::class;
@@ -28,6 +30,15 @@ class RequestsResource extends Resource
     protected static ?int $navigationSort = 3;
 
     protected static ?string $breadcrumb = 'My Requests';
+
+    /**
+     * Only register navigation when running inside the user panel.
+     * Prevents the admin panel's discoverResources() from picking this up.
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return Filament::getCurrentPanel()?->getId() === 'user';
+    }
 
     public static function getLabel(): string
     {
