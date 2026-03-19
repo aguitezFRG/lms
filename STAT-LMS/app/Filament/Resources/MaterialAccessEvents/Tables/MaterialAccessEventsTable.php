@@ -60,6 +60,7 @@ class MaterialAccessEventsTable
                     ->default('-----------')
                     ->toggleable(isToggledHiddenByDefault: false),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 TrashedFilter::make(),
                 Filter::make('Status')
@@ -84,7 +85,10 @@ class MaterialAccessEventsTable
                 ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make()
-                        ->visible(fn ($record) => $record->status !== 'no action')
+                        ->visible(fn ($record) =>
+                            in_array($record->status, ['pending', 'rejected', 'approved']
+                            )
+                        )
                         ->mutateFormDataUsing(fn (array $data) => array_merge($data, [
                             'approver_id' => auth()->id(),
                         ]))
