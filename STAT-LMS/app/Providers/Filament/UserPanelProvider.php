@@ -25,6 +25,7 @@ class UserPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
+            // ->default()
             ->id('user')
             ->path('app')
             ->viteTheme('resources/css/filament/user/theme.css')
@@ -52,19 +53,19 @@ class UserPanelProvider extends PanelProvider
                 'stat-yellow' => Color::hex('#fffd0d'),
             ])
             ->discoverResources(
-                in: app_path('Filament/User/Resources'),
-                for: 'App\Filament\User\Resources'
+                in: app_path('Filament/Resources/User'),
+                for: 'App\Filament\Resources\User'
             )
             ->discoverPages(
-                in: app_path('Filament/User/Pages'),
-                for: 'App\Filament\User\Pages'
+                in: app_path('Filament/Pages/User'),
+                for: 'App\Filament\Pages\User'
             )
-            ->userMenuItems([
-                MenuItem::make()
-                    ->label('My Profile & Requests')
-                    ->url(fn () => UserProfile::getUrl())
-                    ->icon('heroicon-o-user-circle'),
-            ])
+            // ->userMenuItems([
+                // MenuItem::make()
+                //     ->label('My Profile & Requests')
+                //     ->url(fn () => UserProfile::getUrl())
+                //     ->icon('heroicon-o-user-circle'),
+            // ])
             ->sidebarCollapsibleOnDesktop()
             ->globalSearch(false)
             ->middleware([
@@ -78,6 +79,7 @@ class UserPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            ->strictAuthorization()
             ->authMiddleware([
                 Authenticate::class,
             ]);
