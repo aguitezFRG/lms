@@ -15,7 +15,8 @@ class MaterialAccessEventsPolicy
      */
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value]);
+        // All users can view the list of their own requests, but only committee, IT, and RR staff can view all requests
+        return true;
     }
 
     /**
@@ -23,7 +24,9 @@ class MaterialAccessEventsPolicy
      */
     public function view(User $user, MaterialAccessEvents $materialAccessEvents): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value]);
+        // Users can view their own requests, as well as committee, IT, and RR staff can view all requests
+        return $materialAccessEvents->user_id == $user->id ||
+               in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value]);
     }
 
     /**
@@ -43,17 +46,14 @@ class MaterialAccessEventsPolicy
 
         $updated_by = $materialAccessEvents->approver_id;
 
-        if ($updated_by == null) {
-            // If the event has never been updated, only allow committee and IT to update
-            return in_array($user_role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
-        }
-
         // Allow the user who last updated the event to update it again, as well as committee and IT
         // RR staff can only update if the material access event is of an open material copy
-
+        // Users can update if they're the one who initiated the request, but only if it hasn't been approved yet (i.e. approver_id is null)
         return in_array($user_role, [UserRole::COMMITTEE->value, UserRole::IT->value]) ||
                $updated_by == $user->id ||
-               ($user_role == UserRole::RR->value && $materialAccessEvents->material->parent->access_level == 1);}
+               ($user_role == UserRole::RR->value && $materialAccessEvents->material?->parent?->access_level == 1) ||
+               ($materialAccessEvents->user_id == $user->id && $materialAccessEvents->approver_id == null);
+    }
 
     /**
      * Determine whether the user can delete any models.
