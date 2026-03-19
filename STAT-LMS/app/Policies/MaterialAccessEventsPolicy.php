@@ -15,7 +15,7 @@ class MaterialAccessEventsPolicy
      */
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value]);
     }
 
     /**
@@ -23,7 +23,7 @@ class MaterialAccessEventsPolicy
      */
     public function view(User $user, MaterialAccessEvents $materialAccessEvents): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value]);
     }
 
     /**
@@ -49,8 +49,11 @@ class MaterialAccessEventsPolicy
         }
 
         // Allow the user who last updated the event to update it again, as well as committee and IT
-        return $user->id === $updated_by || in_array($user_role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
-    }
+        // RR staff can only update if the material access event is of an open material copy
+
+        return in_array($user_role, [UserRole::COMMITTEE->value, UserRole::IT->value]) ||
+               $updated_by == $user->id ||
+               ($user_role == UserRole::RR->value && $materialAccessEvents->material->parent->access_level == 1);}
 
     /**
      * Determine whether the user can delete any models.
