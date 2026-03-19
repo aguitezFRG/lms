@@ -62,7 +62,6 @@ class ViewCatalog extends ViewRecord
         ];
     }
 
-    // ── Helper: does an available copy of this type exist? ─────────────────
     protected function hasAvailableCopy(bool $digital): bool
     {
         return RrMaterials::where('material_parent_id', $this->record->id)
@@ -72,15 +71,13 @@ class ViewCatalog extends ViewRecord
             ->exists();
     }
 
-    // ── Helper: does the user already have a pending/approved request? ──────
     protected function hasActiveRequest(bool $digital): bool
     {
-        $eventType = $digital
-            ? MaterialEventType::REQUEST->value
-            : MaterialEventType::BORROW->value;
-
         return MaterialAccessEvents::where('user_id', auth()->id())
-            ->where('event_type', $eventType)
+            ->where('event_type', $digital
+                ? MaterialEventType::REQUEST->value
+                : MaterialEventType::BORROW->value
+            )
             ->whereIn('status', ['pending', 'approved'])
             ->whereHas('material', fn ($q) =>
                 $q->where('material_parent_id', $this->record->id)
@@ -89,10 +86,8 @@ class ViewCatalog extends ViewRecord
             ->exists();
     }
 
-    // ── Action: auto-assign first available copy and create the event ───────
     protected function submitRequest(bool $digital): void
     {
-        // Auto-assign: pick the first available copy (FIFO)
         $copy = RrMaterials::where('material_parent_id', $this->record->id)
             ->where('is_digital', $digital)
             ->where('is_available', true)
@@ -110,7 +105,6 @@ class ViewCatalog extends ViewRecord
 
         $eventType = $digital ? MaterialEventType::REQUEST : MaterialEventType::BORROW;
 
-        // Duplicate guard on the specific copy
         $duplicate = MaterialAccessEvents::where('user_id', auth()->id())
             ->where('rr_material_id', $copy->id)
             ->whereIn('status', ['pending', 'approved'])
@@ -139,7 +133,6 @@ class ViewCatalog extends ViewRecord
             ->send();
     }
 
-    // ── Helper: can this user view the document right now? ──────────────────
     protected function canViewDocument(): bool
     {
         $user = auth()->user();
@@ -150,7 +143,6 @@ class ViewCatalog extends ViewRecord
 
         if ($userLevel < $accessLevel) return false;
 
-        // Check for an approved REQUEST event on any digital copy of this parent
         $hasApproved = MaterialAccessEvents::where('user_id', $user->id)
             ->where('event_type', MaterialEventType::REQUEST->value)
             ->where('status', 'approved')
@@ -162,7 +154,6 @@ class ViewCatalog extends ViewRecord
 
         if ($hasApproved) return true;
 
-        // Public (level 1) digital materials are directly readable without a request
         return $accessLevel === 1
             && RrMaterials::where('material_parent_id', $this->record->id)
                 ->where('is_digital', true)
@@ -171,7 +162,6 @@ class ViewCatalog extends ViewRecord
                 ->exists();
     }
 
-    // ── Helper: get the stream URL for the first available digital copy ──────
     protected function getDocumentUrl(): ?string
     {
         $copy = RrMaterials::where('material_parent_id', $this->record->id)
