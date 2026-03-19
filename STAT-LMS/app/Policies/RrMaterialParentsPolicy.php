@@ -17,7 +17,7 @@ class RrMaterialParentsPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->role !== UserRole::STUDENT->value;
+        return true;
     }
 
     /**
@@ -25,9 +25,9 @@ class RrMaterialParentsPolicy
      */
     public function view(User $user, RrMaterialParents $rrMaterialParents): bool
     {
-        if ($user->role === UserRole::STUDENT->value) {
-            return false;
-        }
+        // if ($user->role === UserRole::STUDENT->value) {
+        //     return false;
+        // }
 
         $user_access_level = UserRole::from($user->role)->getAccessLevel();
 
