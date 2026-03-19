@@ -13,7 +13,8 @@ class ViewMaterialAccessEvents extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make(),
+            EditAction::make()
+                ->visible(fn () => in_array($this->record->status, ['pending', 'rejected', 'approved'])),
         ];
     }
 }
