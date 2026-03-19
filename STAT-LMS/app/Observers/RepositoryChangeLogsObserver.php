@@ -21,7 +21,7 @@ class RepositoryChangeLogsObserver
     /**
      * Handle the RepositoryChangeLogs "created" event.
      */
-    public function created(Model $model, array $attributes): void
+    public function created(Model $model): void
     {
         RepositoryChangeLogs::create([
             'editor_id'      => auth()->id(),
@@ -42,8 +42,6 @@ class RepositoryChangeLogsObserver
      */
     public function updated(Model $model): void
     {
-        $old = $model->getOriginal();
-        $new = $model->getDirty();
 
         RepositoryChangeLogs::create([
             'editor_id'      => auth()->id(),
