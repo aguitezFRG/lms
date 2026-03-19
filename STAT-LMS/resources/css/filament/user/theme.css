@@ -1,0 +1,17 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/User/**/*';
+@source '../../../../resources/views/filament/user/**/*';
+
+.fi-section {
+    min-height: 250px;
+}
+
+/* Prevents the primary color from overriding explicit success/danger buttons */
+.fi-ac-btn-action.fi-color-success {
+    --c-500: #014421 !important; /* UP Forest Green */
+}
+
+.fi-ac-btn-action.fi-color-danger {
+    --c-500: #8D1436 !important; /* UP Maroon / Danger */
+}
