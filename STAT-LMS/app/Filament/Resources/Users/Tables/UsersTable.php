@@ -69,6 +69,7 @@ class UsersTable
                     ->badge()
                     ->toggleable(isToggledHiddenByDefault: false)
                     ->color(fn (string $state) => UserRole::from($state)->getColor())
+                    // TO DO: Make this in the enums
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'student' => 'Student',
                         'faculty' => 'Faculty',
