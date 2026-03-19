@@ -13,6 +13,8 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Support\Facades\Log;
 
+use App\Enums\UserRole;
+
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -71,9 +73,12 @@ class User extends Authenticatable implements FilamentUser
     {
         // Log::info('Checking access for user: ' . $this->email . ' with role: ' . $this->role);
         // Log::info('Panel name: ' . $panel->getId());
-        // return in_array($this->role, ['committee', 'it']);
-        // return $panel->getId() === 'admin' && in_array($this->role, ['committee', 'it']);
 
-        return true; // For now, allow all access. Implement proper checks later.
+        return match ($panel->getId()) {
+            'admin' => in_array($this->role, [UserRole::COMMITTEE, UserRole::IT, UserRole::RR]),
+            'user' => in_array($this->role, [UserRole::FACULTY, UserRole::STUDENT]),
+            default => false,
+        };
+
     }
 }

@@ -8,6 +8,8 @@ use setasign\Fpdi\Tcpdf\Fpdi; // Use the TCPDF version of FPDI
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Str;
 
+use App\Enums\UserRole;
+
 class MaterialStreamController extends Controller
 {
     public function stream(RrMaterials $record)
@@ -40,7 +42,10 @@ class MaterialStreamController extends Controller
         $user = auth()->user();
         $timestamp = now()->format('Y-m-d H:i:s');
 
-        for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+        // 4. Process each page
+        // Can be modified so only first page is shown, but for now we apply the same protection to all pages.
+        $endPage  = min($pageCount, 1);
+        for ($pageNo = 1; $pageNo <= $endPage; $pageNo++) {
             $templateId = $pdf->importPage($pageNo);
             $size = $pdf->getTemplateSize($templateId);
 
@@ -64,16 +69,15 @@ class MaterialStreamController extends Controller
         $pdf->SetFont('helvetica', 'B', 10);
 
         // Set transparency (0.1 = 10% opacity)
-        $pdf->SetAlpha(0.08);
+        $pdf->SetAlpha(0.12);
         $pdf->SetTextColor(200, 200, 200);
 
-        $stepX = 8; // Horizontal spacing
-        $stepY = 8; // Vertical spacing
+        $stepX = 6; // Horizontal spacing
+        $stepY = 6; // Vertical spacing
 
         for ($y = 10; $y < $size['height']; $y += $stepY) {
             for ($x = 10; $x < $size['width']; $x += $stepX) {
-                // Generate a random 8-character string for visual noise
-                $scramble = Str::random(8);
+                $scramble = 'INSTAT-RR-SPRIS-' . Str::random(8);
 
                 $pdf->StartTransform();
                 $pdf->Rotate(45, $x, $y);
@@ -116,13 +120,9 @@ class MaterialStreamController extends Controller
         $user = auth()->user();
         $level = (int) $record->parent->access_level;
 
-        // References the roles seen in your User management screen (e.g., 'Committee')
-        $allowed = match ($level) {
-            1 => in_array($user->role, config('api.level_1_access_roles')),
-            2 => in_array($user->role, config('api.level_2_access_roles')),
-            3 => in_array($user->role, config('api.level_3_access_roles')),
-            default => false,
-        };
+        $user_access_level = UserRole::from($user->role)->getAccessLevel();
+
+        $allowed = $user_access_level >= $level;
 
         if (!$allowed) {
             abort(403, 'Unauthorized access to secured library material.');
