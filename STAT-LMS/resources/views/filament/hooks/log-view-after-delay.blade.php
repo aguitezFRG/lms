@@ -15,7 +15,7 @@ document.addEventListener('alpine:init', () => {
                     wire.dispatch('logView');
                     // console.log('Logged view after delay');
                 }
-            }, 5000);
+            }, 3000);
 
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden) clearTimeout(this.timer);
