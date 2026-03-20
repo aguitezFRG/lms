@@ -1,7 +1,7 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
 
-@source '../../../../app/Filament/User/**/*';
-@source '../../../../resources/views/filament/user/**/*';
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
 
 .fi-section {
     min-height: 250px;
