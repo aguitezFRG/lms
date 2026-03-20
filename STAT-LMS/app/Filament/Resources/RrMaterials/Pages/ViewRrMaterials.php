@@ -37,16 +37,12 @@ class ViewRrMaterials extends ViewRecord
         return [
             Action::make('viewDocument')
                 ->label('View Document')
-                ->color('success') // UP Forest Green
-                ->visible(fn ($record) => $this->canViewDocument($record))
-                ->url(fn ($record) => route('materials.stream', ['record' => $record->id]), shouldOpenInNewTab: true)
-                ->after(function ($record) {
-                    MaterialAccessEvents::create([
-                        'user_id' => auth()->id(),
-                        'rr_material_id' => $record->id,
-                        'event_type' => MaterialEventType::ACCESSED,
-                    ]);
-                }),
+                ->color('success')
+                ->hidden(fn () => ! $this->record?->is_digital || ! $this->canViewDocument($this->record))
+                ->url(fn () => route('materials.stream', ['record' => $this->record->id]), shouldOpenInNewTab: true)
+                ->extraAttributes([
+                    'x-on:click.prevent' => '$wire.logAccessedEvent().then(() => window.open($el.href, `_blank`))',
+                ]),
 
             EditAction::make()
                 ->color('danger'),
@@ -55,8 +51,8 @@ class ViewRrMaterials extends ViewRecord
                 ->action(function () {
                     MaterialAccessEvents::create([
                         'user_id' => auth()->id(),
-                        'rr_material_id' => $record->id,
-                        'event_type' => MaterialEventType::VIEW,
+                        'rr_material_id' => $this->record->id,
+                        'event_type' => MaterialEventType::VIEW->value,
                     ]);
                 })
                 ->hidden(), // Keep it invisible
@@ -75,11 +71,25 @@ class ViewRrMaterials extends ViewRecord
             return false; // Not logged in, deny access
         }
 
-        $user_access_level = UserRole::from($user->role)->getAccessLevel();
-        $accessLevel = (int) $record->parent->access_level;
+        // 2. IT and Committee can always view
+        if (in_array($user->role, [UserRole::IT->value, UserRole::COMMITTEE->value])) {
+            return true;
+        }
 
-        // 2. User's access level must be greater than or equal to the material's access level
-        return $user_access_level >= $accessLevel;
+        // 3. Check access level
+        $userAccessLevel = UserRole::from($user->role)->getAccessLevel();
+        $materialAccessLevel = (int) $record->parent->access_level;
+
+        if ($userAccessLevel < $materialAccessLevel) {
+            return false; // User's access level is too low
+        }
+
+        // 4. Approved request is required
+        return MaterialAccessEvents::where('user_id', $user->id)
+            ->where('rr_material_id', $record->id)
+            ->where('event_type', MaterialEventType::REQUEST->value)
+            ->where('status', 'approved')
+            ->exists();
     }
 
     protected $listeners = ['logView' => 'handleLogView'];
@@ -89,7 +99,16 @@ class ViewRrMaterials extends ViewRecord
         MaterialAccessEvents::create([
             'user_id' => auth()->id(),
             'rr_material_id' => $this->record->id,
-            'event_type' => MaterialEventType::VIEW,
+            'event_type' => MaterialEventType::VIEW->value,
+        ]);
+    }
+
+    public function logAccessedEvent(): void
+    {
+        MaterialAccessEvents::create([
+            'user_id'        => auth()->id(),
+            'rr_material_id' => $this->record->id,
+            'event_type'     => MaterialEventType::ACCESSED->value,
         ]);
     }
 }
