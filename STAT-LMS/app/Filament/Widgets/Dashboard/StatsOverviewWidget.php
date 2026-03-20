@@ -37,8 +37,8 @@ class StatsOverviewWidget extends BaseWidget
                 ->icon('heroicon-o-clock')
                 ->color('danger'),
 
-            Stat::make('Accessed',
-                MaterialAccessEvents::whereIn('event_type', ['request', 'accessed'])->count()
+            Stat::make('Requests',
+                MaterialAccessEvents::where('event_type', 'request')->count()
             )
                 ->icon('heroicon-o-document-text')
                 ->color('warning'),
