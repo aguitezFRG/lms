@@ -5,39 +5,73 @@ namespace App\Filament\Pages\Auth;
 use App\Enums\MaterialEventType;
 use App\Enums\UserRole;
 use App\Models\MaterialAccessEvents;
+use Filament\Actions\Action;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Concerns\InteractsWithInfolists;
+use Filament\Infolists\Contracts\HasInfolists;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Schema;
-use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Table;
 
-class AdminProfile extends Page implements HasTable
+class AdminProfile extends Page implements HasTable, HasInfolists
 {
     use InteractsWithTable;
+    use InteractsWithInfolists;
 
-    protected string  $view  = 'filament.pages.auth.admin-profile';
-    protected static ?string $title = 'My Profile';
+    protected string $view = 'filament.pages.auth.admin-profile';
 
     protected static bool $shouldRegisterNavigation = false;
 
     public string $activeTab = 'history';
 
+    // ── Dynamic title ─────────────────────────────────────────────────────────
+
+    public function getTitle(): string
+    {
+        return 'Welcome, ' . (auth()->user()->f_name ?? auth()->user()->name) . '!';
+    }
+
+    // ── Routing ───────────────────────────────────────────────────────────────
+
+    public static function getUrl(
+        array $parameters = [],
+        bool $isAbsolute = true,
+        ?string $panel = null,
+        ?\Illuminate\Database\Eloquent\Model $tenant = null
+    ): string {
+        return parent::getUrl($parameters, $isAbsolute, $panel ?? 'admin', $tenant);
+    }
+
+    // ── Header Actions ────────────────────────────────────────────────────────
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('markAllRead')
+                ->label('Mark All as Read')
+                ->icon('heroicon-o-check-circle')
+                ->color('gray')
+                ->visible(fn () =>
+                    $this->activeTab === 'notifications' &&
+                    auth()->user()->unreadNotifications()->count() > 0
+                )
+                ->action(fn () => auth()->user()->unreadNotifications->markAsRead()),
+        ];
+    }
+
+    // ── Tab Switching ─────────────────────────────────────────────────────────
+
     public function setTab(string $tab): void
     {
         $this->activeTab = $tab;
         $this->resetTable();
-    }
-
-    public function markAllRead(): void
-    {
-        auth()->user()->unreadNotifications->markAsRead();
     }
 
     public function markRead(string $id): void
@@ -49,22 +83,26 @@ class AdminProfile extends Page implements HasTable
             ?->markAsRead();
     }
 
-    // ── Profile infolist ────────────────────────────────────────────────────
-    public function getProfileInfolist(): array
+    // ── Profile Infolist ──────────────────────────────────────────────────────
+
+    public function profileInfolist(Schema $schema): Schema
     {
         $user = auth()->user();
 
-        return [
+        $fullName = trim(implode(' ', array_filter([
+            $user->f_name,
+            $user->m_name ? mb_substr($user->m_name, 0, 1).'.' : null,
+            $user->l_name,
+        ]))) ?: $user->name;
+
+        return $schema->components([
             Section::make()
                 ->schema([
                     Grid::make(2)->schema([
-                        TextEntry::make('name')
+                        TextEntry::make('full_name')
                             ->label('Full Name')
-                            ->state(trim(implode(' ', array_filter([
-                                $user->f_name,
-                                $user->m_name ? mb_substr($user->m_name, 0, 1) . '.' : null,
-                                $user->l_name,
-                            ]))) ?: $user->name),
+                            ->state($fullName)
+                            ->weight('semibold'),
 
                         TextEntry::make('role')
                             ->label('Role')
@@ -76,58 +114,72 @@ class AdminProfile extends Page implements HasTable
                         TextEntry::make('email')
                             ->label('Email')
                             ->state($user->email)
-                            ->icon('heroicon-m-envelope'),
-
-                        TextEntry::make('std_number')
-                            ->label('Student Number')
-                            ->state($user->std_number ?? '—'),
+                            ->icon('heroicon-m-envelope')
+                            ->copyable(),
 
                         TextEntry::make('id')
                             ->label('UUID')
                             ->state($user->id)
                             ->copyable()
-                            ->columnSpanFull(),
+                            ->limit(24),
                     ]),
-                ])
-                ->columnSpanFull(),
-        ];
+                ]),
+        ]);
     }
 
-    // ── Notifications infolist ──────────────────────────────────────────────
-    public function getNotificationsInfolist(): array
+    // ── Notifications Infolist ────────────────────────────────────────────────
+
+    public function notificationsInfolist(Schema $schema): Schema
     {
         $notifications = auth()->user()->notifications()->latest()->get();
 
-        return [
-            Section::make('Notifications')
+        $items = $notifications->map(fn ($n) => [
+            'id'        => $n->id,
+            'title'     => $n->data['title'] ?? 'Notification',
+            'message'   => $n->data['message'] ?? '',
+            'since'     => $n->created_at->diffForHumans(),
+            'is_unread' => is_null($n->read_at),
+        ])->values()->toArray();
+
+        return $schema->components([
+            Section::make()
                 ->schema([
-                    RepeatableEntry::make('notifications')
+                    RepeatableEntry::make('items')
                         ->label('')
+                        ->state($items)
                         ->schema([
-                            TextEntry::make('data.title')
+                            TextEntry::make('title')
                                 ->label('')
-                                ->weight('bold')
+                                ->weight('semibold')
                                 ->size('sm'),
 
-                            TextEntry::make('data.message')
+                            TextEntry::make('message')
                                 ->label('')
-                                ->size('sm')
-                                ->color('gray'),
+                                ->color('gray')
+                                ->size('sm'),
 
-                            TextEntry::make('created_at')
+                            TextEntry::make('since')
                                 ->label('')
-                                ->since()
                                 ->color('gray')
                                 ->size('xs'),
                         ])
-                        ->columns(1)
-                        ->state($notifications),
+                        ->columns(1),
                 ])
-                ->columnSpanFull(),
-        ];
+                ->visible(fn () => count($items) > 0),
+
+            Section::make()
+                ->schema([
+                    TextEntry::make('empty')
+                        ->label('')
+                        ->state('No notifications yet.')
+                        ->color('gray'),
+                ])
+                ->visible(fn () => count($items) === 0),
+        ]);
     }
 
-    // ── Table (history) ─────────────────────────────────────────────────────
+    // ── History Table ─────────────────────────────────────────────────────────
+
     public function table(Table $table): Table
     {
         return $table
@@ -185,6 +237,7 @@ class AdminProfile extends Page implements HasTable
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
                     ]),
+
                 SelectFilter::make('event_type')
                     ->label('Type')
                     ->options([
@@ -196,18 +249,15 @@ class AdminProfile extends Page implements HasTable
             ->emptyStateIcon('heroicon-o-clock');
     }
 
+    // ── View Data ─────────────────────────────────────────────────────────────
+
     protected function getViewData(): array
     {
-        $user          = auth()->user();
-        $notifications = $user->notifications()->latest()->get();
-        $unreadCount   = $user->unreadNotifications()->count();
-
         return [
-            'user'          => $user,
-            'unreadCount'   => $unreadCount,
-            'notifications' => $notifications,
-            'activeTab'     => $this->activeTab,
-            'profileSchema' => $this->getProfileInfolist(),
+            'initials'    => strtoupper(substr(auth()->user()->f_name ?? auth()->user()->name, 0, 1))
+                           . strtoupper(substr(auth()->user()->l_name ?? '', 0, 1)),
+            'unreadCount' => auth()->user()->unreadNotifications()->count(),
+            'activeTab'   => $this->activeTab,
         ];
     }
 }
