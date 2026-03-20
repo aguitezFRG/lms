@@ -5,7 +5,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\rr_material_parents>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\RrMaterialParents>
  */
 class RrMaterialParentsFactory extends Factory
 {
@@ -20,12 +20,12 @@ class RrMaterialParentsFactory extends Factory
             'material_type' => fake()->randomElement(['Book', 'Journal', 'Thesis', 'Dataset', 'Research Paper']),
             'title' => fake()->sentence(6),
             'abstract' => fake()->paragraph(3),
-            'keywords' => implode(', ', fake()->words(5)),
-            'sdgs' => implode(', ', fake()->words(3)),
+            'keywords'         => ['stats', 'research'],           // plain array — model casts handle JSON
+            'sdgs'             => ['Quality Education'],            // plain array
             'publication_date' => fake()->dateTimeBetween('-5 years', 'now'),
-            'author' => fake()->name(),
-            'adviser' => json_encode([fake()->name(), fake()->name()]),
-            'access_level' => fake()->randomElement(['Public', 'Restricted', 'Confidential']),
+            'author'           => fake()->name(),
+            'adviser'          => ['Test Adviser'],                 // plain array
+            'access_level'     => fake()->randomElement([1, 2, 3]), // use int keys
         ];
     }
 }
