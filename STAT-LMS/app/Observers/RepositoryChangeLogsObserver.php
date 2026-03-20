@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Notifications\AccountDetailsChanged;
 use App\Models\RepositoryChangeLogs;
+use App\Models\User;
 use App\Enums\RepositoryChangeType;
 use Illuminate\Database\Eloquent\Model;
 
@@ -24,6 +25,10 @@ class RepositoryChangeLogsObserver
      */
     public function created(Model $model): void
     {
+        if (!auth()->check()) return; // Don't log if no authenticated user
+
+        if ($model instanceof RepositoryChangeLogs) return; // Prevent recursive logging
+
         RepositoryChangeLogs::create([
             'editor_id'      => auth()->id(),
             'rr_material_id' => $this->getMaterialId($model),
@@ -43,6 +48,7 @@ class RepositoryChangeLogsObserver
      */
     public function updated(Model $model): void
     {
+        if (!auth()->check()) return; // Don't log if no authenticated user
 
         RepositoryChangeLogs::create([
             'editor_id'      => auth()->id(),
@@ -86,6 +92,8 @@ class RepositoryChangeLogsObserver
      */
     public function deleted(Model $model): void
     {
+        if (!auth()->check()) return; // Don't log if no authenticated user
+
         RepositoryChangeLogs::create([
             'editor_id'      => auth()->id(),
             'rr_material_id' => $this->getMaterialId($model),
@@ -105,6 +113,8 @@ class RepositoryChangeLogsObserver
      */
     public function restored(Model $model): void
     {
+        if (!auth()->check()) return; // Don't log if no authenticated user
+
         RepositoryChangeLogs::create([
             'editor_id'      => auth()->id(),
             'rr_material_id' => $this->getMaterialId($model),
@@ -124,6 +134,8 @@ class RepositoryChangeLogsObserver
      */
     public function forceDeleted(Model $model): void
     {
+        if (!auth()->check()) return; // Don't log if no authenticated user
+
         RepositoryChangeLogs::create([
             'editor_id'      => auth()->id(),
             'rr_material_id' => $this->getMaterialId($model),

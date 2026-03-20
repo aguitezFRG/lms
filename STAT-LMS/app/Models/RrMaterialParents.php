@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Notifications\AccessLevelChangedNotification;
+use App\Notifications\AccessLevelChanged;
 use App\Models\MaterialAccessEvents;
 use App\Models\User;
 

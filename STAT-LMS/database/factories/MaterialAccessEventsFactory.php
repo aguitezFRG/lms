@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\User;
-use App\Models\rr_materials;
+use App\Models\RrMaterials;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,7 +20,7 @@ class MaterialAccessEventsFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'rr_material_id' => rr_materials::factory(),
+            'rr_material_id' => RrMaterials::factory(),
             'approver_id' => User::factory(),
             'event_type' => fake()->randomElement(['Borrow', 'Return', 'Request', 'Approval']),
             'status' => fake()->randomElement(['Pending', 'Approved', 'Rejected', 'Completed']),

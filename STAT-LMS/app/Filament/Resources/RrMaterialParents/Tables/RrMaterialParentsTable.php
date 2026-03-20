@@ -24,6 +24,8 @@ use Filament\Tables\Enums\FiltersResetActionPosition;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TrashedFilter;
 
+use Illuminate\Database\Eloquent\Builder;
+
 class RrMaterialParentsTable
 {
     public static function configure(Table $table): Table

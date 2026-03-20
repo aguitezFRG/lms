@@ -2,11 +2,11 @@
 
 namespace Database\Factories;
 
-use App\Models\rr_material_parents;
+use App\Models\RrMaterialParents;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\rr_materials>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\RrMaterials>
  */
 class RrMaterialsFactory extends Factory
 {
@@ -18,7 +18,7 @@ class RrMaterialsFactory extends Factory
     public function definition(): array
     {
         return [
-            'material_parent_id' => rr_material_parents::factory(),
+            'material_parent_id' => RrMaterialParents::factory(),
             'is_digital' => fake()->boolean(70),
             'is_available' => fake()->boolean(80),
             'file_name' => fake()->word() . '_' . $this->faker->numberBetween(1000, 9999) . '-' . $this->faker->numerify('#####') . '.' . fake()->randomElement(['pdf', 'docx', 'xlsx', 'txt']),
