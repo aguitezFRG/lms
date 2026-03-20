@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use App\Notifications\AccessLevelChangedNotification;
+use App\Models\MaterialAccessEvents;
+use App\Models\User;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -29,6 +33,32 @@ class RrMaterialParents extends Model
         'keywords' => 'array',
         'sdgs' => 'array',
     ];
+
+    protected static function booted() : void
+    {
+        static::updated(function (RrMaterialParents $material) {
+            if (! $material->wasChanged('access_level')) {
+                return;
+            }
+
+            $oldLevel = (int) $material->getOriginal('access_level');
+            $newLevel = (int) $material->access_level;
+
+            // Notify all users who have any access event (borrow or request)
+            // linked to a copy of this material
+            $affectedUserIds = MaterialAccessEvents::whereHas('material', fn ($q) =>
+                $q->where('material_parent_id', $material->id)
+            )
+            ->whereIn('event_type', ['borrow', 'request'])
+            ->whereIn('status', ['pending', 'approved'])
+            ->pluck('user_id')
+            ->unique();
+
+            User::whereIn('id', $affectedUserIds)->each(function (User $user) use ($material, $oldLevel, $newLevel) {
+                $user->notify(new AccessLevelChanged($material, $oldLevel, $newLevel));
+            });
+        });
+    }
 
     public function authorUser()
     {

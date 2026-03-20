@@ -4,6 +4,8 @@ namespace App\Observers;
 
 use App\Models\MaterialAccessEvents;
 
+use App\Notifications\RequestStatusChanged;
+
 class MaterialAccessEventsObserver
 {
 
@@ -36,7 +38,16 @@ class MaterialAccessEventsObserver
      */
     public function updated(MaterialAccessEvents $materialAccessEvents): void
     {
-        //
+        // Notify the user when their request is approved or rejected
+        if (
+            $materialAccessEvents->wasChanged('status') &&
+            in_array($materialAccessEvents->status, ['approved', 'rejected']) &&
+            $materialAccessEvents->user
+        ) {
+            $materialAccessEvents->user->notify(
+                new RequestStatusChanged($materialAccessEvents)
+            );
+        }
     }
 
     /**

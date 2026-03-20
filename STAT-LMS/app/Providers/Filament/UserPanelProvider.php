@@ -3,7 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\UserLogin;
-use App\Filament\Pages\UserProfile;
+use App\Filament\Pages\User\UserProfile;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -19,6 +19,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Illuminate\Support\HtmlString;
+
+use Filament\Support\Icons\Heroicon;
 
 class UserPanelProvider extends PanelProvider
 {
@@ -60,12 +62,12 @@ class UserPanelProvider extends PanelProvider
                 in: app_path('Filament/Pages/User'),
                 for: 'App\Filament\Pages\User'
             )
-            // ->userMenuItems([
-                // MenuItem::make()
-                //     ->label('My Profile & Requests')
-                //     ->url(fn () => UserProfile::getUrl())
-                //     ->icon('heroicon-o-user-circle'),
-            // ])
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label('My Profile & Requests')
+                    ->url(fn () => UserProfile::getUrl())
+                    ->icon(Heroicon::OutlinedUser),
+            ])
             ->sidebarCollapsibleOnDesktop()
             ->globalSearch(false)
             ->middleware([

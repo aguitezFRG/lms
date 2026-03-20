@@ -25,6 +25,9 @@ use Illuminate\Support\HtmlString;
 use Filament\Support\Icons\Heroicon;
 use Filament\Navigation\NavigationGroup;
 
+use App\Filament\Pages\Auth\AdminProfile;
+use Filament\Navigation\MenuItem;
+
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
@@ -34,10 +37,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->viteTheme('resources/css/filament/admin/theme.css')
-            // ->brandLogo(asset('images/up-seal.png'))
-            // 2. Explicitly tells Filament's topbar to constrain the logo wrapper height
             ->brandLogoHeight('2.5rem')
-            // 2. Inject both the UP Seal and the Text using an HtmlString
             ->brandLogo(new HtmlString('
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <img src="' . asset('images/up-seal.png') . '" alt="UP Seal" style="height: 2.5rem; width: auto;" />
@@ -69,12 +69,18 @@ class AdminPanelProvider extends PanelProvider
                 'Repository',
                 'Logs',
             ])
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label('My Profile')
+                    ->url(fn () => AdminProfile::getUrl())
+                    ->icon(Heroicon::OutlinedUser),
+            ])
             ->sidebarCollapsibleOnDesktop()
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
-            ->widgets([
-                AccountWidget::class,
-                FilamentInfoWidget::class,
-            ])
+            // ->widgets([
+            //     AccountWidget::class,
+            //     FilamentInfoWidget::class,
+            // ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

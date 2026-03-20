@@ -3,11 +3,16 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Event;
 
 use App\Models\MaterialAccessEvents;
-use App\Observers\MaterialAccessEventsObserver;
 
+use App\Observers\MaterialAccessEventsObserver;
 use App\Observers\RepositoryChangeLogsObserver;
+
+use App\Listeners\SendDueSoonOnLogin;
+
 use App\Models\User;
 use App\Models\RrMaterialParents;
 use App\Models\RrMaterials;
@@ -32,6 +37,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         MaterialAccessEvents::observe(MaterialAccessEventsObserver::class);
+
+        Event::listen(Login::class, SendDueSoonOnLogin::class);
 
         Action::configureUsing(function (Action $action) {
             // Log::info('Configuring action: ' . $action->getName());
