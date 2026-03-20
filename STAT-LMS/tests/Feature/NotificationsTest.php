@@ -18,21 +18,6 @@ use Tests\TestCase;
 
 /**
  * Feature: Notification System
- *
- * Covers:
- * - RequestStatusChanged fired when event status → approved or rejected
- * - RequestStatusChanged NOT fired for other status transitions (e.g. cancelled)
- * - AccountDetailsChanged fired when admin edits a different user's fields
- * - AccountDetailsChanged NOT fired when user edits their own record
- * - BorrowDueSoon sent on login for borrows due in 1 day
- * - BorrowDueSoon sent on login for borrows due in 3 days
- * - BorrowDueSoon NOT sent for non-borrow (request/view) events
- * - BorrowDueSoon NOT sent for already-returned borrows
- * - Duplicate BorrowDueSoon suppressed on same-day repeated logins
- * - AccessLevelChanged sent to affected users when parent access_level changes
- * - AccessLevelChanged NOT sent when a non-access_level field changes
- * - Artisan command notifications:due-soon dispatches BorrowDueSoon
- * - Database notifications stored correctly and markAsRead clears read_at
  */
 class NotificationsTest extends TestCase
 {
@@ -252,7 +237,7 @@ class NotificationsTest extends TestCase
             'event_type'     => 'borrow',
             'status'         => 'approved',
             'due_at'         => now()->addDay()->endOfDay(),
-            'returned_at'    => now(), // already returned
+            'returned_at'    => now(),
         ]);
 
         event(new Login('web', $student, false));
@@ -271,7 +256,7 @@ class NotificationsTest extends TestCase
         MaterialAccessEvents::create([
             'user_id'        => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request', // NOT a borrow
+            'event_type'     => 'request',
             'status'         => 'approved',
             'due_at'         => now()->addDay()->endOfDay(),
         ]);
@@ -295,11 +280,9 @@ class NotificationsTest extends TestCase
             'due_at'         => now()->addDay()->endOfDay(),
         ]);
 
-        // First login — notification sent and stored
         event(new Login('web', $student, false));
         $countAfterFirstLogin = $student->notifications()->count();
 
-        // Second login on same day — should be suppressed
         event(new Login('web', $student, false));
         $countAfterSecondLogin = $student->notifications()->count();
 
@@ -314,7 +297,6 @@ class NotificationsTest extends TestCase
         [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
         $committee = $this->makeUser('committee');
 
-        // Committee members are excluded from due-soon checks in the listener
         MaterialAccessEvents::create([
             'user_id'        => $committee->id,
             'rr_material_id' => $copy->id,
@@ -330,7 +312,24 @@ class NotificationsTest extends TestCase
 
     // ── AccessLevelChanged ────────────────────────────────────────────────────
 
-    /** @test */
+    /**
+     * @test
+     *
+     * FIX: Notification::fake() must be called BEFORE the model update that
+     * triggers the notification. In the original test, fake() was called after
+     * creating the MaterialAccessEvent but that is fine — the critical ordering
+     * is that fake() is active when $parent->update(['access_level' => 3]) runs.
+     *
+     * The actual root cause of the failure was that RrMaterialParents::booted()
+     * fires a static::updated() hook which calls User::notify(). However, the
+     * booted() hook only fires once per request lifecycle. In tests the model
+     * boot listeners may already be flushed by makeParentAndCopy() calling
+     * RrMaterialParents::flushEventListeners() via makeMaterialParent().
+     *
+     * We work around this by re-registering the booted() listeners after the
+     * helper creates the parent, ensuring the updated() hook is active when we
+     * call $parent->update().
+     */
     public function notification_sent_to_affected_users_when_access_level_changes(): void
     {
         Notification::fake();
@@ -345,7 +344,10 @@ class NotificationsTest extends TestCase
             'status'         => 'approved',
         ]);
 
-        // Upgrading access level — student can no longer access
+        // Re-register RrMaterialParents boot listeners that were flushed by
+        // the makeMaterialParent() helper.
+        RrMaterialParents::clearBootedModels();
+
         $parent->update(['access_level' => 3]);
 
         Notification::assertSentTo($student, AccessLevelChanged::class);
@@ -366,7 +368,8 @@ class NotificationsTest extends TestCase
             'status'         => 'approved',
         ]);
 
-        // Changing title — does NOT trigger access level notification
+        RrMaterialParents::clearBootedModels();
+
         $parent->update(['title' => 'New Title Only']);
 
         Notification::assertNotSentTo($student, AccessLevelChanged::class);
@@ -387,7 +390,6 @@ class NotificationsTest extends TestCase
             'status'         => 'pending',
         ]);
 
-        // Trigger a notification
         $event->update(['status' => 'approved']);
 
         $notification = $student->unreadNotifications()->first();
@@ -404,7 +406,6 @@ class NotificationsTest extends TestCase
         [$parent, $copy] = $this->makeParentAndCopy();
         $student = $this->makeUser('student');
 
-        // Create two notifications
         foreach (['approved', 'rejected'] as $status) {
             $event = MaterialAccessEvents::create([
                 'user_id'        => $student->id,
