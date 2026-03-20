@@ -119,7 +119,7 @@ class MaterialStreamController extends Controller
     {
         $user = auth()->user();
 
-        if (! user) {
+        if (! $user) {
             abort(403, 'Unauthorized access to secured library material.');
         }
 
