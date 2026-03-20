@@ -74,6 +74,10 @@ class User extends Authenticatable implements FilamentUser
         // Log::info('Checking access for user: ' . $this->email . ' with role: ' . $this->role);
         // Log::info('Panel name: ' . $panel->getId());
 
+        if (! is_null($this->deleted_at)) {
+            return false; // Deny access if user is soft-deleted
+        }
+
         return match ($panel->getId()) {
             'admin' => in_array($this->role, [UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value]),
             'user' => in_array($this->role, [UserRole::FACULTY->value, UserRole::STUDENT->value]),
