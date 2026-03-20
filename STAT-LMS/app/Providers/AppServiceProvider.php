@@ -21,6 +21,10 @@ use Filament\Actions\Action;
 
 use Illuminate\Support\Facades\Log;
 
+use App\Policies\DashboardPolicy;
+use App\Filament\Pages\Dashboard;
+use Illuminate\Support\Facades\Gate;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -49,6 +53,7 @@ class AppServiceProvider extends ServiceProvider
             };
         });
 
+        Gate::policy(Dashboard::class, DashboardPolicy::class);
 
         RrMaterials::observe(RepositoryChangeLogsObserver::class);
         RrMaterialParents::observe(RepositoryChangeLogsObserver::class);

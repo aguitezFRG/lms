@@ -55,10 +55,13 @@ class ViewCatalog extends ViewRecord
             // ── View Document ─────────────────────────────────────────────
             Action::make('viewDocument')
                 ->label('View Document')
-                ->icon('heroicon-o-eye')
                 ->color('warning')
-                ->visible(fn () => $this->canViewDocument())
-                ->url(fn () => $this->getDocumentUrl(), shouldOpenInNewTab: true),
+                ->icon('heroicon-o-eye')
+                ->hidden(fn () => ! $this->canViewDocument())
+                ->url(fn () => $this->getDocumentUrl(), shouldOpenInNewTab: true)
+                ->extraAttributes([
+                    'x-on:click.prevent' => '$wire.logAccessedEvent().then(() => window.open($el.href, `_blank`))',
+                ]),
         ];
     }
 
@@ -135,31 +138,54 @@ class ViewCatalog extends ViewRecord
 
     protected function canViewDocument(): bool
     {
-        $user = auth()->user();
+        $record = $this->record;
+
+        \Illuminate\Support\Facades\Log::info('canViewDocument check', [
+            'user_role'        => auth()->user()?->role,
+            'user_level'       => UserRole::from(auth()->user()->role)->getAccessLevel(),
+            'mat_access_level' => (int) $this->record->access_level,
+            'material_id'      => $this->record->id,
+            'has_digital_copy' => RrMaterials::where('material_parent_id', $this->record->id)
+                ->where('is_digital', true)
+                ->whereNotNull('file_name')
+                ->whereNull('deleted_at')
+                ->exists(),
+            'has_approved'     => MaterialAccessEvents::where('user_id', auth()->id())
+                ->where('event_type', MaterialEventType::REQUEST->value)
+                ->where('status', 'approved')
+                ->whereHas('material', fn ($q) =>
+                    $q->where('material_parent_id', $this->record->id)
+                    ->where('is_digital', true)
+                )
+                ->exists(),
+        ]);
+
+         $user = auth()->user();
         if (! $user) return false;
+
+        // Committee and IT bypass approval requirement
+        if (in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value])) {
+            return RrMaterials::where('material_parent_id', $this->record->id)
+                ->where('is_digital', true)
+                ->whereNotNull('file_name')
+                ->whereNull('deleted_at')
+                ->exists();
+        }
 
         $userLevel   = UserRole::from($user->role)->getAccessLevel();
         $accessLevel = (int) $this->record->access_level;
 
         if ($userLevel < $accessLevel) return false;
 
-        $hasApproved = MaterialAccessEvents::where('user_id', $user->id)
+        // Approved request is always required for students and faculty
+        return MaterialAccessEvents::where('user_id', $user->id)
             ->where('event_type', MaterialEventType::REQUEST->value)
             ->where('status', 'approved')
             ->whereHas('material', fn ($q) =>
                 $q->where('material_parent_id', $this->record->id)
-                  ->where('is_digital', true)
+                ->where('is_digital', true)
             )
             ->exists();
-
-        if ($hasApproved) return true;
-
-        return $accessLevel === 1
-            && RrMaterials::where('material_parent_id', $this->record->id)
-                ->where('is_digital', true)
-                ->whereNotNull('file_name')
-                ->whereNull('deleted_at')
-                ->exists();
     }
 
     protected function getDocumentUrl(): ?string
@@ -171,5 +197,22 @@ class ViewCatalog extends ViewRecord
             ->first();
 
         return $copy ? route('materials.stream', ['record' => $copy->id]) : null;
+    }
+
+    public function logAccessedEvent(): void
+    {
+        $copy = RrMaterials::where('material_parent_id', $this->record->id)
+            ->where('is_digital', true)
+            ->whereNotNull('file_name')
+            ->whereNull('deleted_at')
+            ->first();
+
+        if (! $copy) return;
+
+        MaterialAccessEvents::create([
+            'user_id'        => auth()->id(),
+            'rr_material_id' => $copy->id,
+            'event_type'     => MaterialEventType::ACCESSED->value,
+        ]);
     }
 }

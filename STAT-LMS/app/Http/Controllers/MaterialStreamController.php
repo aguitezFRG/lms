@@ -8,6 +8,9 @@ use setasign\Fpdi\Tcpdf\Fpdi; // Use the TCPDF version of FPDI
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Str;
 
+use App\Models\MaterialAccessEvents;
+use App\Enums\MaterialEventType;
+
 use App\Enums\UserRole;
 
 class MaterialStreamController extends Controller
@@ -44,7 +47,8 @@ class MaterialStreamController extends Controller
 
         // 4. Process each page
         // Can be modified so only first page is shown, but for now we apply the same protection to all pages.
-        $endPage  = min($pageCount, 1);
+        // $endPage  = min($pageCount, 1);
+        $endPage  = $pageCount;
         for ($pageNo = 1; $pageNo <= $endPage; $pageNo++) {
             $templateId = $pdf->importPage($pageNo);
             $size = $pdf->getTemplateSize($templateId);
@@ -72,8 +76,8 @@ class MaterialStreamController extends Controller
         $pdf->SetAlpha(0.12);
         $pdf->SetTextColor(200, 200, 200);
 
-        $stepX = 6; // Horizontal spacing
-        $stepY = 6; // Vertical spacing
+        $stepX = 12; // Horizontal spacing
+        $stepY = 12; // Vertical spacing
 
         for ($y = 10; $y < $size['height']; $y += $stepY) {
             for ($x = 10; $x < $size['width']; $x += $stepX) {
@@ -129,6 +133,22 @@ class MaterialStreamController extends Controller
 
         if ($user_access_level < $level) {
             abort(403, 'Unauthorized access to secured library material.');
+        }
+
+        /* Committee and IT may always stream */
+        if (in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value])) {
+            return;
+        }
+
+        /* Public materials still require an approved request */
+        $hasApproved = MaterialAccessEvents::where('user_id', $user->id)
+            ->where('rr_material_id', $record->id)
+            ->where('event_type', MaterialEventType::REQUEST->value)
+            ->where('status', 'approved')
+            ->exists();
+
+        if (! $hasApproved) {
+            abort(403, 'You do not have an approved request for this material.');
         }
 
     }
