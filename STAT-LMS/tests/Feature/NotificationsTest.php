@@ -1,0 +1,447 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Listeners\SendDueSoonOnLogin;
+use App\Models\MaterialAccessEvents;
+use App\Models\RrMaterialParents;
+use App\Models\RrMaterials;
+use App\Models\User;
+use App\Notifications\AccessLevelChanged;
+use App\Notifications\AccountDetailsChanged;
+use App\Notifications\BorrowDueSoon;
+use App\Notifications\RequestStatusChanged;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
+use Tests\TestCase;
+
+/**
+ * Feature: Notification System
+ *
+ * Covers:
+ * - RequestStatusChanged fired when event status → approved or rejected
+ * - RequestStatusChanged NOT fired for other status transitions (e.g. cancelled)
+ * - AccountDetailsChanged fired when admin edits a different user's fields
+ * - AccountDetailsChanged NOT fired when user edits their own record
+ * - BorrowDueSoon sent on login for borrows due in 1 day
+ * - BorrowDueSoon sent on login for borrows due in 3 days
+ * - BorrowDueSoon NOT sent for non-borrow (request/view) events
+ * - BorrowDueSoon NOT sent for already-returned borrows
+ * - Duplicate BorrowDueSoon suppressed on same-day repeated logins
+ * - AccessLevelChanged sent to affected users when parent access_level changes
+ * - AccessLevelChanged NOT sent when a non-access_level field changes
+ * - Artisan command notifications:due-soon dispatches BorrowDueSoon
+ * - Database notifications stored correctly and markAsRead clears read_at
+ */
+class NotificationsTest extends TestCase
+{
+    use RefreshDatabase;
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private function makeParentAndCopy(int $accessLevel = 1, bool $digital = true): array
+    {
+        $parent = $this->makeMaterialParent([
+            'access_level'     => $accessLevel,
+            'material_type'    => 1,
+            'author'           => 'Notification Test Author',
+            'publication_date' => now()->subYear(),
+            'keywords'         => json_encode(['stats']),
+            'sdgs'             => json_encode(['Education']),
+            'adviser'          => json_encode(['Adviser']),
+        ]);
+
+        $copy = $this->makeMaterialCopy([
+            'material_parent_id' => $parent->id,
+            'is_digital'         => $digital,
+            'is_available'       => true,
+            'file_name'          => $digital ? 'repo/file.pdf' : null,
+        ]);
+
+        return [$parent, $copy];
+    }
+
+    // ── RequestStatusChanged ──────────────────────────────────────────────────
+
+    /** @test */
+    public function notification_is_sent_when_request_is_approved(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy();
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id'        => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type'     => 'request',
+            'status'         => 'pending',
+        ]);
+
+        $event->update(['status' => 'approved']);
+
+        Notification::assertSentTo($student, RequestStatusChanged::class);
+    }
+
+    /** @test */
+    public function notification_is_sent_when_request_is_rejected(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy();
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id'        => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type'     => 'request',
+            'status'         => 'pending',
+        ]);
+
+        $event->update(['status' => 'rejected']);
+
+        Notification::assertSentTo($student, RequestStatusChanged::class);
+    }
+
+    /** @test */
+    public function notification_is_not_sent_when_request_is_cancelled(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy();
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id'        => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type'     => 'request',
+            'status'         => 'pending',
+        ]);
+
+        $event->update(['status' => 'cancelled']);
+
+        Notification::assertNotSentTo($student, RequestStatusChanged::class);
+    }
+
+    /** @test */
+    public function request_status_changed_notification_is_stored_in_database(): void
+    {
+        [$parent, $copy] = $this->makeParentAndCopy();
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id'        => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type'     => 'request',
+            'status'         => 'pending',
+        ]);
+
+        $event->update(['status' => 'approved']);
+
+        $this->assertDatabaseHas('notifications', [
+            'notifiable_type' => User::class,
+            'notifiable_id'   => $student->id,
+        ]);
+    }
+
+    // ── AccountDetailsChanged ─────────────────────────────────────────────────
+
+    /** @test */
+    public function notification_sent_when_admin_changes_another_users_fields(): void
+    {
+        Notification::fake();
+
+        $committee = $this->makeUser('committee');
+        $target    = $this->makeUser('student');
+
+        $this->actingAs($committee);
+        $target->update(['f_name' => 'ChangedName']);
+
+        Notification::assertSentTo($target, AccountDetailsChanged::class);
+    }
+
+    /** @test */
+    public function notification_not_sent_when_user_updates_own_account(): void
+    {
+        Notification::fake();
+
+        $user = $this->makeUser('student');
+        $this->actingAs($user);
+
+        $user->update(['f_name' => 'SelfUpdate']);
+
+        Notification::assertNotSentTo($user, AccountDetailsChanged::class);
+    }
+
+    /** @test */
+    public function account_details_changed_notification_lists_changed_fields(): void
+    {
+        $committee = $this->makeUser('committee');
+        $target    = $this->makeUser('student');
+
+        $this->actingAs($committee);
+        $target->update(['f_name' => 'NewFirst', 'l_name' => 'NewLast']);
+
+        $notification = $target->notifications()->first();
+        $this->assertNotNull($notification);
+        $this->assertStringContainsString('F name', $notification->data['message']);
+    }
+
+    // ── BorrowDueSoon (Login Listener) ────────────────────────────────────────
+
+    /** @test */
+    public function borrow_due_tomorrow_notification_sent_on_login(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id'        => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type'     => 'borrow',
+            'status'         => 'approved',
+            'due_at'         => now()->addDay()->endOfDay(),
+        ]);
+
+        event(new Login('web', $student, false));
+
+        Notification::assertSentTo(
+            $student,
+            fn (BorrowDueSoon $n) => $n->toDatabase($student)['days_until_due'] === 1
+        );
+    }
+
+    /** @test */
+    public function borrow_due_in_3_days_notification_sent_on_login(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id'        => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type'     => 'borrow',
+            'status'         => 'approved',
+            'due_at'         => now()->addDays(3)->endOfDay(),
+        ]);
+
+        event(new Login('web', $student, false));
+
+        Notification::assertSentTo(
+            $student,
+            fn (BorrowDueSoon $n) => $n->toDatabase($student)['days_until_due'] === 3
+        );
+    }
+
+    /** @test */
+    public function already_returned_borrow_does_not_trigger_due_soon(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id'        => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type'     => 'borrow',
+            'status'         => 'approved',
+            'due_at'         => now()->addDay()->endOfDay(),
+            'returned_at'    => now(), // already returned
+        ]);
+
+        event(new Login('web', $student, false));
+
+        Notification::assertNotSentTo($student, BorrowDueSoon::class);
+    }
+
+    /** @test */
+    public function borrow_due_soon_not_triggered_for_digital_requests(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: true);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id'        => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type'     => 'request', // NOT a borrow
+            'status'         => 'approved',
+            'due_at'         => now()->addDay()->endOfDay(),
+        ]);
+
+        event(new Login('web', $student, false));
+
+        Notification::assertNotSentTo($student, BorrowDueSoon::class);
+    }
+
+    /** @test */
+    public function duplicate_due_soon_notification_suppressed_on_same_day_login(): void
+    {
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        $borrow = MaterialAccessEvents::create([
+            'user_id'        => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type'     => 'borrow',
+            'status'         => 'approved',
+            'due_at'         => now()->addDay()->endOfDay(),
+        ]);
+
+        // First login — notification sent and stored
+        event(new Login('web', $student, false));
+        $countAfterFirstLogin = $student->notifications()->count();
+
+        // Second login on same day — should be suppressed
+        event(new Login('web', $student, false));
+        $countAfterSecondLogin = $student->notifications()->count();
+
+        $this->assertEquals($countAfterFirstLogin, $countAfterSecondLogin);
+    }
+
+    /** @test */
+    public function borrow_due_soon_not_sent_for_committee_on_login(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $committee = $this->makeUser('committee');
+
+        // Committee members are excluded from due-soon checks in the listener
+        MaterialAccessEvents::create([
+            'user_id'        => $committee->id,
+            'rr_material_id' => $copy->id,
+            'event_type'     => 'borrow',
+            'status'         => 'approved',
+            'due_at'         => now()->addDay()->endOfDay(),
+        ]);
+
+        event(new Login('web', $committee, false));
+
+        Notification::assertNotSentTo($committee, BorrowDueSoon::class);
+    }
+
+    // ── AccessLevelChanged ────────────────────────────────────────────────────
+
+    /** @test */
+    public function notification_sent_to_affected_users_when_access_level_changes(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id'        => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type'     => 'request',
+            'status'         => 'approved',
+        ]);
+
+        // Upgrading access level — student can no longer access
+        $parent->update(['access_level' => 3]);
+
+        Notification::assertSentTo($student, AccessLevelChanged::class);
+    }
+
+    /** @test */
+    public function access_level_changed_notification_not_sent_for_other_field_updates(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id'        => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type'     => 'request',
+            'status'         => 'approved',
+        ]);
+
+        // Changing title — does NOT trigger access level notification
+        $parent->update(['title' => 'New Title Only']);
+
+        Notification::assertNotSentTo($student, AccessLevelChanged::class);
+    }
+
+    // ── Mark As Read ──────────────────────────────────────────────────────────
+
+    /** @test */
+    public function mark_as_read_sets_read_at_timestamp(): void
+    {
+        [$parent, $copy] = $this->makeParentAndCopy();
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id'        => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type'     => 'request',
+            'status'         => 'pending',
+        ]);
+
+        // Trigger a notification
+        $event->update(['status' => 'approved']);
+
+        $notification = $student->unreadNotifications()->first();
+        $this->assertNotNull($notification);
+
+        $notification->markAsRead();
+
+        $this->assertNotNull($notification->fresh()->read_at);
+    }
+
+    /** @test */
+    public function mark_all_as_read_clears_all_unread_notifications(): void
+    {
+        [$parent, $copy] = $this->makeParentAndCopy();
+        $student = $this->makeUser('student');
+
+        // Create two notifications
+        foreach (['approved', 'rejected'] as $status) {
+            $event = MaterialAccessEvents::create([
+                'user_id'        => $student->id,
+                'rr_material_id' => $copy->id,
+                'event_type'     => 'request',
+                'status'         => 'pending',
+            ]);
+            $event->update(['status' => $status]);
+        }
+
+        $this->assertEquals(2, $student->unreadNotifications()->count());
+
+        $student->unreadNotifications->markAsRead();
+
+        $this->assertEquals(0, $student->unreadNotifications()->count());
+    }
+
+    // ── Artisan Command ───────────────────────────────────────────────────────
+
+    /** @test */
+    public function artisan_due_soon_command_sends_notifications_for_matching_borrows(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id'        => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type'     => 'borrow',
+            'status'         => 'approved',
+            'due_at'         => now()->addDay()->endOfDay(),
+        ]);
+
+        $this->artisan('notifications:due-soon')->assertExitCode(0);
+
+        Notification::assertSentTo($student, BorrowDueSoon::class);
+    }
+}
