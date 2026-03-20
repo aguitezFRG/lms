@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Notifications\AccountDetailsChanged;
 use App\Models\RepositoryChangeLogs;
 use App\Enums\RepositoryChangeType;
 use Illuminate\Database\Eloquent\Model;
@@ -55,6 +56,29 @@ class RepositoryChangeLogsObserver
                 ])->toArray(),
             'changed_at'     => now(),
         ]);
+
+
+        // Notify the user if an admin changed their account details
+        // Only fires when the editor is a different person than the target
+        if (
+            $model instanceof User &&
+            $model->getTable() === 'users' &&
+            auth()->id() !== $model->id
+        ) {
+            $excluded = array_merge(
+                $model->excludedFromChangeLogs ?? [],
+                ['remember_token', 'updated_at']
+            );
+
+            $changedFields = array_keys(
+                collect($model->getDirty())->except($excluded)->toArray()
+            );
+
+            if (count($changedFields) > 0)
+            {
+                $model->notify(new AccountDetailsChanged($changedFields));
+            }
+        }
     }
 
     /**
