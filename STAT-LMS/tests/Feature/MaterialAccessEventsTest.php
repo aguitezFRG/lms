@@ -145,7 +145,7 @@ class MaterialAccessEventsTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(EditMaterialAccessEvents::class, ['record' => $record->getRouteKey()])
+        Livewire::test(EditMaterialAccessEvents::class, ['record' => $event->getRouteKey()])
             ->set('data.status', 'approved')           // set live state first
             ->fillForm(['status' => 'approved', 'due_at' => now()->addDays(3)->toDateString()])
             ->call('save')
@@ -190,7 +190,7 @@ class MaterialAccessEventsTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(EditMaterialAccessEvents::class, ['record' => $record->getRouteKey()])
+        Livewire::test(EditMaterialAccessEvents::class, ['record' => $event->getRouteKey()])
             ->set('data.status', 'approved')           // set live state first
             ->fillForm(['status' => 'approved', 'due_at' => now()->subDay()->toDateString()])
             ->call('save')
@@ -208,7 +208,7 @@ class MaterialAccessEventsTest extends TestCase
         $staff = $this->makeUser('staff/custodian');
         $this->actingAs($staff);
 
-        Livewire::test(EditMaterialAccessEvents::class, ['record' => $record->getRouteKey()])
+        Livewire::test(EditMaterialAccessEvents::class, ['record' => $event->getRouteKey()])
             ->fillForm(['status' => 'rejected'])
             ->call('save')
             ->assertHasNoFormErrors();

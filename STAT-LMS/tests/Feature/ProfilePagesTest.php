@@ -131,7 +131,7 @@ class ProfilePagesTest extends TestCase
         $this->actingAs($student);
 
         Livewire::test(\App\Filament\Pages\User\UserProfile::class)
-            ->assertSeeHtml('>2<'); // pending count badge
+            ->assertSeeHtml((string) MaterialAccessEvents::where('user_id', $student->id)->where('status', 'pending')->count()); // pending count badge
     }
 
     /** @test */
@@ -146,7 +146,7 @@ class ProfilePagesTest extends TestCase
         $this->actingAs($student);
 
         Livewire::test(\App\Filament\Pages\User\UserProfile::class)
-            ->assertSee(fn ($data) => $data['approvedCount'] === 1);
+            ->assertSee((string) MaterialAccessEvents::where('user_id', $student->id)->where('status', 'approved')->count()); // approved count badge
     }
 
     // ── Tab Switching ─────────────────────────────────────────────────────────

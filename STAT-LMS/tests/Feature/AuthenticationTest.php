@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 use App\Filament\Pages\Auth\AdminLogin;
-use App\Filament\Pages\User\UserLogin;
+use App\Filament\Pages\Auth\UserLogin;
 
 use Livewire\Livewire;
 
@@ -210,8 +210,10 @@ class AuthenticationTest extends TestCase
         $user = $this->makeUser('committee', ['password' => bcrypt('password')]);
 
         Livewire::test(AdminLogin::class)
-            ->set('email', $user->email)
-            ->set('password', 'password')
+            ->fillForm([
+                'email' => $user->email,
+                'password' => 'password',
+            ])
             ->call('authenticate')
             ->assertRedirect('/admin');
     }
@@ -222,8 +224,10 @@ class AuthenticationTest extends TestCase
         $user = $this->makeUser('student', ['password' => bcrypt('password')]);
 
         Livewire::test(UserLogin::class)
-            ->set('email', $user->email)
-            ->set('password', 'password')
+            ->fillForm([
+                'email' => $user->email,
+                'password' => 'password',
+            ])
             ->call('authenticate')
             ->assertRedirect('/app');
     }
@@ -234,8 +238,10 @@ class AuthenticationTest extends TestCase
         $user = $this->makeUser('committee', ['password' => bcrypt('correct-password')]);
 
         Livewire::test(AdminLogin::class)
-            ->set('email', $user->email)
-            ->set('password', 'wrong-password')
+            ->fillForm([
+                'email' => $user->email,
+                'password' => 'wrong-password',
+            ])
             ->call('authenticate')
             ->assertHasErrors(['password']);
 
