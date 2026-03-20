@@ -34,9 +34,9 @@ class MaterialCatalogTest extends TestCase
             'title'            => "Test Material L{$accessLevel}",
             'author'           => 'Test Author',
             'publication_date' => now()->subYear(),
-            'keywords'         => json_encode(['stats', 'research']),
-            'sdgs'             => json_encode(['Quality Education']),
-            'adviser'          => json_encode(['Dr. Adviser']),
+            'keywords'         => ['stats', 'research'],
+            'sdgs'             => ['Quality Education'],
+            'adviser'          => ['Dr. Adviser'],
         ], $overrides));
     }
 
@@ -61,8 +61,8 @@ class MaterialCatalogTest extends TestCase
     /** @test */
     public function faculty_sees_public_and_restricted_materials(): void
     {
-        $public     = $this->makeMaterial(1, ['title' => 'Public Paper']);
-        $restricted = $this->makeMaterial(2, ['title' => 'Restricted Paper']);
+        $public       = $this->makeMaterial(1, ['title' => 'Public Paper']);
+        $restricted   = $this->makeMaterial(2, ['title' => 'Restricted Paper']);
         $confidential = $this->makeMaterial(3, ['title' => 'Confidential Paper']);
 
         $faculty = $this->makeUser('faculty');
@@ -108,7 +108,14 @@ class MaterialCatalogTest extends TestCase
 
     // ── Create ────────────────────────────────────────────────────────────────
 
-    /** @test */
+    /**
+     * @test
+     *
+     * TagsInput fields (adviser, keywords, sdgs) must be provided as plain
+     * PHP arrays in fillForm — Filament internally serialises them to JSON.
+     * Passing a JSON string or a nested array with 'value' keys will fail
+     * validation because the field expects an array of strings.
+     */
     public function committee_member_can_create_material(): void
     {
         $committee = $this->makeUser('committee');
@@ -190,18 +197,35 @@ class MaterialCatalogTest extends TestCase
 
     // ── Edit ──────────────────────────────────────────────────────────────────
 
-    /** @test */
+    /**
+     * @test
+     *
+     * TagsInput fields carry their current values on load. When we only want
+     * to update the title, we must also supply the required TagsInput fields
+     * (adviser, keywords, sdgs) so they pass validation; omitting them causes
+     * Filament to treat them as empty/null and fail the `required` rule.
+     */
     public function it_admin_can_edit_material_title(): void
     {
-        $material = $this->makeMaterial(1, ['title' => 'Original Title']);
-        $it       = $this->makeUser('it');
+        $material = $this->makeMaterial(1, [
+            'title'   => 'Original Title',
+            'adviser' => ['Dr. Reyes'],
+            'keywords'=> ['stats'],
+            'sdgs'    => ['Quality Education'],
+        ]);
+        $it = $this->makeUser('it');
         $this->actingAs($it);
 
         Livewire::test(
             \App\Filament\Resources\RrMaterialParents\Pages\EditRrMaterialParents::class,
             ['record' => $material->id]
         )
-            ->fillForm(['title' => 'Updated Title'])
+            ->fillForm([
+                'title'   => 'Updated Title',
+                'adviser' => ['Dr. Reyes'],
+                'keywords'=> ['stats'],
+                'sdgs'    => ['Quality Education'],
+            ])
             ->call('save')
             ->assertHasNoFormErrors();
 

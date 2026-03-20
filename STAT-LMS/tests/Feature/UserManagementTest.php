@@ -37,7 +37,8 @@ class UserManagementTest extends TestCase
             'email'      => 'maria.cruz@up.edu.ph',
             'password'   => 'SecurePass@123',
             'role'       => 'student',
-            'std_number' => '2020-12345',
+            // Omit std_number by default so the unique mask rule doesn't
+            // interfere with tests that don't care about it.
         ], $overrides);
     }
 
@@ -124,12 +125,15 @@ class UserManagementTest extends TestCase
     /** @test */
     public function duplicate_student_number_is_rejected_on_create(): void
     {
-        $existing  = $this->makeUser('student');
+        // Create a user with a known, valid student number format
+        $existing = $this->makeUser('student', ['std_number' => '2020-12345']);
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
+        // The std_number field uses a mask pattern (9999-99999) and a unique rule.
+        // We submit the same number to trigger the duplicate error.
         Livewire::test(\App\Filament\Resources\Users\Pages\CreateUser::class)
-            ->fillForm($this->validUserPayload(['std_number' => $existing->std_number]))
+            ->fillForm($this->validUserPayload(['std_number' => '2020-12345']))
             ->call('create')
             ->assertHasFormErrors(['std_number']);
     }
@@ -146,6 +150,7 @@ class UserManagementTest extends TestCase
                 'm_name' => 'dela',
                 'l_name' => 'Cruz',
                 'name'   => 'Juan dela Cruz',
+                'email'  => 'juan.cruz@up.edu.ph',
             ]))
             ->call('create')
             ->assertHasNoFormErrors();
@@ -156,7 +161,8 @@ class UserManagementTest extends TestCase
     /** @test */
     public function password_is_required_on_create_but_optional_on_edit(): void
     {
-        $target    = $this->makeUser('student');
+        // Create target with a null std_number to avoid the unique mask rule
+        $target    = $this->makeUser('student', ['std_number' => null]);
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
@@ -191,7 +197,8 @@ class UserManagementTest extends TestCase
     /** @test */
     public function committee_member_can_update_another_users_role(): void
     {
-        $target    = $this->makeUser('student');
+        // Null std_number avoids the unique mask validation on a field we aren't testing
+        $target    = $this->makeUser('student', ['std_number' => null]);
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
@@ -212,15 +219,16 @@ class UserManagementTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
+        // UserPolicy::update() returns false when the actor and subject are the same user.
+        // Accessing the edit page should yield a 403 Forbidden.
         $this->get("/admin/users/{$committee->id}/edit")
-            ->call('save')
             ->assertForbidden();
     }
 
     /** @test */
     public function email_uniqueness_is_enforced_ignoring_own_record_on_edit(): void
     {
-        $target    = $this->makeUser('student');
+        $target    = $this->makeUser('student', ['std_number' => null]);
         $other     = $this->makeUser('faculty');
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);

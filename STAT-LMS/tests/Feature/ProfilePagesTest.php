@@ -130,8 +130,12 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
+        $pendingCount = MaterialAccessEvents::where('user_id', $student->id)
+            ->where('status', 'pending')
+            ->count();
+
         Livewire::test(\App\Filament\Pages\User\UserProfile::class)
-            ->assertSeeHtml((string) MaterialAccessEvents::where('user_id', $student->id)->where('status', 'pending')->count()); // pending count badge
+            ->assertSeeHtml((string) $pendingCount);
     }
 
     /** @test */
@@ -145,8 +149,12 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
+        $approvedCount = MaterialAccessEvents::where('user_id', $student->id)
+            ->where('status', 'approved')
+            ->count();
+
         Livewire::test(\App\Filament\Pages\User\UserProfile::class)
-            ->assertSee((string) MaterialAccessEvents::where('user_id', $student->id)->where('status', 'approved')->count()); // approved count badge
+            ->assertSee((string) $approvedCount);
     }
 
     // ── Tab Switching ─────────────────────────────────────────────────────────
@@ -219,7 +227,7 @@ class ProfilePagesTest extends TestCase
 
         Livewire::test(\App\Filament\Pages\User\UserProfile::class)
             ->call('setTab', 'notifications')
-            ->assertSee('approved', false); // notification message contains "Approved"
+            ->assertSee('approved', false); // notification message contains "approved"
     }
 
     /** @test */
@@ -274,7 +282,11 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($committee);
 
+        $unreadCount = $committee->fresh()->unreadNotifications()->count();
+        $this->assertGreaterThanOrEqual(1, $unreadCount);
+
+        // Verify the badge count appears in the rendered component
         Livewire::test(\App\Filament\Pages\Auth\AdminProfile::class)
-            ->assertSee(fn ($data) => $data['unreadCount'] >= 1);
+            ->assertSee((string) $unreadCount);
     }
 }

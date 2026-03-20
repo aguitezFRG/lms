@@ -14,7 +14,9 @@ class ExportTestResults extends Command
      *
      * @var string
      */
-    protected $signature = 'test:export {--path=reports/test-results.pdf : The output path for the PDF}';
+    protected $signature = 'test:export
+                            {--path=reports/test-results.pdf : The output path for the PDF}
+                            {--failures-only : Only include failed and errored test cases in the report}';
 
     /**
      * The console command description.
@@ -28,9 +30,10 @@ class ExportTestResults extends Command
      */
     public function handle()
     {
-        $xmlPath    = storage_path('app/junit.xml');
-        $outputPath = $this->option('path');
-        $basePath   = base_path();
+        $xmlPath      = storage_path('app/junit.xml');
+        $outputPath   = $this->option('path');
+        $failuresOnly = $this->option('failures-only');
+        $basePath     = base_path();
 
         // Clean up any stale XML from a previous run
         File::delete($xmlPath);
@@ -78,12 +81,13 @@ class ExportTestResults extends Command
             : $xml;
 
         $data = [
-            'date'        => now()->toDayDateTimeString(),
-            'total_tests' => (int) ($mainSuite['tests']   ?? 0),
-            'failures'    => (int) ($mainSuite['failures'] ?? 0),
-            'errors'      => (int) ($mainSuite['errors']   ?? 0),
-            'time'        => round((float) ($mainSuite['time'] ?? 0), 2),
-            'suites'      => [],
+            'date'          => now()->toDayDateTimeString(),
+            'total_tests'   => (int) ($mainSuite['tests']   ?? 0),
+            'failures'      => (int) ($mainSuite['failures'] ?? 0),
+            'errors'        => (int) ($mainSuite['errors']   ?? 0),
+            'time'          => round((float) ($mainSuite['time'] ?? 0), 2),
+            'failures_only' => $failuresOnly,
+            'suites'        => [],
         ];
 
         // 5. Gather every <testcase> node regardless of nesting depth
@@ -128,11 +132,30 @@ class ExportTestResults extends Command
             ];
         }
 
+        // 6. If --failures-only, strip passing cases and empty suites
+        if ($failuresOnly) {
+            foreach ($groupedSuites as $className => &$suite) {
+                $suite['cases'] = array_values(
+                    array_filter(
+                        $suite['cases'],
+                        fn ($case) => in_array($case['status'], ['failed', 'error'])
+                    )
+                );
+            }
+            unset($suite);
+
+            // Drop suites that have no failing cases left
+            $groupedSuites = array_filter(
+                $groupedSuites,
+                fn ($suite) => count($suite['cases']) > 0
+            );
+        }
+
         $data['suites'] = array_values($groupedSuites);
 
         $this->info('📄 Generating PDF...');
 
-        // 6. Generate PDF
+        // 7. Generate PDF
         $pdf = Pdf::loadView('reports.test-results', $data)
             ->setPaper('a4', 'portrait');
 
@@ -140,7 +163,7 @@ class ExportTestResults extends Command
         File::ensureDirectoryExists(dirname($fullOutputPath));
         $pdf->save($fullOutputPath);
 
-        // 7. Clean up the temporary XML
+        // 8. Clean up the temporary XML
         File::delete($xmlPath);
 
         $passed = $data['total_tests'] - $data['failures'] - $data['errors'];
@@ -157,7 +180,9 @@ class ExportTestResults extends Command
             ]]
         );
 
-        if ($process->failed()) {
+        if ($failuresOnly && ($data['failures'] + $data['errors']) === 0) {
+            $this->info('🎉 All tests passed — nothing to show in failures-only mode.');
+        } elseif ($process->failed()) {
             $this->warn('⚠  Some tests failed — see the PDF for details.');
         }
 
