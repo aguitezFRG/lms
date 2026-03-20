@@ -44,7 +44,7 @@ class ViewRrMaterials extends ViewRecord
                     MaterialAccessEvents::create([
                         'user_id' => auth()->id(),
                         'rr_material_id' => $record->id,
-                        'event_type' => MaterialEventTypes::ACCESSED,
+                        'event_type' => MaterialEventType::ACCESSED,
                     ]);
                 }),
 
