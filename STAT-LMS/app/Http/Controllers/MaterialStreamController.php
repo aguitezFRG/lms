@@ -118,14 +118,18 @@ class MaterialStreamController extends Controller
     protected function authorizeAccess($record)
     {
         $user = auth()->user();
+
+        if (! user) {
+            abort(403, 'Unauthorized access to secured library material.');
+        }
+
         $level = (int) $record->parent->access_level;
 
         $user_access_level = UserRole::from($user->role)->getAccessLevel();
 
-        $allowed = $user_access_level >= $level;
-
-        if (!$allowed) {
+        if ($user_access_level < $level) {
             abort(403, 'Unauthorized access to secured library material.');
         }
+
     }
 }
