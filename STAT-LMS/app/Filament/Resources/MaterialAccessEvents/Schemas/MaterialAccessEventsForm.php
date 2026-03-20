@@ -48,7 +48,7 @@ class MaterialAccessEventsForm
                         DatePicker::make('due_at')
                             ->label('Due Date')
                             ->minDate(now()->addDays(1)->startOfDay())
-                            ->rules(['date', 'after_or_equal:' . now()->addDays(1)->toDateString()])
+                            ->rules(['nullable', 'date', 'after_or_equal:' . now()->addDays(1)->toDateString()])
                             ->formatStateUsing(fn ($state) => $state ?? now()->addDays(14)->toDateString())
                             ->live()
                             ->afterStateUpdated(fn ($state, callable $set) =>

@@ -68,7 +68,7 @@ class RrMaterialParentsForm
                         TagsInput::make('adviser')
                             ->label('Adviser(s)')
                             ->placeholder('Type name and press Enter')
-                            ->suggestions(User::pluck('name')->toArray())
+                            ->suggestions(fn () => User::pluck('name')->toArray())
                             ->required()
                             // This ensures it stores the data as a clean array in your JSON column
                             ->nestedRecursiveRules([
