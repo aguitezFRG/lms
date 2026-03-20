@@ -45,7 +45,7 @@ class RrMaterialsForm
                     FileUpload::make('file_name')
                         ->label('Digital File (PDF)')
                         ->acceptedFileTypes(['application/pdf'])
-                        ->rules(['mimes:pdf'])
+                        ->rules(['mimes:pdf', 'max:10240']) // 10MB max
                         ->maxSize(10240)
                         ->visible(fn (Get $get) => $get('is_digital'))
                         ->required(fn (Get $get) => $get('is_digital'))
