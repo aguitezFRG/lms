@@ -22,11 +22,28 @@ class ListCatalogs extends Page
     public int    $page         = 1;
     public int    $perPage      = 15;
 
+    /* ── OPAC Extended Filter State ─────────────────────────────────── */
+    public string $searchScope   = 'all';        // all | title | author | keyword
+    public string $pubDateFrom   = '';           // YYYY-MM-DD lower bound on publication_date
+    public string $pubDateTo     = '';           // YYYY-MM-DD upper bound on publication_date
+    public array  $sdgFilter     = [];
+    public string $sortBy        = 'created_at';
+    public string $sortDir       = 'desc';  // asc | desc
+    public bool   $availableOnly = false;   // only show items with available copies
+    /* ──────────────────────────────────────────────────────────────────── */
+
     protected $queryString = [
-        'search'       => ['except' => ''],
-        'typeFilter'   => ['except' => ''],
-        'formatFilter' => ['except' => ''],
-        'page'         => ['except' => 1],
+        'search'        => ['except' => ''],
+        'searchScope'   => ['except' => 'all'],
+        'typeFilter'    => ['except' => ''],
+        'formatFilter'  => ['except' => ''],
+        'pubDateFrom'   => ['except' => ''],
+        'pubDateTo'     => ['except' => ''],
+        'sdgFilter'     => ['except' => []],
+        'sortBy'        => ['except' => 'created_at'],
+        'sortDir'       => ['except' => 'desc'],
+        'availableOnly' => ['except' => false],
+        'page'          => ['except' => 1],
     ];
 
     // ── Livewire lifecycle ──────────────────────────────────────────────────
@@ -34,123 +51,50 @@ class ListCatalogs extends Page
     public function updatedTypeFilter(): void   { $this->page = 1; }
     public function updatedFormatFilter(): void { $this->page = 1; }
 
+    /* OPAC lifecycle resets */
+    public function updatedSearchScope(): void    { $this->page = 1; }
+    public function updatedPubDateFrom(): void    { $this->page = 1; }
+    public function updatedPubDateTo(): void      { $this->page = 1; }
+    public function updatedSortBy(): void         { $this->page = 1; }
+    public function updatedAvailableOnly(): void  { $this->page = 1; }
+    /* ──────────────────────────────────────────────────────────────────── */
+
     public function nextPage(): void       { $this->page++; }
     public function previousPage(): void   { if ($this->page > 1) $this->page--; }
     public function goToPage(int $p): void { $this->page = $p; }
 
-    // ── OPAC Search ─────────────────────────────────────────────────────────
+    /* ── OPAC Filter Actions ──────────────────────────────────────── */
 
-    /**
-     * Parse a raw OPAC query string into structured tokens.
-     *
-     * Supported syntax:
-     *   - Multi-term AND   : each whitespace-separated token must match
-     *   - Quoted phrases   : "exact phrase" treated as a single token
-     *   - Field prefixes   : ti: au: kw: ab: adv: (and long-form aliases)
-     *
-     * Examples:
-     *   regression analysis
-     *   "time series" au:santos
-     *   ti:bayesian kw:inference
-     *
-     * @return array<int, array{term: string, field: string|null}>
-     */
-    protected function parseSearchQuery(string $query): array
+    /** Toggle a single SDG on/off in the multi-select filter array */
+    public function toggleSdg(string $sdg): void
     {
-        preg_match_all('/"([^"]+)"|(\S+)/', trim($query), $matches);
-
-        $tokens = [];
-
-        foreach ($matches[0] as $i => $raw) {
-            $value = $matches[1][$i] !== '' ? $matches[1][$i] : $matches[2][$i];
-            $field = null;
-
-            // Detect field prefix — e.g. ti:regression  or  au:"dela Cruz"
-            if (preg_match(
-                '/^(ti|title|au|author|kw|keyword|keywords|ab|abstract|adv|adviser):(.+)$/i',
-                $value,
-                $fm
-            )) {
-                $prefix = strtolower($fm[1]);
-                $field  = match ($prefix) {
-                    'ti', 'title'               => 'title',
-                    'au', 'author'              => 'author',
-                    'kw', 'keyword', 'keywords' => 'keywords',
-                    'ab', 'abstract'            => 'abstract',
-                    'adv', 'adviser'            => 'adviser',
-                    default                     => null,
-                };
-                $value = $fm[2];
-            }
-
-            if ($value !== '') {
-                $tokens[] = ['term' => $value, 'field' => $field];
-            }
-        }
-
-        return $tokens;
-    }
-
-    /**
-     * Apply OPAC-style search to the query builder.
-     *
-     * AND logic  — every token must match at least one searchable field
-     *              (or the specific field if a prefix was given).
-     *
-     * Relevance  — when there is exactly one unqualified token, results are
-     *              ordered by field priority: title > author > keywords >
-     *              adviser > abstract.
-     */
-    protected function applyOPACSearch(
-        \Illuminate\Database\Eloquent\Builder $q,
-        string $raw
-    ): \Illuminate\Database\Eloquent\Builder {
-        $tokens = $this->parseSearchQuery($raw);
-
-        if (empty($tokens)) {
-            return $q;
-        }
-
-        foreach ($tokens as $token) {
-            $like  = '%' . $token['term'] . '%';
-            $field = $token['field'];
-
-            $q->where(function ($inner) use ($like, $field) {
-                if ($field) {
-                    // Targeted field search
-                    $inner->where($field, 'like', $like);
-                } else {
-                    // Broad search across all indexed fields
-                    $inner->where('title',    'like', $like)
-                          ->orWhere('author',   'like', $like)
-                          ->orWhere('keywords', 'like', $like)
-                          ->orWhere('adviser',  'like', $like)
-                          ->orWhere('abstract', 'like', $like);
-                }
-            });
-        }
-
-        // Relevance ordering for a single unqualified term
-        $unqualified = array_values(array_filter($tokens, fn ($t) => $t['field'] === null));
-
-        if (count($unqualified) === 1) {
-            $like = '%' . $unqualified[0]['term'] . '%';
-
-            $q->orderByRaw("
-                CASE
-                    WHEN title    LIKE ? THEN 1
-                    WHEN author   LIKE ? THEN 2
-                    WHEN keywords LIKE ? THEN 3
-                    WHEN adviser  LIKE ? THEN 4
-                    ELSE                      5
-                END
-            ", [$like, $like, $like, $like]);
+        if (in_array($sdg, $this->sdgFilter)) {
+            $this->sdgFilter = array_values(array_filter($this->sdgFilter, fn ($s) => $s !== $sdg));
         } else {
-            $q->orderByDesc('created_at');
+            $this->sdgFilter[] = $sdg;
         }
-
-        return $q;
+        $this->page = 1;
     }
+
+    /** Flip the sort direction between asc and desc */
+    public function toggleSortDir(): void
+    {
+        $this->sortDir = $this->sortDir === 'desc' ? 'asc' : 'desc';
+        $this->page    = 1;
+    }
+
+    /** Reset every filter (not search) to its default state */
+    public function clearAllFilters(): void
+    {
+        $this->typeFilter    = '';
+        $this->formatFilter  = '';
+        $this->pubDateFrom   = '';
+        $this->pubDateTo     = '';
+        $this->sdgFilter     = [];
+        $this->availableOnly = false;
+        $this->page          = 1;
+    }
+    /* ──────────────────────────────────────────────────────────────────── */
 
     // ── Query ───────────────────────────────────────────────────────────────
     protected function getQuery(): \Illuminate\Database\Eloquent\Builder
@@ -158,9 +102,31 @@ class ListCatalogs extends Page
         $user      = Auth::user();
         $userLevel = UserRole::from($user->role)->getAccessLevel();
 
-        $query = RrMaterialParents::query()
+        return RrMaterialParents::query()
             ->where('access_level', '<=', $userLevel)
+
+            // ── Search (scope-aware) ────────────────────────────────────────
+            ->when($this->search, function ($q) {
+                $term = '%' . $this->search . '%';
+                $q->where(function ($inner) use ($term) {
+                    match ($this->searchScope) {
+                        'title'   => $inner->where('title', 'like', $term),
+                        'author'  => $inner->where('author', 'like', $term),
+                        /* SQLite: JSON stored as text — LIKE on the raw column is sufficient
+                           for partial keyword search and is compatible with SQLite. */
+                        'keyword' => $inner->where('keywords', 'like', $term),
+                        default   => $inner
+                            ->where('title', 'like', $term)
+                            ->orWhere('author', 'like', $term)
+                            ->orWhere('keywords', 'like', $term),
+                    };
+                });
+            })
+
+            // ── Material type ───────────────────────────────────────────────
             ->when($this->typeFilter !== '', fn ($q) => $q->where('material_type', $this->typeFilter))
+
+            // ── Format (digital / physical) ─────────────────────────────────
             ->when($this->formatFilter === 'digital', fn ($q) =>
                 $q->whereHas('materials', fn ($m) =>
                     $m->where('is_digital', true)->where('is_available', true)->whereNull('deleted_at')
@@ -170,15 +136,37 @@ class ListCatalogs extends Page
                 $q->whereHas('materials', fn ($m) =>
                     $m->where('is_digital', false)->where('is_available', true)->whereNull('deleted_at')
                 )
-            );
+            )
 
-        if ($this->search !== '') {
-            $query = $this->applyOPACSearch($query, $this->search);
-        } else {
-            $query->orderByDesc('created_at');
-        }
+            /* publication_date range (full date precision) ──────────────────── */
+            ->when($this->pubDateFrom !== '', fn ($q) =>
+                $q->whereDate('publication_date', '>=', $this->pubDateFrom)
+            )
+            ->when($this->pubDateTo !== '', fn ($q) =>
+                $q->whereDate('publication_date', '<=', $this->pubDateTo)
+            )
 
-        return $query;
+            /* SDG multi-select (OR logic) ────────────────────────────────────
+               SQLite stores JSON as text. Wrapping the value in `"…"` anchors
+               the match to a JSON string boundary, avoiding false positives
+               (e.g. "Poverty" matching "No Poverty Reduction"). */
+            ->when(!empty($this->sdgFilter), function ($q) {
+                $q->where(function ($inner) {
+                    foreach ($this->sdgFilter as $sdg) {
+                        $inner->orWhere('sdgs', 'like', '%"' . addslashes($sdg) . '"%');
+                    }
+                });
+            })
+
+            /* availability guard ─────────────────────────────────────── */
+            ->when($this->availableOnly, fn ($q) =>
+                $q->whereHas('materials', fn ($m) =>
+                    $m->where('is_available', true)->whereNull('deleted_at')
+                )
+            )
+
+            /* dynamic sort ───────────────────────────────────────────── */
+            ->orderBy($this->sortBy, $this->sortDir);
     }
 
     // ── View data ───────────────────────────────────────────────────────────
@@ -199,10 +187,21 @@ class ListCatalogs extends Page
             'view_url'         => CatalogResource::getUrl('view', ['record' => $m->id]),
         ])->toArray();
 
+        /* compute active filter count for the badge on the filter toggle */
+        $activeFilterCount = collect([
+            $this->typeFilter    !== '',
+            $this->formatFilter  !== '',
+            $this->pubDateFrom   !== '',
+            $this->pubDateTo     !== '',
+            ! empty($this->sdgFilter),
+            $this->availableOnly,
+        ])->filter()->count();
+
         return [
-            'materials'    => $materials,
-            'paginator'    => $paginator,
-            'totalResults' => $paginator->total(),
+            'materials'         => $materials,
+            'paginator'         => $paginator,
+            'totalResults'      => $paginator->total(),
+            'activeFilterCount' => $activeFilterCount,
         ];
     }
 }
