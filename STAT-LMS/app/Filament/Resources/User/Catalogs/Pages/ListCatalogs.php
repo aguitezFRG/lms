@@ -38,22 +38,128 @@ class ListCatalogs extends Page
     public function previousPage(): void   { if ($this->page > 1) $this->page--; }
     public function goToPage(int $p): void { $this->page = $p; }
 
+    // ── OPAC Search ─────────────────────────────────────────────────────────
+
+    /**
+     * Parse a raw OPAC query string into structured tokens.
+     *
+     * Supported syntax:
+     *   - Multi-term AND   : each whitespace-separated token must match
+     *   - Quoted phrases   : "exact phrase" treated as a single token
+     *   - Field prefixes   : ti: au: kw: ab: adv: (and long-form aliases)
+     *
+     * Examples:
+     *   regression analysis
+     *   "time series" au:santos
+     *   ti:bayesian kw:inference
+     *
+     * @return array<int, array{term: string, field: string|null}>
+     */
+    protected function parseSearchQuery(string $query): array
+    {
+        preg_match_all('/"([^"]+)"|(\S+)/', trim($query), $matches);
+
+        $tokens = [];
+
+        foreach ($matches[0] as $i => $raw) {
+            $value = $matches[1][$i] !== '' ? $matches[1][$i] : $matches[2][$i];
+            $field = null;
+
+            // Detect field prefix — e.g. ti:regression  or  au:"dela Cruz"
+            if (preg_match(
+                '/^(ti|title|au|author|kw|keyword|keywords|ab|abstract|adv|adviser):(.+)$/i',
+                $value,
+                $fm
+            )) {
+                $prefix = strtolower($fm[1]);
+                $field  = match ($prefix) {
+                    'ti', 'title'               => 'title',
+                    'au', 'author'              => 'author',
+                    'kw', 'keyword', 'keywords' => 'keywords',
+                    'ab', 'abstract'            => 'abstract',
+                    'adv', 'adviser'            => 'adviser',
+                    default                     => null,
+                };
+                $value = $fm[2];
+            }
+
+            if ($value !== '') {
+                $tokens[] = ['term' => $value, 'field' => $field];
+            }
+        }
+
+        return $tokens;
+    }
+
+    /**
+     * Apply OPAC-style search to the query builder.
+     *
+     * AND logic  — every token must match at least one searchable field
+     *              (or the specific field if a prefix was given).
+     *
+     * Relevance  — when there is exactly one unqualified token, results are
+     *              ordered by field priority: title > author > keywords >
+     *              adviser > abstract.
+     */
+    protected function applyOPACSearch(
+        \Illuminate\Database\Eloquent\Builder $q,
+        string $raw
+    ): \Illuminate\Database\Eloquent\Builder {
+        $tokens = $this->parseSearchQuery($raw);
+
+        if (empty($tokens)) {
+            return $q;
+        }
+
+        foreach ($tokens as $token) {
+            $like  = '%' . $token['term'] . '%';
+            $field = $token['field'];
+
+            $q->where(function ($inner) use ($like, $field) {
+                if ($field) {
+                    // Targeted field search
+                    $inner->where($field, 'like', $like);
+                } else {
+                    // Broad search across all indexed fields
+                    $inner->where('title',    'like', $like)
+                          ->orWhere('author',   'like', $like)
+                          ->orWhere('keywords', 'like', $like)
+                          ->orWhere('adviser',  'like', $like)
+                          ->orWhere('abstract', 'like', $like);
+                }
+            });
+        }
+
+        // Relevance ordering for a single unqualified term
+        $unqualified = array_values(array_filter($tokens, fn ($t) => $t['field'] === null));
+
+        if (count($unqualified) === 1) {
+            $like = '%' . $unqualified[0]['term'] . '%';
+
+            $q->orderByRaw("
+                CASE
+                    WHEN title    LIKE ? THEN 1
+                    WHEN author   LIKE ? THEN 2
+                    WHEN keywords LIKE ? THEN 3
+                    WHEN adviser  LIKE ? THEN 4
+                    ELSE                      5
+                END
+            ", [$like, $like, $like, $like]);
+        } else {
+            $q->orderByDesc('created_at');
+        }
+
+        return $q;
+    }
+
     // ── Query ───────────────────────────────────────────────────────────────
     protected function getQuery(): \Illuminate\Database\Eloquent\Builder
     {
         $user      = Auth::user();
         $userLevel = UserRole::from($user->role)->getAccessLevel();
 
-        return RrMaterialParents::query()
+        $query = RrMaterialParents::query()
             ->where('access_level', '<=', $userLevel)
-            ->when($this->search, function ($q) {
-                $term = '%' . $this->search . '%';
-                $q->where(function ($inner) use ($term) {
-                    $inner->where('title', 'like', $term)
-                          ->orWhere('author', 'like', $term)
-                          ->orWhereRaw("JSON_SEARCH(keywords, 'one', ?) IS NOT NULL", [$this->search]);
-                });
-            })
             ->when($this->typeFilter !== '', fn ($q) => $q->where('material_type', $this->typeFilter))
             ->when($this->formatFilter === 'digital', fn ($q) =>
                 $q->whereHas('materials', fn ($m) =>
@@ -64,8 +170,15 @@ class ListCatalogs extends Page
                 $q->whereHas('materials', fn ($m) =>
                     $m->where('is_digital', false)->where('is_available', true)->whereNull('deleted_at')
                 )
-            )
-            ->orderByDesc('created_at');
+            );
+
+        if ($this->search !== '') {
+            $query = $this->applyOPACSearch($query, $this->search);
+        } else {
+            $query->orderByDesc('created_at');
+        }
+
+        return $query;
     }
 
     // ── View data ───────────────────────────────────────────────────────────
