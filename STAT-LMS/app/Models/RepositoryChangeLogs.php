@@ -14,6 +14,7 @@ class RepositoryChangeLogs extends Model
     protected $fillable = [
         'editor_id',
         'rr_material_id',
+        'material_parent_id',
         'target_user_id',
         'table_changed',
         'change_type',
@@ -29,6 +30,11 @@ class RepositoryChangeLogs extends Model
     public function editor()
     {
         return $this->belongsTo(User::class, 'editor_id');
+    }
+
+    public function materialParent()
+    {
+        return $this->belongsTo(RrMaterialParents::class, 'material_parent_id');
     }
 
     public function material()
