@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('repository_change_logs', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('editor_id')->constrained('users');
+            $table->foreignUuid('material_parent_id')->nullable()->constrained('rr_material_parents');
             $table->foreignUuid('rr_material_id')->nullable()->constrained('rr_materials');
             $table->foreignUuid('target_user_id')->nullable()->constrained('users');
             $table->string('table_changed');

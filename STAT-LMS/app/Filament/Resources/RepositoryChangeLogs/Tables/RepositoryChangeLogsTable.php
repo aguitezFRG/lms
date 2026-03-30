@@ -38,8 +38,14 @@ class RepositoryChangeLogsTable
                     ->sortable()
                     ->searchable(),
 
+                TextColumn::make('materialParent.title')
+                    ->label('Material Title')
+                    ->placeholder('N/A')
+                    ->sortable()
+                    ->toggleable(),
+
                 TextColumn::make('material.parent.title')
-                    ->label('Material')
+                    ->label('Copy Title')
                     ->placeholder('N/A')
                     ->sortable()
                     ->toggleable(),

@@ -22,6 +22,11 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
+use Filament\Forms\Components\TextInput;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules\Password;
+
 class UserProfile extends Page implements HasTable, HasInfolists
 {
     use InteractsWithTable;
@@ -56,6 +61,53 @@ class UserProfile extends Page implements HasTable, HasInfolists
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('changePassword')
+                ->label('Change Password')
+                ->icon('heroicon-o-lock-closed')
+                ->color('warning')
+                ->modalHeading('Change Your Password')
+                ->modalDescription('Enter your current password, then choose a new one.')
+                ->modalWidth('md')
+                ->form([
+                    TextInput::make('current_password')
+                        ->label('Current Password')
+                        ->password()
+                        ->revealable()
+                        ->required()
+                        ->currentPassword()
+                        ->autocomplete('current-password'),
+
+                    TextInput::make('password')
+                        ->label('New Password')
+                        ->password()
+                        ->revealable()
+                        ->required()
+                        ->rule(Password::min(8)->mixedCase()->numbers()->symbols())
+                        ->different('current_password')
+                        ->autocomplete('new-password'),
+
+                    TextInput::make('password_confirmation')
+                        ->label('Confirm New Password')
+                        ->password()
+                        ->revealable()
+                        ->required()
+                        ->same('password')
+                        ->autocomplete('new-password'),
+                ])
+                ->action(function (array $data): void {
+                    auth()->user()->update([
+                        'password' => Hash::make($data['password']),
+                    ]);
+
+                    Notification::make()
+                        ->title('Password updated successfully')
+                        ->success()
+                        ->send();
+                })
+                ->modalSubmitActionLabel('Update Password')
+                ->modalCancelActionLabel('Cancel')
+                ->modalSubmitAction(fn (Action $action) => $action->color('success')),
+
             Action::make('markAllRead')
                 ->label('Mark All as Read')
                 ->icon('heroicon-o-check-circle')
