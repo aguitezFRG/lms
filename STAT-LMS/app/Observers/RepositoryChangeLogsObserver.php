@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Enums\RepositoryChangeType;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Support\Facades\Log;
+
 class RepositoryChangeLogsObserver
 {
 
@@ -31,11 +33,12 @@ class RepositoryChangeLogsObserver
 
         RepositoryChangeLogs::create([
             'editor_id'      => auth()->id(),
-            'rr_material_id' => $this->getMaterialId($model),
+            'material_parent_id' => $this->getParentId($model),
+            'rr_material_id' => $this->getCopyId($model),
             'target_user_id' => $this->getTargetUserId($model),
             'table_changed'  => $model->getTable(),
             'change_type'    => RepositoryChangeType::CREATE->value,
-            'change_made'    => collect($this->filterAttributes($model, $model->getAttributes()))
+            'change_made'    => collect($this->filterAttributes($model, $model->getDirty()))
                 ->mapWithKeys(fn ($value, $key) => [
                     $key => ['old' => null, 'new' => $value]
                 ])->toArray(),
@@ -52,13 +55,18 @@ class RepositoryChangeLogsObserver
 
         RepositoryChangeLogs::create([
             'editor_id'      => auth()->id(),
-            'rr_material_id' => $this->getMaterialId($model),
+            'material_parent_id' => $this->getParentId($model),
+            'rr_material_id' => $this->getCopyId($model),
             'target_user_id' => $this->getTargetUserId($model),
             'table_changed'  => $model->getTable(),
             'change_type'    => RepositoryChangeType::UPDATE->value,
-            'change_made'    => collect($this->filterAttributes($model, $model->getAttributes()))
+            'change_made'    => collect($this->filterAttributes($model, $model->getDirty()))
+                ->filter(fn ($value, $key) => $model->getOriginal($key) !== $value)
                 ->mapWithKeys(fn ($value, $key) => [
-                    $key => ['old' => null, 'new' => $value]
+                    $key => [
+                        'old' => $model->getOriginal($key),
+                        'new' => $value,
+                    ]
                 ])->toArray(),
             'changed_at'     => now(),
         ]);
@@ -96,13 +104,14 @@ class RepositoryChangeLogsObserver
 
         RepositoryChangeLogs::create([
             'editor_id'      => auth()->id(),
-            'rr_material_id' => $this->getMaterialId($model),
+            'material_parent_id' => $this->getParentId($model),
+            'rr_material_id' => $this->getCopyId($model),
             'target_user_id' => $this->getTargetUserId($model),
             'table_changed'  => $model->getTable(),
             'change_type'    => RepositoryChangeType::DELETE->value,
-            'change_made'    => collect($this->filterAttributes($model, $model->getAttributes()))
+            'change_made'    => collect($this->filterAttributes($model, $model->getDirty()))
                 ->mapWithKeys(fn ($value, $key) => [
-                    $key => ['old' => null, 'new' => $value]
+                    $key => ['old' => $model->getOriginal($key), 'new' => $value]
                 ])->toArray(),
             'changed_at'     => now(),
         ]);
@@ -117,13 +126,14 @@ class RepositoryChangeLogsObserver
 
         RepositoryChangeLogs::create([
             'editor_id'      => auth()->id(),
-            'rr_material_id' => $this->getMaterialId($model),
+            'material_parent_id' => $this->getParentId($model),
+            'rr_material_id' => $this->getCopyId($model),
             'target_user_id' => $this->getTargetUserId($model),
             'table_changed'  => $model->getTable(),
             'change_type'    => RepositoryChangeType::RESTORE->value,
-            'change_made'    => collect($this->filterAttributes($model, $model->getAttributes()))
+            'change_made'    => collect($this->filterAttributes($model, $model->getDirty()))
                 ->mapWithKeys(fn ($value, $key) => [
-                    $key => ['old' => null, 'new' => $value]
+                    $key => ['old' => $model->getOriginal($key), 'new' => $value]
                 ])->toArray(),
             'changed_at'     => now(),
         ]);
@@ -138,23 +148,33 @@ class RepositoryChangeLogsObserver
 
         RepositoryChangeLogs::create([
             'editor_id'      => auth()->id(),
-            'rr_material_id' => $this->getMaterialId($model),
+            'material_parent_id' => $this->getParentId($model),
+            'rr_material_id' => $this->getCopyId($model),
             'target_user_id' => $this->getTargetUserId($model),
             'table_changed'  => $model->getTable(),
             'change_type'    => RepositoryChangeType::DELETE->value,
-            'change_made'    => collect($this->filterAttributes($model, $model->getAttributes()))
+            'change_made'    => collect($this->filterAttributes($model, $model->getDirty()))
                 ->mapWithKeys(fn ($value, $key) => [
-                    $key => ['old' => null, 'new' => $value]
+                    $key => ['old' => $model->getOriginal($key), 'new' => $value]
                 ])->toArray(),
             'changed_at'     => now(),
         ]);
     }
 
-    private function getMaterialId(Model $model): ?string
+    private function getCopyId(Model $model): ?string
     {
         return match (true) {
             isset($model->rr_material_id) => $model->rr_material_id,
             $model->getTable() === 'rr_materials' => $model->id,
+            default => null,
+        };
+    }
+
+    private function getParentId(Model $model): ?string
+    {
+        return match (true) {
+            isset($model->material_parent_id) => $model->material_parent_id,
+            $model->getTable() === 'rr_material_parents' => $model->id,
             default => null,
         };
     }
