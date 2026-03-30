@@ -16,6 +16,11 @@ class UserLogin extends Login
             ->color('success');
     }
 
+    public function getHeading(): string|Htmlable|null
+    {
+        return 'User Sign In';
+    }
+
     public function getSubheading(): string|Htmlable|null
     {
         return new HtmlString(

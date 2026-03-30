@@ -16,6 +16,11 @@ class AdminLogin extends Login
             ->color('success');
     }
 
+    public function getHeading(): string|Htmlable|null
+    {
+        return 'Admin Sign In';
+    }
+
     public function getSubheading(): string|Htmlable|null
     {
         return new HtmlString(
