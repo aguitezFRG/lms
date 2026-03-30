@@ -7,6 +7,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
 
+use Illuminate\Validation\Rules\Password;
+
 class UserForm
 {
     public static function configure($schema)
@@ -85,7 +87,24 @@ class UserForm
                             ->revealable()
                             ->required(fn (string $context): bool => $context === 'create')
                             ->dehydrated(fn ($state) => filled($state))
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->rules([
+                                fn (string $context) => $context === 'create'
+                                ? Password::min(8)
+                                    ->mixedCase()
+                                    ->numbers()
+                                    ->symbols()
+                                    // ->uncompromised() // uncomment if the hosted environment supports it
+
+                                : Password::min(8)
+                                    ->mixedCase()
+                                    ->numbers()
+                                    ->symbols()
+                                    // ->uncompromised() // uncomment if the hosted environment supports it
+                                    ->sometimes()
+                                    ->ignore($get('id')),
+                            ])
+                            ->helperText('Minimum 8 characters with at least one uppercase letter, one lowercase letter, one number, and one symbol.'),
                     ])->columns(2),
             ]);
     }
