@@ -35,16 +35,24 @@ class RepositoryChangeLogsInfolist
                                     ->color(fn (string $state) => RepositoryChangeType::from($state)->getColor()),
                             ]),
 
-                        Grid::make(3)
+                        Grid::make(2)
                             ->components([
                                 TextEntry::make('rr_material_id')
-                                    ->label('Related Material')
+                                    ->label('Related Material Copy')
                                     ->placeholder('N/A')
+                                    ->visible(fn (RepositoryChangeLogs $record) => $record->rr_material_id !== null)
                                     ->tooltip(fn (RepositoryChangeLogs $record) => $record->material?->parent?->title),
+
+                                TextEntry::make('material_parent_id')
+                                    ->label('Related Material Parent')
+                                    ->placeholder('N/A')
+                                    ->visible(fn (RepositoryChangeLogs $record) => $record->material_parent_id !== null)
+                                    ->tooltip(fn (RepositoryChangeLogs $record) => $record->materialParent?->title),
 
                                 TextEntry::make('target_user_id')
                                     ->label('Target User')
                                     ->placeholder('N/A')
+                                    ->visible(fn (RepositoryChangeLogs $record) => $record->target_user_id !== null)
                                     ->tooltip(fn (RepositoryChangeLogs $record) => $record->targetUser?->name),
 
                                 TextEntry::make('changed_at')
