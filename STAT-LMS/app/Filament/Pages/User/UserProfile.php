@@ -305,6 +305,15 @@ class UserProfile extends Page implements HasTable, HasInfolists
                                 ->whereIn('event_type', ['request', 'borrow'])->count(),
             'unreadCount'   => $user->unreadNotifications()->count(),
             'activeTab'     => $this->activeTab,
+
+            'notifications' => $user->notifications()->latest()->get()->map(fn ($n) => [
+            'id'        => $n->id,
+            'title'     => $n->data['title']   ?? 'Notification',
+            'message'   => $n->data['message'] ?? '',
+            'type'      => $n->data['type']    ?? 'general',
+            'since'     => $n->created_at->diffForHumans(),
+            'is_unread' => is_null($n->read_at),
+        ])->values()->toArray(),
         ];
     }
 }

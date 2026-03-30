@@ -18,17 +18,23 @@ class MaterialAccessEventsFactory extends Factory
      */
     public function definition(): array
     {
+        $status = fake()->randomElement(['pending', 'approved', 'rejected', 'completed', 'cancelled']);
+
         return [
-            'user_id' => User::factory(),
+            'user_id'        => User::factory(),
             'rr_material_id' => RrMaterials::factory(),
-            'approver_id' => User::factory(),
-            'event_type' => fake()->randomElement(['Borrow', 'Return', 'Request', 'Approval']),
-            'status' => fake()->randomElement(['Pending', 'Approved', 'Rejected', 'Completed']),
-            'due_at' => fake()->dateTimeBetween('now', '+30 days'),
-            'returned_at' => fake()->optional(0.6)->dateTime(),
-            'is_overdue' => fake()->boolean(20),
-            'approved_at' => fake()->dateTime(),
-            'completed_at' => fake()->optional(0.5)->dateTime(),
+            'approver_id'    => in_array($status, ['approved', 'rejected', 'completed'])
+                ? User::factory()
+                : null,
+            'event_type'     => fake()->randomElement(['request', 'borrow']),
+            'status'         => $status,
+            'due_at'         => in_array($status, ['approved', 'completed'])
+                ? fake()->dateTimeBetween('now', '+30 days')
+                : null,
+            'returned_at'    => $status === 'completed' ? fake()->dateTimeBetween('-10 days', 'now') : null,
+            'is_overdue'     => false,
+            'approved_at'    => in_array($status, ['approved', 'completed']) ? now() : null,
+            'completed_at'   => $status === 'completed' ? now() : null,
         ];
     }
 }

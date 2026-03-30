@@ -17,11 +17,20 @@ class RrMaterialsFactory extends Factory
      */
     public function definition(): array
     {
+        $isDigital = fake()->boolean(70);
+
         return [
             'material_parent_id' => RrMaterialParents::factory(),
-            'is_digital' => fake()->boolean(70),
-            'is_available' => fake()->boolean(80),
-            'file_name' => fake()->word() . '_' . $this->faker->numberBetween(1000, 9999) . '-' . $this->faker->numerify('#####') . '.' . fake()->randomElement(['pdf', 'docx', 'xlsx', 'txt']),
+            'is_digital'         => $isDigital,
+            'is_available'       => fake()->boolean(80),
+            'file_name'          => $isDigital
+                ? 'repository/access_level_1/'
+                    . fake()->randomElement(['book', 'thesis', 'journal', 'dissertation', 'other'])
+                    . '_' . fake()->slug(4)
+                    . '-' . fake()->year()
+                    . '-' . \Illuminate\Support\Str::uuid()
+                    . '-v1.pdf'
+                : null,
         ];
     }
 }

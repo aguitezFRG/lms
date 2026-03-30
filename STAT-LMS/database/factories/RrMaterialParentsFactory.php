@@ -17,15 +17,15 @@ class RrMaterialParentsFactory extends Factory
     public function definition(): array
     {
         return [
-            'material_type' => fake()->randomElement(['Book', 'Journal', 'Thesis', 'Dataset', 'Research Paper']),
-            'title' => fake()->sentence(6),
-            'abstract' => fake()->paragraph(3),
-            'keywords'         => ['stats', 'research'],           // plain array — model casts handle JSON
-            'sdgs'             => ['Quality Education'],            // plain array
+            'material_type'    => fake()->randomElement([1, 2, 3, 4, 5]),
+            'title'            => fake()->sentence(6),
+            'abstract'         => fake()->paragraph(3),
+            'keywords'         => ['stats', 'research'],
+            'sdgs'             => ['Quality Education'],
             'publication_date' => fake()->dateTimeBetween('-5 years', 'now'),
             'author'           => fake()->name(),
-            'adviser'          => ['Test Adviser'],                 // plain array
-            'access_level'     => fake()->randomElement([1, 2, 3]), // use int keys
+            'adviser'          => ['Test Adviser'],
+            'access_level'     => fake()->randomElement([1, 2, 3]),
         ];
     }
 }
