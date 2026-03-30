@@ -49,9 +49,9 @@
         {{ $this->table }}
     @endif
 
-    {{-- ── Notifications Tab (Infolist) ────────────────────────────────── --}}
+    {{-- ── Notifications Tab ────────────────────────────────────── --}}
     @if ($activeTab === 'notifications')
-        {{ $this->notificationsInfolist }}
+        @include('filament.partials.notification-list', ['notifications' => $notifications])
     @endif
 
 </x-filament-panels::page>
