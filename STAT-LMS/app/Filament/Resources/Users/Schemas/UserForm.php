@@ -7,6 +7,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
 
+use App\Models\User;
+
 use Illuminate\Validation\Rules\Password;
 
 class UserForm
@@ -62,11 +64,11 @@ class UserForm
                     ->schema([
                         TextInput::make('std_number')
                             ->label('Student Number')
-                            ->unique(ignoreRecord: true)
+                            ->unique(table: User::class, column: 'std_number')
                             ->mask('9999-99999')
                             ->placeholder('e.g. 2020-12345')
                             ->length(10)
-                            ->rules(['nullable', 'regex:/^\d{4}-\d{5}$/', 'unique:users,std_number,{{record}}']),
+                            ->rules(['nullable', 'regex:/^\d{4}-\d{5}$/']),
                         Select::make('role')
                             ->options([
                                 'student' => 'Student',
@@ -79,7 +81,7 @@ class UserForm
                             ->required(),
                         TextInput::make('email')
                             ->email()
-                            ->unique(ignoreRecord: true)
+                            ->unique(table: User::class, column: 'email')
                             ->required()
                             ->maxLength(255),
                         TextInput::make('password')
@@ -101,8 +103,7 @@ class UserForm
                                     ->numbers()
                                     ->symbols()
                                     // ->uncompromised() // uncomment if the hosted environment supports it
-                                    ->sometimes()
-                                    ->ignore($get('id')),
+                                    ->sometimes(),
                             ])
                             ->helperText('Minimum 8 characters with at least one uppercase letter, one lowercase letter, one number, and one symbol.'),
                     ])->columns(2),
