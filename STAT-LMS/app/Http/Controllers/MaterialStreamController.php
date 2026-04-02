@@ -79,8 +79,13 @@ class MaterialStreamController extends Controller
             abort(403, 'Unauthorized access to secured library material.');
         }
 
-        // Committee and IT bypass approval requirement
-        if (in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value])) {
+        // Committee bypass approval requirement
+        if (in_array($user->role, [UserRole::COMMITTEE->value])) {
+            return;
+        }
+
+        // IT bypasses approval requirement only for level 1 and 2 materials
+        if ($user->role === UserRole::IT->value && $level <= 2) {
             return;
         }
 
