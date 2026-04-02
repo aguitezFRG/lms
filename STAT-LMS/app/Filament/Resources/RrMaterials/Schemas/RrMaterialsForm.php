@@ -45,14 +45,18 @@ class RrMaterialsForm
                     FileUpload::make('file_name')
                         ->label('Digital File (PDF)')
                         ->acceptedFileTypes(['application/pdf'])
-                        ->rules(['mimes:pdf', 'max:10240']) // 10MB max
-                        ->maxSize(10240)
+                        ->maxSize(10240) // 10 MB in kilobytes
+                        ->validationMessages([
+                            'max'   => 'The file must not exceed 10 MB. Please compress the PDF or split it before uploading.',
+                            'mimes' => 'Only PDF files are accepted. Please convert your document before uploading.',
+                        ])
+                        ->hint('PDF only · Maximum 10 MB')
+                        ->hintColor('gray')
                         ->visible(fn (Get $get) => $get('is_digital'))
                         ->required(fn (Get $get) => $get('is_digital'))
-                        ->disk('local') // Ensures it's stored in /storage/app (private)
+                        ->disk('local')
                         ->directory(function (Get $get) {
                             $parent = RrMaterialParents::find($get('material_parent_id'));
-                            // Folders organized by Access Level (e.g. 1, 2)
                             $accessLevel = $parent?->access_level ?? 'unclassified';
                             return "repository/access_level_{$accessLevel}";
                         })
@@ -61,7 +65,7 @@ class RrMaterialsForm
                             $title = Str::slug($parent?->title ?? 'unknown');
                             $year = $parent?->publication_date?->format('Y') ?? date('Y');
                             $uuid = (string) Str::uuid();
-                            $version = 'v1'; // Logic can be added here for versioning
+                            $version = 'v1';
 
                             $typePrefix = match($parent?->material_type) {
                                 1 => 'book', 2 => 'thesis', 3 => 'journal',
@@ -69,8 +73,7 @@ class RrMaterialsForm
                             };
 
                             $rawName = "{$title}-{$year}-{$uuid}-{$version}";
-                            // Encrypting the core name while keeping the prefix and extension clear
-                            return $typePrefix . '_' .$rawName . '.' . $file->getClientOriginalExtension();
+                            return $typePrefix . '_' . $rawName . '.' . $file->getClientOriginalExtension();
                         }),
 
                     /* // PHYSICAL COPY METADATA (Commented out for future use)
