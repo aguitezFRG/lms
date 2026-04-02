@@ -25,6 +25,11 @@ use App\Policies\DashboardPolicy;
 use App\Filament\Pages\Dashboard;
 use Illuminate\Support\Facades\Gate;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
+
+
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -40,6 +45,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for('login', function (Request $request) {
+            $email = (string) $request->email;
+
+            return Limit::perMinute(3)->by($email.$request->ip());
+        });
+
         MaterialAccessEvents::observe(MaterialAccessEventsObserver::class);
 
         Event::listen(Login::class, SendDueSoonOnLogin::class);
