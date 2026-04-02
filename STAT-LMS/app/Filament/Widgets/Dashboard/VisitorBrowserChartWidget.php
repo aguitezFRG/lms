@@ -16,9 +16,18 @@ class VisitorBorrowerChartWidget extends ChartWidget
 
     protected ?string $pollingInterval = '60s';
 
+    protected ?int $numDays = 4;
+
+    protected ?int $numWeeks = 4;
+
+    protected ?int $numMonths = 4;
+
+    protected ?int $numYears = 4;
+
     protected function getFilters(): ?array
     {
         return [
+            'daily'  => 'Daily',
             'weekly'  => 'Weekly',
             'monthly' => 'Monthly',
             'yearly'  => 'Yearly',
@@ -42,12 +51,14 @@ class VisitorBorrowerChartWidget extends ChartWidget
                     'data'            => $visitors,
                     'backgroundColor' => '#1a3a8f',
                     'borderRadius'    => 4,
+                    'barThickness'    => 50,
                 ],
                 [
                     'label'           => 'Borrower',
                     'data'            => $borrowers,
                     'backgroundColor' => '#F3AA2C',
                     'borderRadius'    => 4,
+                    'barThickness'    => 50,
                 ],
             ],
         ];
@@ -56,7 +67,7 @@ class VisitorBorrowerChartWidget extends ChartWidget
     protected function getOptions(): array
     {
         return [
-            'plugins' => ['legend' => ['display' => false]],
+            'plugins' => ['legend' => ['display' => true]],
             'scales'  => [
                 'x' => ['grid' => ['color' => 'rgba(156,163,175,0.2)']],
                 'y' => ['grid' => ['color' => 'rgba(156,163,175,0.2)'], 'beginAtZero' => true],
@@ -66,21 +77,65 @@ class VisitorBorrowerChartWidget extends ChartWidget
 
     private function buildSeries(): array
     {
-        $days   = match ($this->filter ?? 'weekly' ) {
-            'monthly' => 30,
-            'yearly' => 365,
-            default => 7
-        };
         $labels = $visitors = $borrowers = [];
 
-        for ($i = $days - 1; $i >= 0; $i--) {
-            $date        = Carbon::today()->subDays($i);
-            $labels[]    = $days <= 7 ? $date->format('D d') : $date->format('M d');
-            $visitors[]  = MaterialAccessEvents::whereDate('created_at', $date)
-                ->distinct('user_id')->count('user_id');
-            $borrowers[] = MaterialAccessEvents::where('event_type', 'borrow')
-                ->whereDate('created_at', $date)->count();
-        }
+        match ($this->filter ?? 'daily') {
+
+            'daily' => (function () use (&$labels, &$visitors, &$borrowers) {
+                for ($i = $this->numDays; $i >= 0; $i--) {
+                    $date = Carbon::today()->subDays($i);
+
+                    $labels[]    = $i === 0 ? 'Today' : $date->format('D, M d');
+                    $visitors[]  = MaterialAccessEvents::whereDate('created_at', $date)
+                        ->distinct('user_id')->count('user_id');
+                    $borrowers[] = MaterialAccessEvents::where('event_type', 'borrow')
+                        ->whereDate('created_at', $date)->count();
+                }
+            })(),
+
+            'weekly' => (function () use (&$labels, &$visitors, &$borrowers) {
+                for ($i = $this->numWeeks; $i >= 0; $i--) {
+                    $start = Carbon::today()->startOfWeek()->subWeeks($i);
+                    $end   = $start->copy()->endOfWeek();
+
+                    $labels[]    = $start->format('M d') . '–' . $end->format('M d');
+                    $visitors[]  = MaterialAccessEvents::whereBetween('created_at', [$start, $end])
+                        ->distinct('user_id')->count('user_id');
+                    $borrowers[] = MaterialAccessEvents::where('event_type', 'borrow')
+                        ->whereBetween('created_at', [$start, $end])->count();
+                }
+            })(),
+
+            'monthly' => (function () use (&$labels, &$visitors, &$borrowers) {
+                for ($i = $this->numMonths; $i >= 0; $i--) {
+                    $month = Carbon::today()->startOfMonth()->subMonths($i);
+                    $start = $month->copy()->startOfMonth();
+                    $end   = $month->copy()->endOfMonth();
+
+                    $labels[]    = $month->format('M Y');
+                    $visitors[]  = MaterialAccessEvents::whereBetween('created_at', [$start, $end])
+                        ->distinct('user_id')->count('user_id');
+                    $borrowers[] = MaterialAccessEvents::where('event_type', 'borrow')
+                        ->whereBetween('created_at', [$start, $end])->count();
+                }
+            })(),
+
+            'yearly' => (function () use (&$labels, &$visitors, &$borrowers) {
+                for ($i = $this->numYears; $i >= 0; $i--) {
+                    $year  = Carbon::today()->startOfYear()->subYears($i);
+                    $start = $year->copy()->startOfYear();
+                    $end   = $year->copy()->endOfYear();
+
+                    $labels[]    = $year->format('Y');
+                    $visitors[]  = MaterialAccessEvents::whereBetween('created_at', [$start, $end])
+                        ->distinct('user_id')->count('user_id');
+                    $borrowers[] = MaterialAccessEvents::where('event_type', 'borrow')
+                        ->whereBetween('created_at', [$start, $end])->count();
+                }
+            })(),
+
+            default => throw new \InvalidArgumentException("Invalid filter value: {$this->filter}"),
+        };
 
         return [$labels, $visitors, $borrowers];
     }

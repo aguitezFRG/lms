@@ -16,6 +16,14 @@ class PhysicalDigitalChartWidget extends ChartWidget
 
     protected ?string $pollingInterval = '60s';
 
+    protected ?int $numDays = 5;
+
+    protected ?int $numWeeks = 5;
+
+    protected ?int $numMonths = 5;
+
+    protected ?int $numYears = 5;
+
     protected function getFilters(): ?array
     {
         return [
@@ -62,7 +70,7 @@ class PhysicalDigitalChartWidget extends ChartWidget
     protected function getOptions(): array
     {
         return [
-            'plugins' => ['legend' => ['display' => false]],
+            'plugins' => ['legend' => ['display' => true]],
             'scales'  => [
                 'x' => ['grid' => ['color' => 'rgba(156,163,175,0.2)']],
                 'y' => ['grid' => ['color' => 'rgba(156,163,175,0.2)'], 'beginAtZero' => true],
@@ -72,21 +80,65 @@ class PhysicalDigitalChartWidget extends ChartWidget
 
     private function buildSeries(): array
     {
-        $days    = match ($this->filter ?? 'weekly') {
-            'monthly' => 30,
-            'yearly' => 365,
-            default => 7
-        };
         $labels  = $physical = $digital = [];
 
-        for ($i = $days - 1; $i >= 0; $i--) {
-            $date      = Carbon::today()->subDays($i);
-            $labels[]  = $days <= 7 ? $date->format('D d') : $date->format('M d');
-            $physical[] = MaterialAccessEvents::where('event_type', 'borrow')
-                ->whereDate('created_at', $date)->count();
-            $digital[]  = MaterialAccessEvents::where('event_type', 'request')
-                ->whereDate('created_at', $date)->count();
-        }
+        match ($this->filter ?? 'daily') {
+
+            'daily' => (function () use (&$labels, &$physical, &$digital) {
+                for ($i = $this->numDays; $i >= 0; $i--) {
+                    $date = Carbon::today()->subDays($i);
+
+                    $labels[]    = $i === 0 ? 'Today' : $date->format('D, M d');
+                    $physical[]  = MaterialAccessEvents::where('event_type', 'borrow')
+                        ->whereDate('created_at', $date)->count();
+                    $digital[] = MaterialAccessEvents::where('event_type', 'request')
+                        ->whereDate('created_at', $date)->count();
+                }
+            })(),
+
+            'weekly' => (function () use (&$labels, &$physical, &$digital) {
+                for ($i = $this->numWeeks - 1; $i >= 0; $i--) {
+                    $start = Carbon::today()->startOfWeek()->subWeeks($i);
+                    $end   = $start->copy()->endOfWeek();
+
+                    $labels[]    = $start->format('M d') . '–' . $end->format('M d');
+                    $physical[]  = MaterialAccessEvents::where('event_type', 'borrow')
+                        ->whereBetween('created_at', [$start, $end])->count();
+                    $digital[] = MaterialAccessEvents::where('event_type', 'request')
+                        ->whereBetween('created_at', [$start, $end])->count();
+                }
+            })(),
+
+            'monthly' => (function () use (&$labels, &$physical, &$digital) {
+                for ($i = $this->numMonths - 1; $i >= 0; $i--) {
+                    $month = Carbon::today()->startOfMonth()->subMonths($i);
+                    $start = $month->copy()->startOfMonth();
+                    $end   = $month->copy()->endOfMonth();
+
+                    $labels[]    = $month->format('M Y');
+                    $physical[]  = MaterialAccessEvents::where('event_type', 'borrow')
+                        ->whereBetween('created_at', [$start, $end])->count();
+                    $digital[] = MaterialAccessEvents::where('event_type', 'request')
+                        ->whereBetween('created_at', [$start, $end])->count();
+                }
+            })(),
+
+            'yearly' => (function () use (&$labels, &$physical, &$digital) {
+                for ($i = $this->numYears; $i >= 0; $i--) {
+                    $year  = Carbon::today()->startOfYear()->subYears($i);
+                    $start = $year->copy()->startOfYear();
+                    $end   = $year->copy()->endOfYear();
+
+                    $labels[]    = $year->format('Y');
+                    $physical[]  = MaterialAccessEvents::where('event_type', 'borrow')
+                        ->whereBetween('created_at', [$start, $end])->count();
+                    $digital[] = MaterialAccessEvents::where('event_type', 'request')
+                        ->whereBetween('created_at', [$start, $end])->count();
+                }
+            })(),
+
+            default => throw new \InvalidArgumentException("Invalid filter value: {$this->filter}"),
+        };
 
         return [$labels, $physical, $digital];
     }
