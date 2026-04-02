@@ -39,7 +39,7 @@ class ViewRrMaterials extends ViewRecord
                 ->label('View Document')
                 ->color('success')
                 ->hidden(fn () => ! $this->record?->is_digital || ! $this->canViewDocument($this->record))
-                ->url(fn () => route('materials.stream', ['record' => $this->record->id]), shouldOpenInNewTab: true)
+                ->url(fn () => route('materials.viewer', ['record' => $this->record->id]), shouldOpenInNewTab: true)
                 ->extraAttributes([
                     'x-on:click.prevent' => '$wire.logAccessedEvent().then(() => window.open($el.href, `_blank`))',
                 ]),

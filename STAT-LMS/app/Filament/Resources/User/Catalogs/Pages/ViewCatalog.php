@@ -196,7 +196,7 @@ class ViewCatalog extends ViewRecord
             ->whereNull('deleted_at')
             ->first();
 
-        return $copy ? route('materials.stream', ['record' => $copy->id]) : null;
+        return $copy ? route('materials.viewer', ['record' => $copy->id]) : null;
     }
 
     public function logAccessedEvent(): void
