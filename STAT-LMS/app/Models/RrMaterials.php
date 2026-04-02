@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
+use Illuminate\Support\Facades\Storage;
+
 class RrMaterials extends Model
 {
     use HasFactory, SoftDeletes, HasUuids;
@@ -23,6 +25,30 @@ class RrMaterials extends Model
         'is_digital' => 'boolean',
         'is_available' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::updating(function (RrMaterials $copy)
+        {
+            if (! $copy->isDirty('file_name')) {
+                return;
+            }
+
+            $oldPath = $copy->getOriginal('file_name');
+
+            if (blank($oldPath)) {
+                return;
+            }
+
+            if ($oldPath === $copy->file_name) {
+                return;
+            }
+
+            if (Storage::disk('local')->exists($oldPath)) {
+                Storage::disk('local')->delete($oldPath);
+            }
+        });
+    }
 
     public function parent()
     {
