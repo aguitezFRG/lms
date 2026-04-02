@@ -17,6 +17,9 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/materials/stream/{record}', [MaterialStreamController::class, 'stream'])
+    Route::get('/materials/{record}/viewer', [MaterialStreamController::class, 'viewer'])
+        ->name('materials.viewer');
+
+    Route::get('/materials/{record}/stream', [MaterialStreamController::class, 'stream'])
         ->name('materials.stream');
 });

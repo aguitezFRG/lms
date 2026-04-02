@@ -6,9 +6,9 @@ use App\Models\MaterialAccessEvents;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 
-class PhysicalDigitalChartWidget extends ChartWidget
+class VisitorBorrowerChartWidget extends ChartWidget
 {
-    protected ?string $heading = 'Physical vs Digital Materials';
+    protected ?string $heading = 'Visitor & Borrower';
 
     protected static bool $isLazy = false;
 
@@ -16,17 +16,18 @@ class PhysicalDigitalChartWidget extends ChartWidget
 
     protected ?string $pollingInterval = '60s';
 
-    protected ?int $numDays = 5;
+    protected ?int $numDays = 4;
 
-    protected ?int $numWeeks = 5;
+    protected ?int $numWeeks = 4;
 
-    protected ?int $numMonths = 5;
+    protected ?int $numMonths = 4;
 
-    protected ?int $numYears = 5;
+    protected ?int $numYears = 4;
 
     protected function getFilters(): ?array
     {
         return [
+            'daily'  => 'Daily',
             'weekly'  => 'Weekly',
             'monthly' => 'Monthly',
             'yearly'  => 'Yearly',
@@ -35,33 +36,29 @@ class PhysicalDigitalChartWidget extends ChartWidget
 
     protected function getType(): string
     {
-        return 'line';
+        return 'bar';
     }
 
     protected function getData(): array
     {
-        [$labels, $physical, $digital] = $this->buildSeries();
+        [$labels, $visitors, $borrowers] = $this->buildSeries();
 
         return [
             'labels'   => $labels,
             'datasets' => [
                 [
-                    'label'           => 'Physical Copies',
-                    'data'            => $physical,
-                    'borderColor'     => '#1a3a8f',
-                    'backgroundColor' => 'rgba(26,58,143,0.08)',
-                    'tension'         => 0.4,
-                    'fill'            => false,
-                    'pointBackgroundColor' => '#1a3a8f',
+                    'label'           => 'Visitor',
+                    'data'            => $visitors,
+                    'backgroundColor' => '#1a3a8f',
+                    'borderRadius'    => 4,
+                    'barThickness'    => 50,
                 ],
                 [
-                    'label'           => 'Digital Access',
-                    'data'            => $digital,
-                    'borderColor'     => '#F3AA2C',
-                    'backgroundColor' => 'rgba(243,170,44,0.08)',
-                    'tension'         => 0.4,
-                    'fill'            => false,
-                    'pointBackgroundColor' => '#F3AA2C',
+                    'label'           => 'Borrower',
+                    'data'            => $borrowers,
+                    'backgroundColor' => '#F3AA2C',
+                    'borderRadius'    => 4,
+                    'barThickness'    => 50,
                 ],
             ],
         ];
@@ -80,59 +77,59 @@ class PhysicalDigitalChartWidget extends ChartWidget
 
     private function buildSeries(): array
     {
-        $labels  = $physical = $digital = [];
+        $labels = $visitors = $borrowers = [];
 
         match ($this->filter ?? 'daily') {
 
-            'daily' => (function () use (&$labels, &$physical, &$digital) {
+            'daily' => (function () use (&$labels, &$visitors, &$borrowers) {
                 for ($i = $this->numDays; $i >= 0; $i--) {
                     $date = Carbon::today()->subDays($i);
 
                     $labels[]    = $i === 0 ? 'Today' : $date->format('D, M d');
-                    $physical[]  = MaterialAccessEvents::where('event_type', 'borrow')
-                        ->whereDate('created_at', $date)->count();
-                    $digital[] = MaterialAccessEvents::where('event_type', 'request')
+                    $visitors[]  = MaterialAccessEvents::whereDate('created_at', $date)
+                        ->distinct('user_id')->count('user_id');
+                    $borrowers[] = MaterialAccessEvents::where('event_type', 'borrow')
                         ->whereDate('created_at', $date)->count();
                 }
             })(),
 
-            'weekly' => (function () use (&$labels, &$physical, &$digital) {
-                for ($i = $this->numWeeks - 1; $i >= 0; $i--) {
+            'weekly' => (function () use (&$labels, &$visitors, &$borrowers) {
+                for ($i = $this->numWeeks; $i >= 0; $i--) {
                     $start = Carbon::today()->startOfWeek()->subWeeks($i);
                     $end   = $start->copy()->endOfWeek();
 
                     $labels[]    = $start->format('M d') . '–' . $end->format('M d');
-                    $physical[]  = MaterialAccessEvents::where('event_type', 'borrow')
-                        ->whereBetween('created_at', [$start, $end])->count();
-                    $digital[] = MaterialAccessEvents::where('event_type', 'request')
+                    $visitors[]  = MaterialAccessEvents::whereBetween('created_at', [$start, $end])
+                        ->distinct('user_id')->count('user_id');
+                    $borrowers[] = MaterialAccessEvents::where('event_type', 'borrow')
                         ->whereBetween('created_at', [$start, $end])->count();
                 }
             })(),
 
-            'monthly' => (function () use (&$labels, &$physical, &$digital) {
-                for ($i = $this->numMonths - 1; $i >= 0; $i--) {
+            'monthly' => (function () use (&$labels, &$visitors, &$borrowers) {
+                for ($i = $this->numMonths; $i >= 0; $i--) {
                     $month = Carbon::today()->startOfMonth()->subMonths($i);
                     $start = $month->copy()->startOfMonth();
                     $end   = $month->copy()->endOfMonth();
 
                     $labels[]    = $month->format('M Y');
-                    $physical[]  = MaterialAccessEvents::where('event_type', 'borrow')
-                        ->whereBetween('created_at', [$start, $end])->count();
-                    $digital[] = MaterialAccessEvents::where('event_type', 'request')
+                    $visitors[]  = MaterialAccessEvents::whereBetween('created_at', [$start, $end])
+                        ->distinct('user_id')->count('user_id');
+                    $borrowers[] = MaterialAccessEvents::where('event_type', 'borrow')
                         ->whereBetween('created_at', [$start, $end])->count();
                 }
             })(),
 
-            'yearly' => (function () use (&$labels, &$physical, &$digital) {
+            'yearly' => (function () use (&$labels, &$visitors, &$borrowers) {
                 for ($i = $this->numYears; $i >= 0; $i--) {
                     $year  = Carbon::today()->startOfYear()->subYears($i);
                     $start = $year->copy()->startOfYear();
                     $end   = $year->copy()->endOfYear();
 
                     $labels[]    = $year->format('Y');
-                    $physical[]  = MaterialAccessEvents::where('event_type', 'borrow')
-                        ->whereBetween('created_at', [$start, $end])->count();
-                    $digital[] = MaterialAccessEvents::where('event_type', 'request')
+                    $visitors[]  = MaterialAccessEvents::whereBetween('created_at', [$start, $end])
+                        ->distinct('user_id')->count('user_id');
+                    $borrowers[] = MaterialAccessEvents::where('event_type', 'borrow')
                         ->whereBetween('created_at', [$start, $end])->count();
                 }
             })(),
@@ -140,6 +137,6 @@ class PhysicalDigitalChartWidget extends ChartWidget
             default => throw new \InvalidArgumentException("Invalid filter value: {$this->filter}"),
         };
 
-        return [$labels, $physical, $digital];
+        return [$labels, $visitors, $borrowers];
     }
 }
