@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('table_changed');
             $table->string('change_type');
             $table->json('change_made')->nullable();
-            $table->timestamp('changed_at')->default(time());
+            $table->timestamp('changed_at')->default(now()); // changed time() to now() --- IGNORE ---
             $table->timestamps();
         });
     }

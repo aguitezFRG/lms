@@ -22,8 +22,8 @@ return new class extends Migration
             $table->timestamp('returned_at')->nullable();
             $table->boolean('is_overdue')->default(false);
             $table->timestamps();
-            $table->timestamp('approved_at')->nullable()->default(time());
-            $table->timestamp('completed_at')->nullable()->default(time());
+            $table->timestamp('approved_at')->nullable()->default(now()); // changed time() to now() --- IGNORE ---
+            $table->timestamp('completed_at')->nullable()->default(now());  // changed time() to now() --- IGNORE ---
             $table->softDeletes();
         });
     }
