@@ -9,13 +9,16 @@ use Filament\Actions\Action;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Filament\Notifications\Notification;
 
+use Illuminate\Support\Facades\Gate;
+use App\Filament\Pages\Dashboard;
+
 class PendingAccessesWidget extends BaseWidget
 {
     protected int | string | array $columnSpan = 'full';
 
     protected static ?string $heading = 'Pending Digital Access Requests';
 
-    protected static ?string $pollingInterval = '15s';
+    protected static ?string $pollingInterval = '8s';
 
     protected $listeners = ['request-actioned' => '$refresh'];
 
@@ -34,6 +37,7 @@ class PendingAccessesWidget extends BaseWidget
                     ->where('status', 'pending')
                     ->oldest()
             )
+            ->poll('8s')
             ->columns([
                 TextColumn::make('user.name')
                     ->label('Requester Name')
