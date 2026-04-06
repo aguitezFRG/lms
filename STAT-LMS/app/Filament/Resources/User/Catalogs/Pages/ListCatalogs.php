@@ -15,22 +15,29 @@ class ListCatalogs extends Page
     protected string $view   = 'filament.resources.user.list-catalog';
     protected static ?string $title = 'Material Catalog';
 
-    // ── Livewire state ──────────────────────────────────────────────────────
+    // ── Applied filter state (what the query actually uses) ─────────────────
     public string $search       = '';
+    public string $searchScope   = 'all';
     public string $typeFilter   = '';
     public string $formatFilter = '';
+    public string $pubDateFrom   = '';
+    public string $pubDateTo     = '';
+    public array  $sdgFilter     = [];
+    public string $sortBy        = 'publication_date';
+    public string $sortDir       = 'desc';
+    public bool   $availableOnly = true;  // hide unavailable by default
     public int    $page         = 1;
     public int    $perPage      = 15;
 
-    /* ── OPAC Extended Filter State ─────────────────────────────────── */
-    public string $searchScope   = 'all';        // all | title | author | keyword
-    public string $pubDateFrom   = '';           // YYYY-MM-DD lower bound on publication_date
-    public string $pubDateTo     = '';           // YYYY-MM-DD upper bound on publication_date
-    public array  $sdgFilter     = [];
-    public string $sortBy        = 'created_at';
-    public string $sortDir       = 'desc';  // asc | desc
-    public bool   $availableOnly = false;   // only show items with available copies
-    /* ──────────────────────────────────────────────────────────────────── */
+    public string $draftTypeFilter   = '';
+    public string $draftFormatFilter = '';
+    public string $draftPubDateFrom  = '';
+    public string $draftPubDateTo    = '';
+    public array  $draftSdgFilter    = [];
+    public bool   $draftAvailableOnly = true;
+
+    // ── Skeleton loading state ───────────────────────────────────────────────
+    public bool $isLoading = false;
 
     protected $queryString = [
         'search'        => ['except' => ''],
@@ -40,50 +47,75 @@ class ListCatalogs extends Page
         'pubDateFrom'   => ['except' => ''],
         'pubDateTo'     => ['except' => ''],
         'sdgFilter'     => ['except' => []],
-        'sortBy'        => ['except' => 'created_at'],
+        'sortBy'        => ['except' => 'publication_date'],
         'sortDir'       => ['except' => 'desc'],
-        'availableOnly' => ['except' => false],
+        'availableOnly' => ['except' => true],
         'page'          => ['except' => 1],
     ];
 
-    // ── Livewire lifecycle ──────────────────────────────────────────────────
-    public function updatedSearch(): void       { $this->page = 1; }
-    public function updatedTypeFilter(): void   { $this->page = 1; }
-    public function updatedFormatFilter(): void { $this->page = 1; }
+    // ── Lifecycle hooks — only search/sort apply live ────────────────────────
 
-    /* OPAC lifecycle resets */
-    public function updatedSearchScope(): void    { $this->page = 1; }
-    public function updatedPubDateFrom(): void    { $this->page = 1; }
-    public function updatedPubDateTo(): void      { $this->page = 1; }
-    public function updatedSortBy(): void         { $this->page = 1; }
-    public function updatedAvailableOnly(): void  { $this->page = 1; }
-    /* ──────────────────────────────────────────────────────────────────── */
+    public function updatedSearch(): void       { $this->page = 1; }
+    public function updatedSearchScope(): void  { $this->page = 1; }
+    public function updatedSortBy(): void       { $this->page = 1; }
+    public function updatedSortDir(): void      { $this->page = 1; }
+
+    // ── Pagination ───────────────────────────────────────────────────────────
 
     public function nextPage(): void       { $this->page++; }
     public function previousPage(): void   { if ($this->page > 1) $this->page--; }
     public function goToPage(int $p): void { $this->page = $p; }
 
-    /* ── OPAC Filter Actions ──────────────────────────────────────── */
+    // ── Open filter modal: copy applied → staged ─────────────────────────────
 
-    /** Toggle a single SDG on/off in the multi-select filter array */
-    public function toggleSdg(string $sdg): void
+    public function openFilterModal(): void
     {
-        if (in_array($sdg, $this->sdgFilter)) {
-            $this->sdgFilter = array_values(array_filter($this->sdgFilter, fn ($s) => $s !== $sdg));
+        $this->draftTypeFilter    = $this->typeFilter;
+        $this->draftFormatFilter  = $this->formatFilter;
+        $this->draftPubDateFrom   = $this->pubDateFrom;
+        $this->draftPubDateTo     = $this->pubDateTo;
+        $this->draftSdgFilter     = $this->sdgFilter;
+        $this->draftAvailableOnly = $this->availableOnly;
+    }
+
+    // ── Apply staged → applied, then close modal ─────────────────────────────
+
+    public function applyFilters(): void
+    {
+        $this->typeFilter    = $this->draftTypeFilter;
+        $this->formatFilter  = $this->draftFormatFilter;
+        $this->pubDateFrom   = $this->draftPubDateFrom;
+        $this->pubDateTo     = $this->draftPubDateTo;
+        $this->sdgFilter     = $this->draftSdgFilter;
+        $this->availableOnly = $this->draftAvailableOnly;
+        $this->page          = 1;
+    }
+
+    // ── Draft filter helpers ────────────────────────────────────────────
+
+    public function toggleDraftSdg(string $sdg): void
+    {
+        if (in_array($sdg, $this->draftSdgFilter)) {
+            $this->draftSdgFilter = array_values(
+                array_filter($this->draftSdgFilter, fn ($s) => $s !== $sdg)
+            );
         } else {
-            $this->sdgFilter[] = $sdg;
+            $this->draftSdgFilter[] = $sdg;
         }
-        $this->page = 1;
     }
 
-    /** Flip the sort direction between asc and desc */
-    public function toggleSortDir(): void
+    public function clearDraftFilters(): void
     {
-        $this->sortDir = $this->sortDir === 'desc' ? 'asc' : 'desc';
-        $this->page    = 1;
+        $this->draftTypeFilter    = '';
+        $this->draftFormatFilter  = '';
+        $this->draftPubDateFrom   = '';
+        $this->draftPubDateTo     = '';
+        $this->draftSdgFilter     = [];
+        $this->draftAvailableOnly = true;
     }
 
-    /** Reset every filter (not search) to its default state */
+    // ── Clear all applied filters ─────────────────────────────────────────────
+
     public function clearAllFilters(): void
     {
         $this->typeFilter    = '';
@@ -91,29 +123,71 @@ class ListCatalogs extends Page
         $this->pubDateFrom   = '';
         $this->pubDateTo     = '';
         $this->sdgFilter     = [];
-        $this->availableOnly = false;
-        $this->page          = 1;
-    }
-    /* ──────────────────────────────────────────────────────────────────── */
+        $this->availableOnly = true;
 
-    // ── Query ───────────────────────────────────────────────────────────────
+        // Sync draft to match applied
+        $this->clearDraftFilters();
+
+        $this->page = 1;
+    }
+
+    // ── Remove a single chip ─────────────────────────────────────────────────
+
+    public function removeFilter(string $filter, ?string $value = null): void
+    {
+        match ($filter) {
+            'typeFilter'    => $this->typeFilter    = '',
+            'formatFilter'  => $this->formatFilter  = '',
+            'pubDate'       => [$this->pubDateFrom = '', $this->pubDateTo = ''],
+            'availableOnly' => $this->availableOnly = true,  // revert to default (hide unavailable)
+            'sdg'           => $this->sdgFilter = array_values(
+                                    array_filter($this->sdgFilter, fn ($s) => $s !== $value)
+                                ),
+            default         => null,
+        };
+
+        // Keep draft in sync
+        $this->draftTypeFilter    = $this->typeFilter;
+        $this->draftFormatFilter  = $this->formatFilter;
+        $this->draftPubDateFrom   = $this->pubDateFrom;
+        $this->draftPubDateTo     = $this->pubDateTo;
+        $this->draftSdgFilter     = $this->sdgFilter;
+        $this->draftAvailableOnly = $this->availableOnly;
+
+        $this->page = 1;
+    }
+
+    // ── Sort direction toggle ─────────────────────────────────────────────────
+
+    public function toggleSortDir(): void
+    {
+        $this->sortDir = $this->sortDir === 'desc' ? 'asc' : 'desc';
+        $this->page    = 1;
+    }
+
+    // ── Optimised query ───────────────────────────────────────────────────────
+
     protected function getQuery(): \Illuminate\Database\Eloquent\Builder
     {
         $user      = Auth::user();
         $userLevel = UserRole::from($user->role)->getAccessLevel();
 
         return RrMaterialParents::query()
+            // Only the columns needed for the card list — keeps the result set lean
+            ->select([
+                'id', 'title', 'author', 'material_type',
+                'access_level', 'publication_date',
+                'keywords', 'abstract', 'created_at',
+            ])
             ->where('access_level', '<=', $userLevel)
 
-            // ── Search (scope-aware) ────────────────────────────────────────
+            // ── Search ───────────────────────────────────────────────────────
             ->when($this->search, function ($q) {
                 $term = '%' . $this->search . '%';
                 $q->where(function ($inner) use ($term) {
                     match ($this->searchScope) {
                         'title'   => $inner->where('title', 'like', $term),
                         'author'  => $inner->where('author', 'like', $term),
-                        /* SQLite: JSON stored as text — LIKE on the raw column is sufficient
-                           for partial keyword search and is compatible with SQLite. */
                         'keyword' => $inner->where('keywords', 'like', $term),
                         default   => $inner
                             ->where('title', 'like', $term)
@@ -123,22 +197,28 @@ class ListCatalogs extends Page
                 });
             })
 
-            // ── Material type ───────────────────────────────────────────────
-            ->when($this->typeFilter !== '', fn ($q) => $q->where('material_type', $this->typeFilter))
+            // ── Type ─────────────────────────────────────────────────────────
+            ->when($this->typeFilter !== '', fn ($q) =>
+                $q->where('material_type', $this->typeFilter)
+            )
 
-            // ── Format (digital / physical) ─────────────────────────────────
+            // ── Format ───────────────────────────────────────────────────────
             ->when($this->formatFilter === 'digital', fn ($q) =>
                 $q->whereHas('materials', fn ($m) =>
-                    $m->where('is_digital', true)->where('is_available', true)->whereNull('deleted_at')
+                    $m->where('is_digital', true)
+                      ->where('is_available', true)
+                      ->whereNull('deleted_at')
                 )
             )
             ->when($this->formatFilter === 'physical', fn ($q) =>
                 $q->whereHas('materials', fn ($m) =>
-                    $m->where('is_digital', false)->where('is_available', true)->whereNull('deleted_at')
+                    $m->where('is_digital', false)
+                      ->where('is_available', true)
+                      ->whereNull('deleted_at')
                 )
             )
 
-            /* publication_date range (full date precision) ──────────────────── */
+            // ── Publication date range ────────────────────────────────────────
             ->when($this->pubDateFrom !== '', fn ($q) =>
                 $q->whereDate('publication_date', '>=', $this->pubDateFrom)
             )
@@ -146,7 +226,7 @@ class ListCatalogs extends Page
                 $q->whereDate('publication_date', '<=', $this->pubDateTo)
             )
 
-            // SDG multi-select (OR logic) ────────────────────────────────────
+            // ── SDG multi-select (OR) ─────────────────────────────────────────
             ->when(!empty($this->sdgFilter), function ($q) {
                 $q->where(function ($inner) {
                     foreach ($this->sdgFilter as $sdg) {
@@ -157,28 +237,38 @@ class ListCatalogs extends Page
                                 [json_encode($sdg)]
                             );
                         } else {
-                            // SQLite fallback (tests still use SQLite)
                             $inner->orWhere('sdgs', 'like', '%"' . addslashes($sdg) . '"%');
                         }
                     }
                 });
             })
 
-            /* availability guard ─────────────────────────────────────── */
+            // ── Availability guard ────────────────────────────────────────────
             ->when($this->availableOnly, fn ($q) =>
                 $q->whereHas('materials', fn ($m) =>
                     $m->where('is_available', true)->whereNull('deleted_at')
                 )
             )
 
-            /* dynamic sort ───────────────────────────────────────────── */
+            // ── Sort ──────────────────────────────────────────────────────────
             ->orderBy($this->sortBy, $this->sortDir);
     }
 
-    // ── View data ───────────────────────────────────────────────────────────
+    // ── View data ─────────────────────────────────────────────────────────────
+
     protected function getViewData(): array
     {
-        $paginator = $this->getQuery()->paginate($this->perPage, ['*'], 'page', $this->page);
+        // Limit to 50 per page max; default is 15
+        $clampedPerPage = min($this->perPage, 50);
+
+        $paginator = $this->getQuery()
+            ->with([
+                // Only load what the card needs — avoid N+1 on the materials sub-query
+                'materials' => fn ($q) => $q
+                    ->select(['id', 'material_parent_id', 'is_digital', 'is_available', 'deleted_at'])
+                    ->whereNull('deleted_at'),
+            ])
+            ->paginate($clampedPerPage, ['*'], 'page', $this->page);
 
         $materials = collect($paginator->items())->map(fn (RrMaterialParents $m) => [
             'id'               => $m->id,
@@ -189,19 +279,34 @@ class ListCatalogs extends Page
             'publication_date' => $m->publication_date?->format('Y'),
             'keywords'         => is_array($m->keywords) ? $m->keywords : [],
             'abstract'         => $m->abstract,
-            'has_digital'      => $m->materials()->where('is_digital', true)->where('is_available', true)->whereNull('deleted_at')->exists(),
-            'has_physical'     => $m->materials()->where('is_digital', false)->where('is_available', true)->whereNull('deleted_at')->exists(),
-            'view_url'         => CatalogResource::getUrl('view', ['record' => $m->id]),
+            // Derive availability from the already-eager-loaded relation
+            'has_digital'  => $m->materials->contains(
+                fn ($c) => $c->is_digital && $c->is_available
+            ),
+            'has_physical' => $m->materials->contains(
+                fn ($c) => !$c->is_digital && $c->is_available
+            ),
+            'view_url' => CatalogResource::getUrl('view', ['record' => $m->id]),
         ])->toArray();
 
-        /* compute active filter count for the badge on the filter toggle */
+        // Active filter count (for badge display on the "Filters" button)
         $activeFilterCount = collect([
-            $this->typeFilter    !== '',
-            $this->formatFilter  !== '',
-            $this->pubDateFrom   !== '',
-            $this->pubDateTo     !== '',
-            ! empty($this->sdgFilter),
-            $this->availableOnly,
+            $this->typeFilter   !== '',
+            $this->formatFilter !== '',
+            $this->pubDateFrom  !== '',
+            $this->pubDateTo    !== '',
+            !empty($this->sdgFilter),
+            $this->availableOnly === false,  // only count if it's hiding unavailable items (non-default)
+        ])->filter()->count();
+
+        // Draft badge count (inside the modal)
+        $draftFilterCount = collect([
+            $this->draftTypeFilter   !== '',
+            $this->draftFormatFilter !== '',
+            $this->draftPubDateFrom  !== '',
+            $this->draftPubDateTo    !== '',
+            !empty($this->draftSdgFilter),
+            $this->draftAvailableOnly === false,  // only count if it's hiding unavailable items (non-default)
         ])->filter()->count();
 
         return [
@@ -209,6 +314,7 @@ class ListCatalogs extends Page
             'paginator'         => $paginator,
             'totalResults'      => $paginator->total(),
             'activeFilterCount' => $activeFilterCount,
+            'draftFilterCount'  => $draftFilterCount,
         ];
     }
 }

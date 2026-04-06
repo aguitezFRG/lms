@@ -38,9 +38,9 @@
             />
         </div>
 
-        {{-- Filter toggle button (highlighted when filters are active) --}}
+        {{-- Filter toggle button — badge reflects APPLIED filters only --}}
         <button
-            @click="filtersOpen = true"
+            @click="$wire.openFilterModal().then(() => { filtersOpen = true })"
             @class([
                 'flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium shadow-sm transition',
                 'border-primary-500 bg-primary-50 text-primary-700 dark:border-primary-400 dark:bg-primary-900/30 dark:text-primary-300' => $activeFilterCount > 0,
@@ -78,8 +78,8 @@
                        focus:border-primary-500 focus:outline-none
                        dark:border-white/10 dark:bg-white/5 dark:text-white"
             >
-                <option value="created_at">Date Added</option>
                 <option value="publication_date">Publication Date</option>
+                <option value="created_at">Date Added</option>
                 <option value="title">Title</option>
                 <option value="author">Author</option>
             </select>
@@ -100,7 +100,7 @@
         </div>
     </div>
 
-    {{-- ── 3. Active Filter Chips ───────────────────────────────────────────── --}}
+    {{-- ── 3. Active Filter Chips (applied state only) ─────────────────────── --}}
     @if ($activeFilterCount > 0)
         <div class="mb-4 flex flex-wrap items-center gap-2">
             <span class="text-xs font-medium text-gray-400">Active filters:</span>
@@ -110,7 +110,7 @@
                 <span class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1
                              text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
                     {{ $typeChipLabel }}
-                    <button wire:click="$set('typeFilter', '')" class="ml-0.5 hover:text-blue-900">
+                    <button wire:click="removeFilter('typeFilter')" class="ml-0.5 hover:text-blue-900">
                         <x-heroicon-m-x-mark class="h-3 w-3" />
                     </button>
                 </span>
@@ -120,7 +120,7 @@
                 <span class="inline-flex items-center gap-1 rounded-full bg-teal-100 px-2.5 py-1
                              text-xs font-medium text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
                     {{ $formatFilter === 'digital' ? 'Digital' : 'Physical' }}
-                    <button wire:click="$set('formatFilter', '')" class="ml-0.5 hover:text-teal-900">
+                    <button wire:click="removeFilter('formatFilter')" class="ml-0.5 hover:text-teal-900">
                         <x-heroicon-m-x-mark class="h-3 w-3" />
                     </button>
                 </span>
@@ -130,8 +130,7 @@
                 <span class="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2.5 py-1
                              text-xs font-medium text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
                     {{ $pubDateFrom ?: '…' }} – {{ $pubDateTo ?: '…' }}
-                    <button wire:click="$set('pubDateFrom', ''); $set('pubDateTo', '')"
-                            class="ml-0.5 hover:text-violet-900">
+                    <button wire:click="removeFilter('pubDate')" class="ml-0.5 hover:text-violet-900">
                         <x-heroicon-m-x-mark class="h-3 w-3" />
                     </button>
                 </span>
@@ -141,17 +140,17 @@
                 <span class="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2.5 py-1
                              text-xs font-medium text-warning-700 dark:bg-warning-900/40 dark:text-warning-300">
                     SDG: {{ $sdg }}
-                    <button wire:click="toggleSdg('{{ $sdg }}')" class="ml-0.5 hover:text-warning-900">
+                    <button wire:click="removeFilter('sdg', '{{ $sdg }}')" class="ml-0.5 hover:text-warning-900">
                         <x-heroicon-m-x-mark class="h-3 w-3" />
                     </button>
                 </span>
             @endforeach
 
-            @if ($availableOnly)
+            @if (!$availableOnly)
                 <span class="inline-flex items-center gap-1 rounded-full bg-success-100 px-2.5 py-1
                              text-xs font-medium text-success-700 dark:bg-success-900/40 dark:text-success-300">
-                    Available only
-                    <button wire:click="$set('availableOnly', false)" class="ml-0.5 hover:text-success-900">
+                    Including unavailable
+                    <button wire:click="removeFilter('availableOnly')" class="ml-0.5 hover:text-success-900">
                         <x-heroicon-m-x-mark class="h-3 w-3" />
                     </button>
                 </span>
@@ -166,13 +165,11 @@
     @endif
 
     {{-- ── 4. Filter Modal ──────────────────────────────────────────────────── --}}
-    {{-- wire:ignore.self: Livewire skips morphing this node's attributes/children
-         so Alpine's filtersOpen state and the @class on the pill buttons inside
-         are not reset on every Livewire round-trip. --}}
+    {{-- Draft state: all bindings inside the modal target $draft* properties.
+         Nothing is applied to the live query until "Apply & Close" is clicked. --}}
     <div
         x-show="filtersOpen"
         x-cloak
-        wire:ignore.self
         x-transition:enter="ease-out duration-200"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
@@ -181,22 +178,19 @@
         x-transition:leave-end="opacity-0"
         class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
     >
-            {{-- Backdrop --}}
+            {{-- Backdrop — clicking it discards draft changes (same as Escape) --}}
             <div
                 class="absolute inset-0 bg-black/50 backdrop-blur-sm"
                 @click="filtersOpen = false"
             ></div>
 
-            {{-- Modal panel — no x-show here; the outer overlay's x-show handles
-                 visibility. Keeping this node always in DOM lets Livewire morph
-                 the @class pill buttons correctly on every re-render. --}}
             <div
                 wire:key="filter-modal-panel"
                 class="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl
                        bg-white shadow-2xl ring-1 ring-black/5
                        dark:bg-gray-900 dark:ring-white/10"
             >
-                {{-- Modal Header --}}
+                {{-- Modal Header — badge reflects DRAFT filter count --}}
                 <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4
                             dark:border-white/10">
                     <div class="flex items-center gap-2">
@@ -204,10 +198,10 @@
                         <h2 class="text-base font-semibold text-gray-900 dark:text-white">
                             Filter Catalog
                         </h2>
-                        @if ($activeFilterCount > 0)
+                        @if ($draftFilterCount > 0)
                             <span class="flex h-5 w-5 items-center justify-center rounded-full
                                          bg-primary-600 text-xs font-bold text-white dark:bg-primary-400">
-                                {{ $activeFilterCount }}
+                                {{ $draftFilterCount }}
                             </span>
                         @endif
                     </div>
@@ -220,7 +214,7 @@
                     </button>
                 </div>
 
-                {{-- Modal Body --}}
+                {{-- Modal Body — all inputs bind to draft* state --}}
                 <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2">
 
                     {{-- Material Type --}}
@@ -231,11 +225,11 @@
                         <div class="flex flex-wrap gap-1.5">
                             @foreach (['' => 'All', '1' => 'Book', '2' => 'Thesis', '3' => 'Journal', '4' => 'Dissertation', '5' => 'Others'] as $val => $label)
                                 <button
-                                    wire:click="$set('typeFilter', '{{ $val }}')"
+                                    wire:click="$set('draftTypeFilter', '{{ $val }}')"
                                     @class([
                                         'rounded-full px-3 py-1 text-xs font-medium transition border',
-                                        'border-primary-600 bg-primary-600 text-white dark:border-primary-400 dark:bg-primary-400' => $typeFilter === (string) $val,
-                                        'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:text-gray-300' => $typeFilter !== (string) $val,
+                                        'border-primary-600 bg-primary-600 text-white dark:border-primary-400 dark:bg-primary-400' => $draftTypeFilter === (string) $val,
+                                        'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:text-gray-300' => $draftTypeFilter !== (string) $val,
                                     ])
                                 >{{ $label }}</button>
                             @endforeach
@@ -254,11 +248,11 @@
                                 'physical' => ['label' => 'Physical',    'icon' => 'heroicon-o-book-open'],
                             ] as $val => $cfg)
                                 <button
-                                    wire:click="$set('formatFilter', '{{ $val }}')"
+                                    wire:click="$set('draftFormatFilter', '{{ $val }}')"
                                     @class([
                                         'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition border',
-                                        'border-primary-600 bg-primary-600 text-white dark:border-primary-400 dark:bg-primary-400' => $formatFilter === (string) $val,
-                                        'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:text-gray-300' => $formatFilter !== (string) $val,
+                                        'border-primary-600 bg-primary-600 text-white dark:border-primary-400 dark:bg-primary-400' => $draftFormatFilter === (string) $val,
+                                        'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:text-gray-300' => $draftFormatFilter !== (string) $val,
                                     ])
                                 >
                                     <x-dynamic-component :component="$cfg['icon']" class="h-3 w-3" />
@@ -275,7 +269,7 @@
                         </p>
                         <label class="flex cursor-pointer items-center gap-2.5">
                             <div class="relative">
-                                <input type="checkbox" wire:model.live="availableOnly" class="sr-only peer" />
+                                <input type="checkbox" wire:model="draftAvailableOnly" class="sr-only peer" />
                                 <div class="h-5 w-9 rounded-full bg-gray-200 transition peer-checked:bg-primary-600
                                             dark:bg-gray-700 dark:peer-checked:bg-primary-500
                                             after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4
@@ -284,6 +278,9 @@
                             </div>
                             <span class="text-sm text-gray-600 dark:text-gray-300">Show only available copies</span>
                         </label>
+                        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                            Materials with no available copies are always hidden.
+                        </p>
                     </div>
 
                     {{-- Publication Date Range --}}
@@ -295,7 +292,7 @@
                             <div class="flex flex-1 items-center gap-2">
                                 <label class="w-8 shrink-0 text-xs text-gray-400">From</label>
                                 <input
-                                    wire:model.live="pubDateFrom"
+                                    wire:model="draftPubDateFrom"
                                     type="date"
                                     max="{{ date('Y-m-d') }}"
                                     class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm
@@ -307,7 +304,7 @@
                             <div class="flex flex-1 items-center gap-2">
                                 <label class="w-8 shrink-0 text-xs text-gray-400">To</label>
                                 <input
-                                    wire:model.live="pubDateTo"
+                                    wire:model="draftPubDateTo"
                                     type="date"
                                     max="{{ date('Y-m-d') }}"
                                     class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm
@@ -315,9 +312,9 @@
                                            dark:border-white/10 dark:bg-white/5 dark:text-white dark:[color-scheme:dark]"
                                 />
                             </div>
-                            @if ($pubDateFrom !== '' || $pubDateTo !== '')
+                            @if ($draftPubDateFrom !== '' || $draftPubDateTo !== '')
                                 <button
-                                    wire:click="$set('pubDateFrom', ''); $set('pubDateTo', '')"
+                                    wire:click="$set('draftPubDateFrom', ''); $set('draftPubDateTo', '')"
                                     class="shrink-0 text-xs text-gray-400 underline underline-offset-2 hover:text-danger-500"
                                 >Clear</button>
                             @endif
@@ -344,9 +341,9 @@
                                 ];
                             @endphp
                             @foreach ($sdgs as $sdg)
-                                @php $active = in_array($sdg, $sdgFilter); @endphp
+                                @php $active = in_array($sdg, $draftSdgFilter); @endphp
                                 <button
-                                    wire:click="toggleSdg('{{ $sdg }}')"
+                                    wire:click="toggleDraftSdg('{{ $sdg }}')"
                                     @class([
                                         'rounded-full px-2.5 py-1 text-xs font-medium transition border',
                                         'border-warning-500 bg-warning-500 text-white dark:border-warning-400' => $active,
@@ -362,7 +359,7 @@
                 {{-- Modal Footer --}}
                 <div class="flex items-center justify-between border-t border-gray-100 px-6 py-4 dark:border-white/10">
                     <button
-                        wire:click="clearAllFilters"
+                        wire:click="clearDraftFilters"
                         class="rounded-lg border border-danger-200 px-4 py-2 text-xs font-medium text-danger-600
                                transition hover:bg-danger-50 dark:border-danger-500/40 dark:text-danger-400
                                dark:hover:bg-danger-500/10"
@@ -370,7 +367,7 @@
                         Clear All Filters
                     </button>
                     <button
-                        @click="filtersOpen = false"
+                        @click="$wire.applyFilters().then(() => { filtersOpen = false })"
                         class="rounded-lg bg-primary-600 px-5 py-2 text-xs font-semibold text-white shadow-sm
                                transition hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-400"
                     >
@@ -380,12 +377,11 @@
             </div>
     </div>
 
-    {{-- ── 5. Card List (full-width, availability-bordered) ─────────────────── --}}
+    {{-- ── 5. Card List ─────────────────────────────────────────────────────── --}}
     @if (count($materials))
         <div class="flex flex-col gap-6">
             @foreach ($materials as $m)
                 @php
-                    /* — type label & badge colour — */
                     $typeLabel = match ((int) $m['material_type']) {
                         1 => 'Book', 2 => 'Thesis', 3 => 'Journal',
                         4 => 'Dissertation', default => 'Other',
@@ -398,16 +394,14 @@
                         default => 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
                     };
 
-                    /* — availability — drives left border colour — */
                     $isAvailable = $m['has_digital'] || $m['has_physical'];
                     $borderColour = $isAvailable
                         ? 'border-l-green-500 dark:border-l-green-400'
                         : 'border-l-amber-400 dark:border-l-amber-500';
 
-                    /* — keyword slicing — */
-                    $kwAll    = array_values(array_filter((array) $m['keywords']));
-                    $kwShown  = array_slice($kwAll, 0, 3);
-                    $kwExtra  = count($kwAll) - count($kwShown);
+                    $kwAll   = array_values(array_filter((array) $m['keywords']));
+                    $kwShown = array_slice($kwAll, 0, 3);
+                    $kwExtra = count($kwAll) - count($kwShown);
                 @endphp
 
                 <a href="{{ $m['view_url'] }}"
@@ -418,22 +412,18 @@
 
                     <div class="flex-1 min-w-0">
 
-                        {{-- Title --}}
                         <h3 class="text-base font-bold leading-snug text-gray-800
                                    transition-colors group-hover:text-primary-600
                                    dark:text-white dark:group-hover:text-primary-400">
                             {{ $m['title'] }}
                         </h3>
 
-                        {{-- Author --}}
                         <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
                             {{ $m['author'] }}
                         </p>
 
-                        {{-- Badge row —————————————————————————————————————— --}}
                         <div class="mt-2 flex flex-wrap items-center gap-1.5">
 
-                            {{-- Availability badge --}}
                             @if ($isAvailable)
                                 <span class="inline-flex items-center gap-1 rounded-full
                                              bg-green-100 px-2.5 py-0.5
@@ -452,7 +442,6 @@
                                 </span>
                             @endif
 
-                            {{-- Format badges --}}
                             @if ($m['has_digital'])
                                 <span class="inline-flex items-center gap-1 rounded-full
                                              bg-sky-100 px-2.5 py-0.5
@@ -472,12 +461,10 @@
                                 </span>
                             @endif
 
-                            {{-- Material type --}}
                             <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $typeBg }}">
                                 {{ $typeLabel }}
                             </span>
 
-                            {{-- Keywords (first 3 + overflow count) --}}
                             @foreach ($kwShown as $kw)
                                 <span class="rounded-full bg-gray-100 px-2.5 py-0.5
                                              text-xs text-gray-500
@@ -486,58 +473,50 @@
                                 </span>
                             @endforeach
                             @if ($kwExtra > 0)
-                            @php
-                                /* Build the tooltip string from the keywords that were sliced off */
-                                $kwHidden = array_slice($kwAll, 3);
-                                $kwTooltip = implode(', ', $kwHidden);
-                            @endphp
-
-                            <span
-                                x-data="{ open: false }"
-                                class="relative"
-                                @mouseenter="open = true"
-                                @mouseleave="open = false"
-                                @focusin="open = true"
-                                @focusout="open = false"
-                            >
-                                {{-- Pill trigger --}}
-                                <span tabindex="0"
-                                    class="cursor-default rounded-full bg-gray-100 px-2.5 py-0.5
-                                            text-xs text-gray-400 select-none
-                                            dark:bg-white/10 dark:text-gray-500">
-                                    +{{ $kwExtra }} keywords
-                                </span>
-
-                                {{-- Tooltip bubble --}}
+                                @php
+                                    $kwHidden  = array_slice($kwAll, 3);
+                                    $kwTooltip = implode(', ', $kwHidden);
+                                @endphp
                                 <span
-                                    x-show="open"
-                                    x-transition:enter="transition ease-out duration-100"
-                                    x-transition:enter-start="opacity-0 -translate-y-1"
-                                    x-transition:enter-end="opacity-100 translate-y-0"
-                                    x-transition:leave="transition ease-in duration-75"
-                                    x-transition:leave-start="opacity-100 translate-y-0"
-                                    x-transition:leave-end="opacity-0 -translate-y-1"
-                                    class="absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2
-                                        w-max max-w-[14rem] rounded-lg bg-gray-900 px-3 py-2
-                                        text-xs leading-relaxed text-white shadow-lg
-                                        dark:bg-gray-700"
-                                    role="tooltip"
+                                    x-data="{ open: false }"
+                                    class="relative"
+                                    @mouseenter="open = true"
+                                    @mouseleave="open = false"
+                                    @focusin="open = true"
+                                    @focusout="open = false"
                                 >
-                                    {{ $kwTooltip }}
+                                    <span tabindex="0"
+                                        class="cursor-default rounded-full bg-gray-100 px-2.5 py-0.5
+                                                text-xs text-gray-400 select-none
+                                                dark:bg-white/10 dark:text-gray-500">
+                                        +{{ $kwExtra }} keywords
+                                    </span>
 
-                                    {{-- Arrow --}}
-                                    <span class="absolute left-1/2 top-full -translate-x-1/2
-                                                border-4 border-transparent border-t-gray-900
-                                                dark:border-t-gray-700">
+                                    <span
+                                        x-show="open"
+                                        x-transition:enter="transition ease-out duration-100"
+                                        x-transition:enter-start="opacity-0 -translate-y-1"
+                                        x-transition:enter-end="opacity-100 translate-y-0"
+                                        x-transition:leave="transition ease-in duration-75"
+                                        x-transition:leave-start="opacity-100 translate-y-0"
+                                        x-transition:leave-end="opacity-0 -translate-y-1"
+                                        class="absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2
+                                            w-max max-w-[14rem] rounded-lg bg-gray-900 px-3 py-2
+                                            text-xs leading-relaxed text-white shadow-lg
+                                            dark:bg-gray-700"
+                                        role="tooltip"
+                                    >
+                                        {{ $kwTooltip }}
+                                        <span class="absolute left-1/2 top-full -translate-x-1/2
+                                                    border-4 border-transparent border-t-gray-900
+                                                    dark:border-t-gray-700">
+                                        </span>
                                     </span>
                                 </span>
-                            </span>
-                        @endif
+                            @endif
 
                         </div>
-                        {{-- /Badge row ————————————————————————————————————— --}}
 
-                        {{-- Abstract excerpt --}}
                         @if (!empty($m['abstract']))
                             <p class="mt-2.5 line-clamp-2 text-sm leading-relaxed
                                       text-gray-600 dark:text-gray-300">
@@ -545,17 +524,14 @@
                             </p>
                         @endif
 
-                        {{-- Footer: publication year · UUID --}}
                         <div class="mt-2.5 flex flex-wrap items-center gap-1.5
                                     text-xs text-gray-400 dark:text-gray-500">
                             @if ($m['publication_date'])
                                 <span>{{ $m['publication_date'] }}</span>
-                                <!-- <span aria-hidden="true">•</span> -->
                             @endif
-                            <!-- <span>ID:&nbsp;<span class="font-mono">{{ $m['id'] }}</span></span> -->
                         </div>
 
-                    </div>{{-- /flex-1 --}}
+                    </div>
                 </a>
 
             @endforeach
@@ -593,7 +569,6 @@
         @endif
 
     @else
-        {{-- Empty state --}}
         <div class="rounded-xl border border-dashed border-gray-300 bg-white py-20 text-center
                     dark:border-white/10 dark:bg-white/5">
             <x-heroicon-o-document-magnifying-glass class="mx-auto mb-4 h-10 w-10 text-gray-300" />
