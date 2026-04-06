@@ -18,6 +18,8 @@ class ListRequests extends ListRecords
 {
     protected static string $resource = RequestsResource::class;
 
+    protected ?string $pollingInterval = '8s'; // poll every 8 seconds for real-time updates
+
     protected function getHeaderActions(): array
     {
         return [];
@@ -66,6 +68,7 @@ class ListRequests extends ListRecords
                     ->dateTime('M d, Y')
                     ->sortable(),
             ])
+            ->poll('8s')
             ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('status')

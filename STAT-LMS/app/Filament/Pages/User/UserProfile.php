@@ -34,6 +34,8 @@ class UserProfile extends Page implements HasTable, HasInfolists
 
     protected string $view = 'filament.pages.user.user-profile';
 
+    protected ?string $pollingInterval = '8s'; // poll every 8 seconds for real-time updates
+
     protected static bool $shouldRegisterNavigation = false;
 
     public string $activeTab = 'pending';
@@ -255,6 +257,7 @@ class UserProfile extends Page implements HasTable, HasInfolists
 
         return $table
             ->query($query)
+            ->poll('8s')
             ->columns([
                 TextColumn::make('material.parent.title')
                     ->label('Material')
