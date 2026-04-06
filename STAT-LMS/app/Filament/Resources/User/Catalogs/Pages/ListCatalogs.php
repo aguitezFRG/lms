@@ -146,14 +146,20 @@ class ListCatalogs extends Page
                 $q->whereDate('publication_date', '<=', $this->pubDateTo)
             )
 
-            /* SDG multi-select (OR logic) ────────────────────────────────────
-               SQLite stores JSON as text. Wrapping the value in `"…"` anchors
-               the match to a JSON string boundary, avoiding false positives
-               (e.g. "Poverty" matching "No Poverty Reduction"). */
+            // SDG multi-select (OR logic) ────────────────────────────────────
             ->when(!empty($this->sdgFilter), function ($q) {
                 $q->where(function ($inner) {
                     foreach ($this->sdgFilter as $sdg) {
-                        $inner->orWhere('sdgs', 'like', '%"' . addslashes($sdg) . '"%');
+                        $driver = config('database.default');
+                        if ($driver === 'mysql') {
+                            $inner->orWhereRaw(
+                                'JSON_CONTAINS(sdgs, ?)',
+                                [json_encode($sdg)]
+                            );
+                        } else {
+                            // SQLite fallback (tests still use SQLite)
+                            $inner->orWhere('sdgs', 'like', '%"' . addslashes($sdg) . '"%');
+                        }
                     }
                 });
             })

@@ -11,13 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notifications', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('type');
-            $table->uuidMorphs('notifiable');
-            $table->text('data');
-            $table->timestamp('read_at')->nullable();
-            $table->timestamps();
+        Schema::table('rr_material_parents', function (Blueprint $table) {
+            $table->text('abstract')->nullable()->change();
         });
     }
 
@@ -26,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notifications');
+        Schema::table('rr_material_parents', function (Blueprint $table) {
+            $table->string('abstract', 255)->nullable()->change();
+        });
     }
 };
