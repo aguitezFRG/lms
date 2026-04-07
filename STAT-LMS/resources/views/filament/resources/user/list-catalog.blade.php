@@ -1,6 +1,6 @@
 <x-filament-panels::page>
 <style>[x-cloak] { display: none !important; }</style>
-<div x-data="{ filtersOpen: false }" @keydown.escape.window="filtersOpen = false">
+<div x-data="{ filtersOpen: false, loading: true }" @keydown.escape.window="filtersOpen = false" x-init="$wire.on('catalog-ready', () => { loading = false })">
 
     {{-- ── 1. Search Bar Row ────────────────────────────────────────────── --}}
     <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -378,7 +378,8 @@
     </div>
 
     {{-- ── 5. Card List ─────────────────────────────────────────────────────── --}}
-    @if (count($materials))
+    <div x-show="!loading" x-cloak>
+        @if (count($materials))
         <div class="flex flex-col gap-6">
             @foreach ($materials as $m)
                 @php
@@ -568,14 +569,49 @@
             </div>
         @endif
 
-    @else
-        <div class="rounded-xl border border-dashed border-gray-300 bg-white py-20 text-center
-                    dark:border-white/10 dark:bg-white/5">
-            <x-heroicon-o-document-magnifying-glass class="mx-auto mb-4 h-10 w-10 text-gray-300" />
-            <p class="text-sm font-medium text-gray-500">No materials found</p>
-            <p class="mt-1 text-xs text-gray-400">Try adjusting your search or clearing some filters.</p>
-        </div>
-    @endif
+        @else
+            <div class="rounded-xl border border-dashed border-gray-300 bg-white py-20 text-center
+                        dark:border-white/10 dark:bg-white/5">
+                <x-heroicon-o-document-magnifying-glass class="mx-auto mb-4 h-10 w-10 text-gray-300" />
+                <p class="text-sm font-medium text-gray-500">No materials found</p>
+                <p class="mt-1 text-xs text-gray-400">Try adjusting your search or clearing some filters.</p>
+            </div>
+        @endif
+    </div>{{-- /loading --}}
 
+    {{-- ── 6. Skeleton rows (shown while the first query is in-flight) ──────── --}}
+    <div x-show="loading" x-cloak class="flex flex-col gap-6">
+        @foreach (range(1, 5) as $i)
+            <div class="flex w-full animate-pulse rounded-xl border border-gray-200 border-l-4
+                        border-l-gray-200 bg-white px-5 py-4 shadow-sm
+                        dark:border-gray-700/60 dark:border-l-gray-700 dark:bg-white/5">
+                <div class="flex-1 min-w-0 space-y-3">
+
+                    {{-- Title line --}}
+                    <div class="h-4 w-3/4 rounded bg-gray-200 dark:bg-white/10"></div>
+
+                    {{-- Author line --}}
+                    <div class="h-3 w-1/3 rounded bg-gray-200 dark:bg-white/10"></div>
+
+                    {{-- Badge row --}}
+                    <div class="flex flex-wrap gap-1.5 pt-1">
+                        <div class="h-5 w-16 rounded-full bg-gray-200 dark:bg-white/10"></div>
+                        <div class="h-5 w-14 rounded-full bg-gray-200 dark:bg-white/10"></div>
+                        <div class="h-5 w-12 rounded-full bg-gray-200 dark:bg-white/10"></div>
+                        <div class="h-5 w-20 rounded-full bg-gray-200 dark:bg-white/10"></div>
+                    </div>
+
+                    {{-- Abstract lines --}}
+                    <div class="space-y-1.5 pt-0.5">
+                        <div class="h-3 w-full rounded bg-gray-200 dark:bg-white/10"></div>
+                        <div class="h-3 w-5/6 rounded bg-gray-200 dark:bg-white/10"></div>
+                    </div>
+
+                    {{-- Footer line --}}
+                    <div class="h-3 w-16 rounded bg-gray-200 dark:bg-white/10"></div>
+                </div>
+            </div>
+        @endforeach
+    </div>
 </div>{{-- /x-data --}}
 </x-filament-panels::page>

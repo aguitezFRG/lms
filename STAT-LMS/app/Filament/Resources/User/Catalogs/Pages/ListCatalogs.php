@@ -309,6 +309,8 @@ class ListCatalogs extends Page
             $this->draftAvailableOnly === false,  // only count if it's hiding unavailable items (non-default)
         ])->filter()->count();
 
+        $this->dispatch('catalog-ready');
+
         return [
             'materials'         => $materials,
             'paginator'         => $paginator,
