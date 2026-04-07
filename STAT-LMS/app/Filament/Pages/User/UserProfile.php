@@ -257,6 +257,8 @@ class UserProfile extends Page implements HasTable, HasInfolists
 
         return $table
             ->query($query)
+            ->deferLoading()
+            ->defaultSort('created_at', 'desc')
             ->poll('8s')
             ->columns([
                 TextColumn::make('material.parent.title')
