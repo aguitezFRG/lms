@@ -1,6 +1,6 @@
 <x-filament-panels::page>
 <style>[x-cloak] { display: none !important; }</style>
-<div x-data="{ filtersOpen: false, loading: true }" @keydown.escape.window="filtersOpen = false" x-init="$wire.on('catalog-ready', () => { loading = false })">
+<div x-data="{ filtersOpen: false }" @keydown.escape.window="filtersOpen = false">
 
     {{-- ── 1. Search Bar Row ────────────────────────────────────────────── --}}
     <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -378,7 +378,7 @@
     </div>
 
     {{-- ── 5. Card List ─────────────────────────────────────────────────────── --}}
-    <div x-show="!loading" x-cloak>
+    <div wire:loading.remove>
         @if (count($materials))
         <div class="flex flex-col gap-6">
             @foreach ($materials as $m)
@@ -580,7 +580,7 @@
     </div>{{-- /loading --}}
 
     {{-- ── 6. Skeleton rows (shown while the first query is in-flight) ──────── --}}
-    <div x-show="loading" x-cloak class="flex flex-col gap-6">
+    <div wire:loading class="flex flex-col gap-6">
         @foreach (range(1, 5) as $i)
             <div class="flex w-full animate-pulse rounded-xl border border-gray-200 border-l-4
                         border-l-gray-200 bg-white px-5 py-4 shadow-sm
