@@ -19,6 +19,8 @@ class RepositoryChangeLogsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->deferLoading()
+            ->defaultSort('changed_at', 'desc')
             ->columns([
                 TextColumn::make('editor.name')
                     ->label('Editor')

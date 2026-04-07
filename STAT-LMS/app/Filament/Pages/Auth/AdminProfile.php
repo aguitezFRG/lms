@@ -236,6 +236,8 @@ class AdminProfile extends Page implements HasTable, HasInfolists
     public function table(Table $table): Table
     {
         return $table
+            ->deferLoading()
+            ->defaultSort('created_at', 'desc')
             ->query(
                 MaterialAccessEvents::query()
                     ->with(['material.parent'])

@@ -16,6 +16,8 @@ class RequestsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->deferLoading()
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 //
             ])
