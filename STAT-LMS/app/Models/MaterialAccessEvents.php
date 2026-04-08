@@ -22,6 +22,7 @@ class MaterialAccessEvents extends Model
         'is_overdue',
         'approved_at',
         'completed_at',
+        'rejection_reason',
     ];
 
     protected $casts = [
@@ -30,6 +31,7 @@ class MaterialAccessEvents extends Model
         'is_overdue' => 'boolean',
         'approved_at' => 'datetime',
         'completed_at' => 'datetime',
+        'rejection_reason' => 'array',
     ];
 
     public function user()
