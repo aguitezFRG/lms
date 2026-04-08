@@ -36,9 +36,22 @@ class RrMaterialsForm
                     Toggle::make('is_available')
                         ->label('Available for Circulation')
                         ->default(true),
+
+                    TextInput::make('number_of_copies')
+                        ->label('Number of Physical Copies')
+                        ->numeric()
+                        ->integer()
+                        ->default(1)
+                        ->minValue(1)
+                        ->maxValue(50)
+                        ->hint('How many physical copies to add')
+                        ->hintColor('gray')
+                        ->visible(fn (Get $get) => ! $get('is_digital'))
+                        ->required(fn (Get $get) => ! $get('is_digital')),
                 ])->columns(3),
 
             Section::make('Repository Information')
+                ->visible(fn (Get $get) => $get('is_digital'))
                 ->columnSpanFull()
                 ->schema([
                     // DIGITAL UPLOAD BLOCK
