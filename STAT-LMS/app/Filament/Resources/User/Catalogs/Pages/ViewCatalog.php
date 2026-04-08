@@ -24,10 +24,12 @@ class ViewCatalog extends ViewRecord
                 ->icon('heroicon-o-paper-airplane')
                 ->color('success')
                 ->visible(fn () => $this->hasAvailableCopy(digital: true))
-                ->disabled(fn () => $this->hasActiveRequest(digital: true))
-                ->tooltip(fn () => $this->hasActiveRequest(digital: true)
-                    ? 'You already have an active request for the digital copy of this material.'
-                    : null
+                ->disabled(fn () => auth()->user()?->is_banned || $this->hasActiveRequest(digital: true))
+                ->tooltip(fn () => auth()->user()?->is_banned
+                    ? 'Your account is banned from submitting requests.'
+                    : ($this->hasActiveRequest(digital: true)
+                        ? 'You already have an active request for the digital copy of this material.'
+                        : null)
                 )
                 ->requiresConfirmation()
                 ->modalHeading('Request Digital Copy')
@@ -41,10 +43,12 @@ class ViewCatalog extends ViewRecord
                 ->icon('heroicon-o-book-open')
                 ->color('info')
                 ->visible(fn () => $this->hasAvailableCopy(digital: false))
-                ->disabled(fn () => $this->hasActiveRequest(digital: false))
-                ->tooltip(fn () => $this->hasActiveRequest(digital: false)
-                    ? 'You already have an active borrow request for this material.'
-                    : null
+                ->disabled(fn () => auth()->user()?->is_banned || $this->hasActiveRequest(digital: false))
+                ->tooltip(fn () => auth()->user()?->is_banned
+                    ? 'Your account is banned from submitting requests.'
+                    : ($this->hasActiveRequest(digital: false)
+                        ? 'You already have an active borrow request for this material.'
+                        : null)
                 )
                 ->requiresConfirmation()
                 ->modalHeading('Borrow Physical Copy')
@@ -91,6 +95,15 @@ class ViewCatalog extends ViewRecord
 
     protected function submitRequest(bool $digital): void
     {
+        if (auth()->user()?->is_banned) {
+            Notification::make()
+                ->title('Account restricted')
+                ->body('Your account has been banned. You are not allowed to submit new requests.')
+                ->danger()
+                ->send();
+            return;
+        }
+
         $copy = RrMaterials::where('material_parent_id', $this->record->id)
             ->where('is_digital', $digital)
             ->where('is_available', true)
@@ -138,29 +151,7 @@ class ViewCatalog extends ViewRecord
 
     protected function canViewDocument(): bool
     {
-        $record = $this->record;
-
-        \Illuminate\Support\Facades\Log::info('canViewDocument check', [
-            'user_role'        => auth()->user()?->role,
-            'user_level'       => UserRole::from(auth()->user()->role)->getAccessLevel(),
-            'mat_access_level' => (int) $this->record->access_level,
-            'material_id'      => $this->record->id,
-            'has_digital_copy' => RrMaterials::where('material_parent_id', $this->record->id)
-                ->where('is_digital', true)
-                ->whereNotNull('file_name')
-                ->whereNull('deleted_at')
-                ->exists(),
-            'has_approved'     => MaterialAccessEvents::where('user_id', auth()->id())
-                ->where('event_type', MaterialEventType::REQUEST->value)
-                ->where('status', 'approved')
-                ->whereHas('material', fn ($q) =>
-                    $q->where('material_parent_id', $this->record->id)
-                    ->where('is_digital', true)
-                )
-                ->exists(),
-        ]);
-
-         $user = auth()->user();
+        $user = auth()->user();
         if (! $user) return false;
 
         // Committee and IT bypass approval requirement

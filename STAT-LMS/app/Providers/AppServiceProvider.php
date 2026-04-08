@@ -10,6 +10,7 @@ use App\Models\MaterialAccessEvents;
 
 use App\Observers\MaterialAccessEventsObserver;
 use App\Observers\RepositoryChangeLogsObserver;
+use App\Observers\UserObserver;
 
 use App\Listeners\SendDueSoonOnLogin;
 
@@ -62,6 +63,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         MaterialAccessEvents::observe(MaterialAccessEventsObserver::class);
+        User::observe(UserObserver::class);
 
         Event::listen(Login::class, SendDueSoonOnLogin::class);
 
