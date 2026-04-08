@@ -23,11 +23,11 @@ class RepositoryChangeLogsResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedServerStack;
 
-    // protected static ?string $recordTitleAttribute = 'Repository Change Logs';
-
     protected static ?string $navigationLabel = 'Repository Change Logs';
 
     protected static string | UnitEnum | null $navigationGroup = 'Logs';
+
+    protected static ?int $navigationSort = 3;
 
     public static function form(Schema $schema): Schema
     {
