@@ -9,6 +9,7 @@ use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TagsInput;
 
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Components\Hidden;
@@ -42,6 +43,28 @@ class MaterialAccessEventsForm
                     ])
                     ->columns(1),
 
+                Section::make('Rejection Reason')
+                    ->columnSpanFull()
+                    ->schema([
+                        TagsInput::make('rejection_reason')
+                            ->label('Reason(s)')
+                            ->placeholder('Select or type a reason...')
+                            ->suggestions([
+                                'Overdue materials on record',
+                                'Outstanding fees',
+                                'Request limit reached',
+                                'Incomplete request details',
+                                'Access level restriction',
+                                'Material currently unavailable',
+                                'Policy violation',
+                                'Duplicate request',
+                            ])
+                            ->hint('Select from suggestions or type a custom reason and press Enter.')
+                            ->hintColor('gray'),
+                    ])
+                    ->columns(1)
+                    ->visible(fn (callable $get) => $get('status') === 'rejected'),
+
                 Section::make('Dates')
                     ->columnSpanFull()
                     ->schema([
@@ -57,11 +80,11 @@ class MaterialAccessEventsForm
 
                         DatePicker::make('returned_at')
                             ->label('Returned At')
-                            ->minDate(now()->addDays(1)->startOfDay())
-                            ->rules(['date', 'after_or_equal:' . now()->addDays(1)->toDateString()])
+                            ->maxDate(now())
+                            ->rules(['nullable', 'date', 'before_or_equal:today'])
                             ->live()
                             ->afterStateUpdated(fn ($state, callable $set) =>
-                                $set('due_at', $state ? $state . ' 23:59:59' : null)
+                                $set('returned_at', $state ? $state . ' 23:59:59' : null)
                             ),
                     ])
                     ->columns(1)

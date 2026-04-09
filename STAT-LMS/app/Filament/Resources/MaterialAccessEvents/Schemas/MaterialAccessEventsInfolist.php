@@ -47,6 +47,13 @@ class MaterialAccessEventsInfolist
                         TextEntry::make('status')
                             ->label('Request Status'),
 
+                        TextEntry::make('rejection_reason')
+                            ->label('Rejection Reason(s)')
+                            ->placeholder('N/A')
+                            ->columnSpanFull()
+                            ->formatStateUsing(fn ($state) => is_array($state) ? implode(', ', $state) : $state)
+                            ->visible(fn (MaterialAccessEvents $record) => $record->status === 'rejected'),
+
                         TextEntry::make('approved_at')
                             ->label('Approved At')
                             ->placeholder('N/A')
@@ -73,6 +80,26 @@ class MaterialAccessEventsInfolist
                             ->iconColor(fn (bool $state) => $state ? 'danger' : 'success')
                             ->formatStateUsing(fn (bool $state) => $state ? 'Overdue' : 'Not Overdue')
                             ->color(fn (bool $state) => $state ? 'danger' : 'success'),
+
+                        TextEntry::make('id')
+                            ->label('Overdue Fee')
+                            ->columnSpanFull()
+                            ->color(fn (MaterialAccessEvents $record) => $record->returned_at ? 'success' : 'danger')
+                            ->icon(fn (MaterialAccessEvents $record) => $record->returned_at ? 'heroicon-m-check-circle' : 'heroicon-m-banknotes')
+                            ->formatStateUsing(function (MaterialAccessEvents $record) {
+                                if (! $record->is_overdue) return 'No fee — not overdue.';
+
+                                $feePerDay = config('reading_room.overdue_fee_per_day', 10);
+                                $daysOverdue = (int) now()->diffInDays($record->due_at, absolute: true);
+                                $totalFee = $daysOverdue * $feePerDay;
+
+                                $status = $record->returned_at
+                                    ? 'PAID (marked returned)'
+                                    : 'UNPAID';
+
+                                return "₱{$totalFee}.00 ({$daysOverdue} day(s) × ₱{$feePerDay}/day) — {$status}";
+                            })
+                            ->visible(fn (MaterialAccessEvents $record) => $record->is_overdue),
                     ])
                     ->columns(3),
             ]);

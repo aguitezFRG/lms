@@ -6,6 +6,7 @@ use App\Models\MaterialAccessEvents;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\Action;
+use Filament\Forms\Components\TagsInput;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Filament\Notifications\Notification;
 
@@ -96,13 +97,30 @@ class PendingAccessesWidget extends BaseWidget
                     ->label('Reject')
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
-                    ->requiresConfirmation()
                     ->modalHeading('Reject access request?')
                     ->modalSubmitActionLabel('Yes, reject')
-                    ->action(function (MaterialAccessEvents $record): void {
+                    ->form([
+                        TagsInput::make('rejection_reason')
+                            ->label('Rejection Reason(s)')
+                            ->placeholder('Select or type a reason...')
+                            ->suggestions([
+                                'Overdue materials on record',
+                                'Outstanding fees',
+                                'Request limit reached',
+                                'Incomplete request details',
+                                'Access level restriction',
+                                'Material currently unavailable',
+                                'Policy violation',
+                                'Duplicate request',
+                            ])
+                            ->hint('Select from suggestions or type a custom reason and press Enter.')
+                            ->hintColor('gray'),
+                    ])
+                    ->action(function (array $data, MaterialAccessEvents $record): void {
                         $record->update([
-                            'status'      => 'rejected',
-                            'approver_id' => auth()->id(),
+                            'status'           => 'rejected',
+                            'approver_id'      => auth()->id(),
+                            'rejection_reason' => $data['rejection_reason'] ?? null,
                         ]);
                         Notification::make()->title('Access request rejected')->danger()->send();
                         $this->dispatch('request-actioned');

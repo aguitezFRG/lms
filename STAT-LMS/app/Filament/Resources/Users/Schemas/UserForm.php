@@ -5,7 +5,9 @@ namespace App\Filament\Resources\Users\Schemas;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Utilities\Get;
 
 use App\Models\User;
 
@@ -60,6 +62,18 @@ class UserForm
                             ->maxLength(255),
                     ])->columns(2),
 
+                // This section is only visible for student and faculty roles
+                Section::make('Account Status')
+                    ->schema([
+                        Toggle::make('is_banned')
+                            ->label('Banned')
+                            ->helperText('Banned users cannot log in or submit new requests, and lose access to approved materials.')
+                            ->default(false)
+                            ->visibleOn(['edit']),
+                    ])
+                    ->visible(fn (Get $get) => in_array($get('role'), ['student', 'faculty']))
+                    ->columns(1),
+
                 Section::make('Account Details')
                     ->schema([
                         TextInput::make('std_number')
@@ -78,7 +92,8 @@ class UserForm
                                 'committee' => 'Committee',
                             ])
                             ->default('student')
-                            ->required(),
+                            ->required()
+                            ->live(),
                         TextInput::make('email')
                             ->email()
                             ->unique(table: User::class, column: 'email')

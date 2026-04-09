@@ -25,11 +25,11 @@ class MaterialAccessEventsResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
-    // protected static ?string $recordTitleAttribute = 'Material Access Logs';
-
     protected static ?string $navigationLabel = 'Material Access Logs';
 
     protected static string | UnitEnum | null $navigationGroup = 'Logs';
+
+    protected static ?int $navigationSort = 2;
 
     public static function form(Schema $schema): Schema
     {

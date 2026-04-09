@@ -14,6 +14,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\RestoreAction;
 
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
 
 use Filament\Tables\Enums\FiltersLayout;
@@ -66,6 +67,15 @@ class UsersTable
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: false)
                     ->sortable(),
+
+                IconColumn::make('is_banned')
+                    ->label('Banned')
+                    ->boolean()
+                    ->trueIcon('heroicon-m-no-symbol')
+                    ->falseIcon('heroicon-m-check-circle')
+                    ->trueColor('danger')
+                    ->falseColor('success')
+                    ->toggleable(isToggledHiddenByDefault: false),
 
                 TextColumn::make('role')
                     ->badge()

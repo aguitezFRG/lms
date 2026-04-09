@@ -32,6 +32,7 @@ class User extends Authenticatable implements FilamentUser
         'l_name',
         'std_number',
         'role',
+        'is_banned',
         'email',
         'password',
     ];
@@ -56,6 +57,7 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_banned' => 'boolean',
         ];
     }
 
@@ -77,6 +79,11 @@ class User extends Authenticatable implements FilamentUser
         if (! is_null($this->deleted_at)) {
             return false; // Deny access if user is soft-deleted
         }
+
+        // TODO: Consult with the team if we want to implement this
+        // if ($this->is_banned) {
+        //     return false; // Deny access if user is banned
+        // }
 
         return match ($panel->getId()) {
             'admin' => in_array($this->role, [UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value]),
