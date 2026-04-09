@@ -1,5 +1,8 @@
 <x-filament-panels::page>
 
+    {{-- Auto-refresh polling (30s) --}}
+    <span wire:poll.30s class="hidden"></span>
+
     {{-- Tab Bar --}}
     <x-filament::tabs class="mb-6">
 

@@ -34,7 +34,7 @@ class UserProfile extends Page implements HasTable, HasInfolists
 
     protected string $view = 'filament.pages.user.user-profile';
 
-    protected ?string $pollingInterval = '8s'; // poll every 8 seconds for real-time updates
+    protected ?string $pollingInterval = '20s';
 
     protected static bool $shouldRegisterNavigation = false;
 
@@ -63,6 +63,13 @@ class UserProfile extends Page implements HasTable, HasInfolists
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('refresh')
+                ->label('Refresh')
+                ->icon('heroicon-o-arrow-path')
+                ->color('gray')
+                ->tooltip('Refresh the data')
+                ->action(fn () => $this->dispatch('$refresh')),
+
             Action::make('changePassword')
                 ->label('Change Password')
                 ->icon('heroicon-o-lock-closed')
@@ -259,7 +266,6 @@ class UserProfile extends Page implements HasTable, HasInfolists
             ->query($query)
             ->deferLoading()
             ->defaultSort('created_at', 'desc')
-            ->poll('8s')
             ->columns([
                 TextColumn::make('material.parent.title')
                     ->label('Material')

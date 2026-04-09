@@ -24,7 +24,7 @@ class Dashboard extends BaseDashboard
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;
 
-    protected ?string $pollingInterval = '8s'; // poll every 8 seconds for real-time updates
+    protected ?string $pollingInterval = '30s';
 
     protected $listeners = ['request-actioned' => '$refresh'];
 

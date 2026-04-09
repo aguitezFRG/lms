@@ -35,6 +35,8 @@ class SystemUsage extends Page
 
     public string $activeTab = 'summary';
 
+    protected ?string $pollingInterval = '120s';
+
     // Filter state
     public ?string $filterStatus   = null;
     public ?string $filterType     = null;
@@ -124,6 +126,13 @@ class SystemUsage extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('refresh')
+                ->label('Refresh')
+                ->icon('heroicon-o-arrow-path')
+                ->color('gray')
+                ->tooltip('Refresh the data')
+                ->action(fn () => $this->dispatch('$refresh')),
+
             Action::make('downloadCsv')
                 ->label('Download CSV')
                 ->icon('heroicon-o-arrow-down-tray')

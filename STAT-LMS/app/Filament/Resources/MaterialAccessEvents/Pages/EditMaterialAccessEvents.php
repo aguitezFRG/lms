@@ -26,6 +26,11 @@ class EditMaterialAccessEvents extends EditRecord
         ];
     }
 
+    protected function afterSave(): void
+    {
+        $this->dispatch('request-actioned');
+    }
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $data['approver_id'] = auth()->id();

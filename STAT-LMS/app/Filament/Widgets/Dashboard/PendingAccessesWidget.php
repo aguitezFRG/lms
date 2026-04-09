@@ -19,7 +19,7 @@ class PendingAccessesWidget extends BaseWidget
 
     protected static ?string $heading = 'Pending Digital Access Requests';
 
-    protected static ?string $pollingInterval = '8s';
+    protected static ?string $pollingInterval = '30s';
 
     protected $listeners = ['request-actioned' => '$refresh'];
 
@@ -38,7 +38,6 @@ class PendingAccessesWidget extends BaseWidget
                     ->where('status', 'pending')
                     ->oldest()
             )
-            ->poll('8s')
             ->columns([
                 TextColumn::make('user.name')
                     ->label('Requester Name')

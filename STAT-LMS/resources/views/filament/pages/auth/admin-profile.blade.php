@@ -1,5 +1,8 @@
 <x-filament-panels::page>
 
+    {{-- Auto-refresh polling (60s) --}}
+    <span wire:poll.60s class="hidden"></span>
+
     {{-- ── Profile Card ─────────────────────────────────────────────────── --}}
     <x-filament::section class="mb-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center">

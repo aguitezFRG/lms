@@ -14,7 +14,7 @@ class VisitorBorrowerChartWidget extends ChartWidget
 
     protected int | string | array $columnSpan = 1;
 
-    protected ?string $pollingInterval = '60s';
+    protected ?string $pollingInterval = '120s';
 
     protected ?int $numDays = 4;
 

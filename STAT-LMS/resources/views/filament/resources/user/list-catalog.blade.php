@@ -1,5 +1,8 @@
 <x-filament-panels::page>
 <style>[x-cloak] { display: none !important; }</style>
+
+{{-- Auto-refresh polling (60s) --}}
+<span wire:poll.60s class="hidden"></span>
 <div x-data="{ filtersOpen: false }" @keydown.escape.window="filtersOpen = false">
 
     {{-- ── 1. Search Bar Row ────────────────────────────────────────────── --}}
