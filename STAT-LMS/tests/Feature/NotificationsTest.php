@@ -347,6 +347,7 @@ class NotificationsTest extends TestCase
         // Re-register RrMaterialParents boot listeners that were flushed by
         // the makeMaterialParent() helper.
         RrMaterialParents::clearBootedModels();
+        $parent = RrMaterialParents::find($parent->id);
 
         $parent->update(['access_level' => 3]);
 

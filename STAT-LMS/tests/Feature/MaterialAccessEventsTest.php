@@ -199,7 +199,7 @@ class MaterialAccessEventsTest extends TestCase
                 'due_at' => now()->subDay()->toDateString(),
             ])
             ->call('save')
-            ->assertHasNoFormErrors();
+            ->assertHasErrors(['data.due_at']);
     }
 
     // ── Rejection ─────────────────────────────────────────────────────────────
@@ -385,6 +385,7 @@ class MaterialAccessEventsTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(\App\Filament\Resources\MaterialAccessEvents\Pages\ListMaterialAccessEvents::class)
+            ->call('loadTable')
             ->assertSee($event1->id)
             ->assertSee($event2->id);
     }

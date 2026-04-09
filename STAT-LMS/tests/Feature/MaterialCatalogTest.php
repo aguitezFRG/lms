@@ -53,6 +53,7 @@ class MaterialCatalogTest extends TestCase
         $this->actingAs($student);
 
         Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ListCatalogs::class)
+            ->set('availableOnly', false)
             ->assertSee('Public Paper')
             ->assertDontSee('Restricted Paper')
             ->assertDontSee('Confidential Paper');
@@ -69,6 +70,7 @@ class MaterialCatalogTest extends TestCase
         $this->actingAs($faculty);
 
         Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ListCatalogs::class)
+            ->set('availableOnly', false)
             ->assertSee('Public Paper')
             ->assertSee('Restricted Paper')
             ->assertDontSee('Confidential Paper');
@@ -85,6 +87,7 @@ class MaterialCatalogTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\ListRrMaterialParents::class)
+            ->call('loadTable')
             ->assertSee('Public Paper')
             ->assertSee('Restricted Paper')
             ->assertSee('Confidential Paper');
@@ -101,6 +104,7 @@ class MaterialCatalogTest extends TestCase
         $this->actingAs($staff);
 
         Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\ListRrMaterialParents::class)
+            ->call('loadTable')
             ->assertSee('Public Paper')
             ->assertSee('Restricted Paper')
             ->assertDontSee('Confidential Paper');
@@ -292,6 +296,7 @@ class MaterialCatalogTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\ListRrMaterialParents::class)
+            ->call('loadTable')
             ->assertSee('Active Material')
             ->assertDontSee('Deleted Material');
     }
@@ -306,6 +311,7 @@ class MaterialCatalogTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\ListRrMaterialParents::class)
+            ->call('loadTable')
             ->filterTable('trashed', 'with')
             ->assertSee('Deleted Material');
     }
@@ -322,6 +328,7 @@ class MaterialCatalogTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\ListRrMaterialParents::class)
+            ->call('loadTable')
             ->filterTable('material_type', [1])
             ->assertSee('Book Title')
             ->assertDontSee('Thesis Title');
@@ -337,6 +344,7 @@ class MaterialCatalogTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\ListRrMaterialParents::class)
+            ->call('loadTable')
             ->searchTable('Bayesian')
             ->assertSee('Unique Bayesian Study')
             ->assertDontSee('Unrelated Paper');

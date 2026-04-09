@@ -175,6 +175,7 @@ class MaterialCopiesTest extends TestCase
         $this->actingAs($student);
 
         Livewire::test(\App\Filament\Resources\RrMaterials\Pages\ListRrMaterials::class)
+            ->call('loadTable')
             ->assertSee($publicParent->title)
             ->assertDontSee($confidentialParent->title);
     }
@@ -190,6 +191,7 @@ class MaterialCopiesTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(\App\Filament\Resources\RrMaterials\Pages\ListRrMaterials::class)
+            ->call('loadTable')
             ->filterTable('is_digital', true)
             ->assertSee($digital->id)
             ->assertDontSee($physical->id);
@@ -206,6 +208,7 @@ class MaterialCopiesTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(\App\Filament\Resources\RrMaterials\Pages\ListRrMaterials::class)
+            ->call('loadTable')
             ->filterTable('is_available', true)
             ->assertSee($available->id)
             ->assertDontSee($unavailable->id);

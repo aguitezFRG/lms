@@ -172,6 +172,7 @@ class ProfilePagesTest extends TestCase
 
         Livewire::test(\App\Filament\Pages\User\UserProfile::class)
             ->call('setTab', 'pending')
+            ->call('loadTable')
             ->assertSee($pending->id)
             ->assertDontSee($approved->id);
     }
@@ -189,6 +190,7 @@ class ProfilePagesTest extends TestCase
 
         Livewire::test(\App\Filament\Pages\User\UserProfile::class)
             ->call('setTab', 'approved')
+            ->call('loadTable')
             ->assertSee($approved->id)
             ->assertDontSee($pending->id);
     }
@@ -207,6 +209,7 @@ class ProfilePagesTest extends TestCase
 
         Livewire::test(\App\Filament\Pages\User\UserProfile::class)
             ->call('setTab', 'closed')
+            ->call('loadTable')
             ->assertSee($rejected->id)
             ->assertSee($cancelled->id)
             ->assertDontSee($pending->id);
@@ -266,6 +269,7 @@ class ProfilePagesTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(\App\Filament\Pages\Auth\AdminProfile::class)
+            ->call('loadTable')
             ->assertSee($myEvent->id)
             ->assertDontSee($otherEvent->id);
     }
