@@ -19,7 +19,7 @@ class PendingBorrowsWidget extends BaseWidget
 
     protected static ?string $heading = 'Pending Borrow Requests';
 
-    protected static ?string $pollingInterval = '8s';
+    protected static ?string $pollingInterval = '30s';
 
     protected $listeners = ['request-actioned' => '$refresh'];
 
@@ -38,7 +38,6 @@ class PendingBorrowsWidget extends BaseWidget
                     ->where('status', 'pending')
                     ->oldest()
             )
-            ->poll('8s')
             ->columns([
                 TextColumn::make('user.name')
                     ->label('Borrower Name')

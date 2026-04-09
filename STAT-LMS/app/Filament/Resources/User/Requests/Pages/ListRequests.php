@@ -18,11 +18,23 @@ class ListRequests extends ListRecords
 {
     protected static string $resource = RequestsResource::class;
 
-    protected ?string $pollingInterval = '8s'; // poll every 8 seconds for real-time updates
+    protected ?string $pollingInterval = '20s';
+
+    public function getTablePollingInterval(): ?string
+    {
+        return '20s';
+    }
 
     protected function getHeaderActions(): array
     {
-        return [];
+        return [
+            Action::make('refresh')
+                ->label('Refresh')
+                ->icon('heroicon-o-arrow-path')
+                ->color('gray')
+                ->tooltip('Refresh the data')
+                ->action(fn () => $this->dispatch('$refresh')),
+        ];
     }
 
     public function table(Table $table): Table
@@ -68,7 +80,6 @@ class ListRequests extends ListRecords
                     ->dateTime('M d, Y')
                     ->sortable(),
             ])
-            ->poll('8s')
             ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('status')

@@ -66,6 +66,14 @@ class ViewCatalog extends ViewRecord
                 ->extraAttributes([
                     'x-on:click.prevent' => '$wire.logAccessedEvent().then(() => window.open($el.href, `_blank`))',
                 ]),
+
+            // ── Refresh ───────────────────────────────────────────────────
+            Action::make('refresh')
+                ->label('Refresh')
+                ->icon('heroicon-o-arrow-path')
+                ->color('gray')
+                ->tooltip('Refresh the data')
+                ->action(fn () => $this->dispatch('$refresh')),
         ];
     }
 

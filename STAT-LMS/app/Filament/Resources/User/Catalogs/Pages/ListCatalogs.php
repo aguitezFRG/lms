@@ -5,6 +5,7 @@ namespace App\Filament\Resources\User\Catalogs\Pages;
 use App\Enums\UserRole;
 use App\Filament\Resources\User\Catalogs\CatalogResource;
 use App\Models\RrMaterialParents;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,6 +15,8 @@ class ListCatalogs extends Page
 
     protected string $view   = 'filament.resources.user.list-catalog';
     protected static ?string $title = 'Material Catalog';
+
+    protected ?string $pollingInterval = '60s';
 
     // ── Applied filter state (what the query actually uses) ─────────────────
     public string $search       = '';
@@ -38,6 +41,20 @@ class ListCatalogs extends Page
 
     // ── Skeleton loading state ───────────────────────────────────────────────
     public bool $isLoading = false;
+
+    // ── Header Actions ────────────────────────────────────────────────────────
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('refresh')
+                ->label('Refresh')
+                ->icon('heroicon-o-arrow-path')
+                ->color('gray')
+                ->tooltip('Refresh the data')
+                ->action(fn () => $this->dispatch('$refresh')),
+        ];
+    }
 
     protected $queryString = [
         'search'        => ['except' => ''],

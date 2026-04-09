@@ -21,6 +21,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
@@ -32,6 +33,8 @@ class AdminProfile extends Page implements HasTable, HasInfolists
     protected string $view = 'filament.pages.auth.admin-profile';
 
     protected static bool $shouldRegisterNavigation = false;
+
+    protected ?string $pollingInterval = '60s';
 
     public string $activeTab = 'history';
 
@@ -59,6 +62,13 @@ class AdminProfile extends Page implements HasTable, HasInfolists
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('refresh')
+                ->label('Refresh')
+                ->icon('heroicon-o-arrow-path')
+                ->color('gray')
+                ->tooltip('Refresh the data')
+                ->action(fn () => $this->dispatch('$refresh')),
+
             Action::make('changePassword')
                 ->label('Change Password')
                 ->icon('heroicon-o-lock-closed')
