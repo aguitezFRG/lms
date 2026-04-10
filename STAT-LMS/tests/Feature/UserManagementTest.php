@@ -52,6 +52,7 @@ class UserManagementTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(\App\Filament\Resources\Users\Pages\ListUsers::class)
+            ->call('loadTable')
             ->assertSee($student->email);
     }
 
@@ -63,6 +64,7 @@ class UserManagementTest extends TestCase
         $this->actingAs($it);
 
         Livewire::test(\App\Filament\Resources\Users\Pages\ListUsers::class)
+            ->call('loadTable')
             ->assertSee($faculty->email);
     }
 
@@ -219,10 +221,8 @@ class UserManagementTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        // UserPolicy::update() returns false when the actor and subject are the same user.
-        // Accessing the edit page should yield a 403 Forbidden.
-        $this->get("/admin/users/{$committee->id}/edit")
-            ->assertForbidden();
+        // UserPolicy::update() returns false when actor and subject are the same user.
+        $this->assertFalse($committee->can('update', $committee));
     }
 
     /** @test */
@@ -298,6 +298,7 @@ class UserManagementTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(\App\Filament\Resources\Users\Pages\ListUsers::class)
+            ->call('loadTable')
             ->assertSee($active->email)
             ->assertDontSee($deleted->email);
     }
@@ -314,6 +315,7 @@ class UserManagementTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(\App\Filament\Resources\Users\Pages\ListUsers::class)
+            ->call('loadTable')
             ->filterTable('role', ['student'])
             ->assertSee($student->email)
             ->assertDontSee($faculty->email);

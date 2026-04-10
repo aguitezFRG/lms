@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MaterialStreamController;
+use App\Http\Controllers\PasswordEncryptionKeyController;
 
 use App\Enums\UserRole;
 
@@ -15,6 +16,10 @@ Route::get('/', function () {
     }
     return redirect('/app/login');
 });
+
+// Public key for client-side password encryption — no auth required, no sensitive data
+Route::get('/password-encryption-key', PasswordEncryptionKeyController::class)
+    ->name('password.encryption-key');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/materials/{record}/viewer', [MaterialStreamController::class, 'viewer'])

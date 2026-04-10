@@ -10,6 +10,26 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        \Illuminate\Support\Facades\Cache::flush();
+    }
+
+    /**
+     * Re-register all model observers that AppServiceProvider sets up.
+     * Call this in tests that need observers to fire after using the make* helpers.
+     */
+    protected function reRegisterObservers(): void
+    {
+        \App\Models\User::observe(\App\Observers\UserObserver::class);
+        \App\Models\User::observe(\App\Observers\RepositoryChangeLogsObserver::class);
+        \App\Models\RrMaterialParents::observe(\App\Observers\RepositoryChangeLogsObserver::class);
+        \App\Models\RrMaterials::observe(\App\Observers\RepositoryChangeLogsObserver::class);
+        \App\Models\MaterialAccessEvents::observe(\App\Observers\MaterialAccessEventsObserver::class);
+        \App\Models\MaterialAccessEvents::observe(\App\Observers\RepositoryChangeLogsObserver::class);
+    }
+
     /**
      * Create a User without triggering the RepositoryChangeLogsObserver.
      */

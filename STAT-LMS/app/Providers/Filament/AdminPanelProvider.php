@@ -24,6 +24,7 @@ use Illuminate\Support\HtmlString;
 
 use Filament\Support\Icons\Heroicon;
 use Filament\Navigation\NavigationGroup;
+use Filament\View\PanelsRenderHook;
 
 use App\Filament\Pages\Auth\AdminProfile;
 use Filament\Navigation\MenuItem;
@@ -95,6 +96,10 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn () => view('filament.components.password-encryption-script'),
+            )
             ->strictAuthorization()
             ->globalSearch(false);
     }

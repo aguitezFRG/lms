@@ -56,12 +56,23 @@ class RepositoryChangeLogsTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        $parent = $this->makeParent();
+        $this->reRegisterObservers();
+
+        RrMaterialParents::create([
+            'access_level'     => 1,
+            'material_type'    => 1,
+            'title'            => 'Observer Test Material',
+            'author'           => 'Observer Test Author',
+            'publication_date' => now()->subYear(),
+            'keywords'         => json_encode(['stats']),
+            'sdgs'             => json_encode(['Education']),
+            'adviser'          => json_encode(['Adviser']),
+        ]);
 
         $this->assertDatabaseHas('repository_change_logs', [
-            'editor_id'    => $committee->id,
+            'editor_id'     => $committee->id,
             'table_changed' => 'rr_material_parents',
-            'change_type'  => RepositoryChangeType::CREATE->value,
+            'change_type'   => RepositoryChangeType::CREATE->value,
         ]);
     }
 
@@ -123,7 +134,10 @@ class RepositoryChangeLogsTest extends TestCase
         $this->actingAs($committee);
 
         $parent = $this->makeParent();
-        $copy   = $this->makeMaterialCopy([
+
+        $this->reRegisterObservers();
+
+        $copy = RrMaterials::create([
             'material_parent_id' => $parent->id,
             'is_digital'         => false,
             'is_available'       => true,
@@ -162,7 +176,9 @@ class RepositoryChangeLogsTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        $newUser = $this->makeUser('student');
+        $this->reRegisterObservers();
+
+        $newUser = User::factory()->create(['role' => 'student']);
 
         $this->assertDatabaseHas('repository_change_logs', [
             'editor_id'      => $committee->id,
@@ -283,23 +299,24 @@ class RepositoryChangeLogsTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        RepositoryChangeLogs::factory()->create([
-            'editor_id'    => $committee->id,
+        $createLog = RepositoryChangeLogs::factory()->create([
+            'editor_id'     => $committee->id,
             'table_changed' => 'users',
-            'change_type'  => RepositoryChangeType::CREATE->value,
-            'changed_at'   => now(),
+            'change_type'   => RepositoryChangeType::CREATE->value,
+            'changed_at'    => now(),
         ]);
-        RepositoryChangeLogs::factory()->create([
-            'editor_id'    => $committee->id,
+        $deleteLog = RepositoryChangeLogs::factory()->create([
+            'editor_id'     => $committee->id,
             'table_changed' => 'users',
-            'change_type'  => RepositoryChangeType::DELETE->value,
-            'changed_at'   => now(),
+            'change_type'   => RepositoryChangeType::DELETE->value,
+            'changed_at'    => now(),
         ]);
 
         Livewire::test(\App\Filament\Resources\RepositoryChangeLogs\Pages\ListRepositoryChangeLogs::class)
+            ->call('loadTable')
             ->filterTable('change_type', RepositoryChangeType::CREATE->value)
-            ->assertSee(RepositoryChangeType::CREATE->getLabel())
-            ->assertDontSee(RepositoryChangeType::DELETE->getLabel());
+            ->assertCanSeeTableRecords([$createLog])
+            ->assertCanNotSeeTableRecords([$deleteLog]);
     }
 
     /** @test */
@@ -308,22 +325,23 @@ class RepositoryChangeLogsTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        RepositoryChangeLogs::factory()->create([
-            'editor_id'    => $committee->id,
+        $usersLog = RepositoryChangeLogs::factory()->create([
+            'editor_id'     => $committee->id,
             'table_changed' => 'users',
-            'change_type'  => RepositoryChangeType::UPDATE->value,
-            'changed_at'   => now(),
+            'change_type'   => RepositoryChangeType::UPDATE->value,
+            'changed_at'    => now(),
         ]);
-        RepositoryChangeLogs::factory()->create([
-            'editor_id'    => $committee->id,
+        $materialsLog = RepositoryChangeLogs::factory()->create([
+            'editor_id'     => $committee->id,
             'table_changed' => 'rr_materials',
-            'change_type'  => RepositoryChangeType::UPDATE->value,
-            'changed_at'   => now(),
+            'change_type'   => RepositoryChangeType::UPDATE->value,
+            'changed_at'    => now(),
         ]);
 
         Livewire::test(\App\Filament\Resources\RepositoryChangeLogs\Pages\ListRepositoryChangeLogs::class)
+            ->call('loadTable')
             ->filterTable('table_changed', 'users')
-            ->assertSee('users')
-            ->assertDontSee('rr_materials');
+            ->assertCanSeeTableRecords([$usersLog])
+            ->assertCanNotSeeTableRecords([$materialsLog]);
     }
 }
