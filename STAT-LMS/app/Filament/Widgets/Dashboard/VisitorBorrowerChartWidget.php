@@ -14,6 +14,8 @@ class VisitorBorrowerChartWidget extends ChartWidget
 
     protected ?string $pollingInterval = null;
 
+    protected static bool $isLazy = false;
+
     protected ?int $numDays = 4;
 
     protected ?int $numWeeks = 4;

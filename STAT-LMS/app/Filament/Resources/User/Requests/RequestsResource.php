@@ -25,7 +25,7 @@ class RequestsResource extends Resource
 
     protected static ?string $navigationLabel = 'My Requests';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Logs';
+    // protected static string | UnitEnum | null $navigationGroup = 'Logs';
 
     protected static ?int $navigationSort = 3;
 

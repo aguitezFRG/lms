@@ -14,6 +14,8 @@ class PhysicalDigitalChartWidget extends ChartWidget
 
     protected ?string $pollingInterval = null;
 
+    protected static bool $isLazy = false;
+
     protected ?int $numDays = 5;
 
     protected ?int $numWeeks = 5;
