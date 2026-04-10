@@ -20,10 +20,9 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
-use Filament\Forms\Components\TextInput;
+use App\Services\PasswordEncryptionService;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 
 class AdminProfile extends Page implements HasTable, HasInfolists
 {
@@ -34,7 +33,7 @@ class AdminProfile extends Page implements HasTable, HasInfolists
 
     protected static bool $shouldRegisterNavigation = false;
 
-    protected ?string $pollingInterval = '60s';
+    protected ?string $pollingInterval = '120s';
 
     public string $activeTab = 'history';
 
@@ -76,46 +75,9 @@ class AdminProfile extends Page implements HasTable, HasInfolists
                 ->modalHeading('Change Your Password')
                 ->modalDescription('Enter your current password, then choose a new one.')
                 ->modalWidth('md')
-                ->requiresConfirmation()
-                ->form([
-                    TextInput::make('current_password')
-                        ->label('Current Password')
-                        ->password()
-                        ->revealable()
-                        ->required()
-                        ->currentPassword()  // validates against the authenticated user's password
-                        ->autocomplete('current-password'),
-
-                    TextInput::make('password')
-                        ->label('New Password')
-                        ->password()
-                        ->revealable()
-                        ->required()
-                        ->rule(Password::min(8)->mixedCase()->numbers()->symbols())
-                        ->different('current_password')
-                        ->autocomplete('new-password'),
-
-                    TextInput::make('password_confirmation')
-                        ->label('Confirm New Password')
-                        ->password()
-                        ->revealable()
-                        ->required()
-                        ->same('password')
-                        ->autocomplete('new-password'),
-                ])
-                ->action(function (array $data): void {
-                    auth()->user()->update([
-                        'password' => Hash::make($data['password']),
-                    ]);
-
-                    Notification::make()
-                        ->title('Password updated successfully')
-                        ->success()
-                        ->send();
-                })
-                ->modalSubmitActionLabel('Update Password')
-                ->modalCancelActionLabel('Cancel')
-                ->modalSubmitAction(fn (Action $action) => $action->color('success')),
+                ->modalContent(view('filament.components.password-change-modal'))
+                ->modalFooterActions([])
+                ->action(fn () => null),
 
             Action::make('markAllRead')
                 ->label('Mark All as Read')
@@ -127,6 +89,37 @@ class AdminProfile extends Page implements HasTable, HasInfolists
                 )
                 ->action(fn () => auth()->user()->unreadNotifications->markAsRead()),
         ];
+    }
+
+    // ── Encrypted Password Change ─────────────────────────────────────────────
+    //
+    // Called by the Alpine modal — receives RSA-OAEP ciphertext, never plaintext.
+
+    public function submitEncryptedPasswordChange(string $encryptedCurrent, string $encryptedNew): void
+    {
+        $service = app(PasswordEncryptionService::class);
+
+        try {
+            $currentPassword = $service->decrypt($this->stripEncPrefix($encryptedCurrent));
+            $newPassword     = $service->decrypt($this->stripEncPrefix($encryptedNew));
+        } catch (\Throwable) {
+            Notification::make()->title('Security error')->body('Password could not be decrypted. Please try again.')->danger()->send();
+            return;
+        }
+
+        if (! Hash::check($currentPassword, auth()->user()->password)) {
+            Notification::make()->title('Incorrect password')->body('Your current password is wrong.')->danger()->send();
+            return;
+        }
+
+        auth()->user()->update(['password' => Hash::make($newPassword)]);
+
+        Notification::make()->title('Password updated successfully')->success()->send();
+    }
+
+    private function stripEncPrefix(string $value): string
+    {
+        return str_starts_with($value, 'ENC:') ? substr($value, 4) : $value;
     }
 
     // ── Tab Switching ─────────────────────────────────────────────────────────
