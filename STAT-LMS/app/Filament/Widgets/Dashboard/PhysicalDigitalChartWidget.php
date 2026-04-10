@@ -10,11 +10,9 @@ class PhysicalDigitalChartWidget extends ChartWidget
 {
     protected ?string $heading = 'Physical vs Digital Materials';
 
-    protected static bool $isLazy = false;
-
     protected int | string | array $columnSpan = 1;
 
-    protected ?string $pollingInterval = '120s';
+    protected ?string $pollingInterval = null;
 
     protected ?int $numDays = 5;
 

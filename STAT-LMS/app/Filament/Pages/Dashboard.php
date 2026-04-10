@@ -7,6 +7,7 @@ use App\Filament\Widgets\Dashboard\StatsOverviewWidget;
 use App\Filament\Widgets\Dashboard\VisitorBorrowerChartWidget;
 use App\Models\MaterialAccessEvents;
 use Filament\Actions\Action;
+use Illuminate\Support\Facades\Cache;
 
 use BackedEnum;
 use Filament\Pages\Dashboard as BaseDashboard;
@@ -24,7 +25,7 @@ class Dashboard extends BaseDashboard
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;
 
-    protected ?string $pollingInterval = '30s';
+    protected ?string $pollingInterval = '60s';
 
     protected $listeners = ['request-actioned' => '$refresh'];
 
@@ -73,17 +74,31 @@ class Dashboard extends BaseDashboard
 
     protected function getViewData(): array
     {
+        $canViewBorrows = Gate::allows('viewBorrows', static::class);
+        $canViewAccess  = Gate::allows('viewAccess', static::class);
+
+        // Cache pending counts for 60 s — refreshed on action events and on each poll.
+        $pendingBorrowCount = $canViewBorrows
+            ? Cache::remember('dashboard.pending_borrows', 60, fn () =>
+                MaterialAccessEvents::where('event_type', 'borrow')
+                    ->where('status', 'pending')->count()
+            )
+            : 0;
+
+        $pendingAccessCount = $canViewAccess
+            ? Cache::remember('dashboard.pending_accesses', 60, fn () =>
+                MaterialAccessEvents::where('event_type', 'request')
+                    ->where('status', 'pending')->count()
+            )
+            : 0;
+
         return [
             'activeTab'          => $this->activeTab,
             'canViewGeneral'     => Gate::allows('viewGeneral', static::class),
-            'canViewBorrows'     => Gate::allows('viewBorrows', static::class),
-            'canViewAccess'      => Gate::allows('viewAccess', static::class),
-            'pendingBorrowCount' => MaterialAccessEvents::where('event_type', 'borrow')
-                ->where('status', 'pending')->count(),
-            'pendingAccessCount' => Gate::allows('viewAccess', static::class)
-                ? MaterialAccessEvents::where('event_type', 'request')
-                    ->where('status', 'pending')->count()
-                : 0,
+            'canViewBorrows'     => $canViewBorrows,
+            'canViewAccess'      => $canViewAccess,
+            'pendingBorrowCount' => $pendingBorrowCount,
+            'pendingAccessCount' => $pendingAccessCount,
         ];
     }
 }

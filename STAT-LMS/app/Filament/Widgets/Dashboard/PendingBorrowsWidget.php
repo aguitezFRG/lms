@@ -10,6 +10,7 @@ use Filament\Forms\Components\TagsInput;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Filament\Notifications\Notification;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use App\Filament\Pages\Dashboard;
 
@@ -19,7 +20,7 @@ class PendingBorrowsWidget extends BaseWidget
 
     protected static ?string $heading = 'Pending Borrow Requests';
 
-    protected static ?string $pollingInterval = '30s';
+    protected static ?string $pollingInterval = '60s';
 
     protected $listeners = ['request-actioned' => '$refresh'];
 
@@ -74,6 +75,7 @@ class PendingBorrowsWidget extends BaseWidget
                             'approved_at' => now(),
                             'due_at'      => now()->addDays(14)->endOfDay(),
                         ]);
+                        Cache::forget('dashboard.pending_borrows');
                         Notification::make()->title('Request approved')->success()->send();
                         $this->dispatch('request-actioned');
                     }),
@@ -107,6 +109,7 @@ class PendingBorrowsWidget extends BaseWidget
                             'approver_id'      => auth()->id(),
                             'rejection_reason' => $data['rejection_reason'] ?? null,
                         ]);
+                        Cache::forget('dashboard.pending_borrows');
                         Notification::make()->title('Request rejected')->danger()->send();
                         $this->dispatch('request-actioned');
                     }),

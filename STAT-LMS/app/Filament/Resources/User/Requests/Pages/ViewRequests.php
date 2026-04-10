@@ -12,6 +12,8 @@ class ViewRequests extends ViewRecord
 {
     protected static string $resource = RequestsResource::class;
 
+    protected ?string $pollingInterval = '60s';
+
     protected function getHeaderActions(): array
     {
         return [
@@ -34,6 +36,13 @@ class ViewRequests extends ViewRecord
 
                     $this->redirect(RequestsResource::getUrl('index'));
                 }),
+
+            Action::make('refresh')
+                ->label('Refresh')
+                ->icon('heroicon-o-arrow-path')
+                ->color('gray')
+                ->tooltip('Refresh the data')
+                ->action(fn () => $this->dispatch('$refresh')),
         ];
     }
 }

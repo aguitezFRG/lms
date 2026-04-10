@@ -16,7 +16,7 @@ class ListCatalogs extends Page
     protected string $view   = 'filament.resources.user.list-catalog';
     protected static ?string $title = 'Material Catalog';
 
-    protected ?string $pollingInterval = '60s';
+    protected ?string $pollingInterval = '120s';
 
     // ── Applied filter state (what the query actually uses) ─────────────────
     public string $search       = '';

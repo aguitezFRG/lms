@@ -15,7 +15,7 @@ class StatsOverviewWidget extends BaseWidget
 
     protected int | string | array $columnSpan = 'full';
 
-    protected ?string $pollingInterval = '30s';
+    protected ?string $pollingInterval = '60s';
 
     /* Exposed so the Dashboard page can toggle visibility */
     public bool $visible = true;

@@ -10,6 +10,7 @@ use Filament\Forms\Components\TagsInput;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Filament\Notifications\Notification;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use App\Filament\Pages\Dashboard;
 
@@ -19,7 +20,7 @@ class PendingAccessesWidget extends BaseWidget
 
     protected static ?string $heading = 'Pending Digital Access Requests';
 
-    protected static ?string $pollingInterval = '30s';
+    protected static ?string $pollingInterval = '60s';
 
     protected $listeners = ['request-actioned' => '$refresh'];
 
@@ -88,6 +89,7 @@ class PendingAccessesWidget extends BaseWidget
                             'approved_at' => now(),
                             'due_at'      => now()->addDays(7)->endOfDay(),
                         ]);
+                        Cache::forget('dashboard.pending_accesses');
                         Notification::make()->title('Access request approved')->success()->send();
                         $this->dispatch('request-actioned');
                     }),
@@ -121,6 +123,7 @@ class PendingAccessesWidget extends BaseWidget
                             'approver_id'      => auth()->id(),
                             'rejection_reason' => $data['rejection_reason'] ?? null,
                         ]);
+                        Cache::forget('dashboard.pending_accesses');
                         Notification::make()->title('Access request rejected')->danger()->send();
                         $this->dispatch('request-actioned');
                     }),
