@@ -21,6 +21,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Illuminate\Support\HtmlString;
 
 use Filament\Support\Icons\Heroicon;
+use Filament\View\PanelsRenderHook;
 
 class UserPanelProvider extends PanelProvider
 {
@@ -81,6 +82,10 @@ class UserPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn () => view('filament.components.password-encryption-script'),
+            )
             ->strictAuthorization()
             ->authMiddleware([
                 Authenticate::class,

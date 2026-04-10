@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
                  \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT |
                  \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO
         );
+
+        // Decrypt RSA-encrypted password fields from Livewire update payloads
+        $middleware->web(append: [\App\Http\Middleware\DecryptLivewirePasswords::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
