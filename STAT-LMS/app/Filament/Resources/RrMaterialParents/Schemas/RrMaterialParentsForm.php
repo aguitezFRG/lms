@@ -141,6 +141,7 @@ class RrMaterialParentsForm
                             ]),
 
                         DatePicker::make('publication_date')
+                            ->rules(['date', 'before_or_equal:today'])
                             ->required(),
                     ])->columns(2),
             ]);
