@@ -2,23 +2,19 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
+use App\Enums\UserRole;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
-use Illuminate\Support\Facades\Log;
-
-use App\Enums\UserRole;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -66,15 +62,13 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(MaterialAccessEvents::class, 'user_id');
     }
 
-    public array $excludedFromChangeLogs =[
+    public array $excludedFromChangeLogs = [
         'password',
         'remember_token',
     ];
 
     public function canAccessPanel(Panel $panel): bool
     {
-        // Log::info('Checking access for user: ' . $this->email . ' with role: ' . $this->role);
-        // Log::info('Panel name: ' . $panel->getId());
 
         if (! is_null($this->deleted_at)) {
             return false; // Deny access if user is soft-deleted

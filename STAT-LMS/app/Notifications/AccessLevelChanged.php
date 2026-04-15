@@ -28,9 +28,9 @@ class AccessLevelChanged extends Notification
         };
 
         return [
-            'type'        => 'access_level_changed',
-            'title'       => 'Material Access Level Changed',
-            'message'     => "The access level for \"{$this->material->title}\" changed from {$levelLabel($this->oldLevel)} to {$levelLabel($this->newLevel)}. This may affect your ability to access this material.",
+            'type' => 'access_level_changed',
+            'title' => 'Material Access Level Changed',
+            'message' => "The access level for \"{$this->material->title}\" changed from {$levelLabel($this->oldLevel)} to {$levelLabel($this->newLevel)}. This may affect your ability to access this material.",
             'material_id' => $this->material->id,
         ];
     }

@@ -5,7 +5,6 @@ namespace App\Filament\Resources\RepositoryChangeLogs\Schemas;
 use App\Enums\RepositoryChangeType;
 use App\Models\RepositoryChangeLogs;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;

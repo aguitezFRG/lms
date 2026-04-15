@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\MaterialAccessEvents;
-use App\Models\RrMaterialParents;
 use App\Models\RrMaterials;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

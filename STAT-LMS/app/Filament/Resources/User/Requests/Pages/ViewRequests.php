@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\User\Requests\Pages;
 
 use App\Filament\Resources\User\Requests\RequestsResource;
-use App\Models\MaterialAccessEvents;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;

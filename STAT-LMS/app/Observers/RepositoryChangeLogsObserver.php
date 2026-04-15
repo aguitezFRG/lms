@@ -8,8 +8,6 @@ use App\Models\User;
 use App\Enums\RepositoryChangeType;
 use Illuminate\Database\Eloquent\Model;
 
-use Illuminate\Support\Facades\Log;
-
 class RepositoryChangeLogsObserver
 {
 
