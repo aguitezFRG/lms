@@ -10,6 +10,7 @@ use Filament\Forms\Components\TagsInput;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Filament\Notifications\Notification;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use App\Filament\Pages\Dashboard;
 
@@ -19,7 +20,9 @@ class PendingAccessesWidget extends BaseWidget
 
     protected static ?string $heading = 'Pending Digital Access Requests';
 
-    protected static ?string $pollingInterval = '30s';
+    protected static ?string $pollingInterval = '60s';
+
+    protected static bool $isLazy = false;
 
     protected $listeners = ['request-actioned' => '$refresh'];
 
@@ -74,9 +77,10 @@ class PendingAccessesWidget extends BaseWidget
             ])
             ->actions([
                 Action::make('approve')
-                    ->label('Approve')
+                    ->label('')
                     ->icon('heroicon-o-check')
                     ->color('success')
+                    ->iconButton()
                     ->requiresConfirmation()
                     ->modalHeading('Approve access request?')
                     ->modalDescription('The user will be notified and granted access to the digital material.')
@@ -88,14 +92,16 @@ class PendingAccessesWidget extends BaseWidget
                             'approved_at' => now(),
                             'due_at'      => now()->addDays(7)->endOfDay(),
                         ]);
+                        Cache::forget('dashboard.pending_accesses');
                         Notification::make()->title('Access request approved')->success()->send();
                         $this->dispatch('request-actioned');
                     }),
 
                 Action::make('reject')
-                    ->label('Reject')
+                    ->label('')
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
+                    ->iconButton()
                     ->modalHeading('Reject access request?')
                     ->modalSubmitActionLabel('Yes, reject')
                     ->form([
@@ -121,6 +127,7 @@ class PendingAccessesWidget extends BaseWidget
                             'approver_id'      => auth()->id(),
                             'rejection_reason' => $data['rejection_reason'] ?? null,
                         ]);
+                        Cache::forget('dashboard.pending_accesses');
                         Notification::make()->title('Access request rejected')->danger()->send();
                         $this->dispatch('request-actioned');
                     }),

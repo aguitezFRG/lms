@@ -10,6 +10,7 @@ use Filament\Forms\Components\TagsInput;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Filament\Notifications\Notification;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use App\Filament\Pages\Dashboard;
 
@@ -19,7 +20,9 @@ class PendingBorrowsWidget extends BaseWidget
 
     protected static ?string $heading = 'Pending Borrow Requests';
 
-    protected static ?string $pollingInterval = '30s';
+    protected static ?string $pollingInterval = '60s';
+
+    protected static bool $isLazy = false;
 
     protected $listeners = ['request-actioned' => '$refresh'];
 
@@ -61,9 +64,10 @@ class PendingBorrowsWidget extends BaseWidget
             ])
             ->actions([
                 Action::make('approve')
-                    ->label('Approve')
+                    ->label('')
                     ->icon('heroicon-o-check')
                     ->color('success')
+                    ->iconButton()
                     ->requiresConfirmation()
                     ->modalHeading('Approve borrow request?')
                     ->modalSubmitActionLabel('Yes, approve')
@@ -74,14 +78,16 @@ class PendingBorrowsWidget extends BaseWidget
                             'approved_at' => now(),
                             'due_at'      => now()->addDays(14)->endOfDay(),
                         ]);
+                        Cache::forget('dashboard.pending_borrows');
                         Notification::make()->title('Request approved')->success()->send();
                         $this->dispatch('request-actioned');
                     }),
 
                 Action::make('reject')
-                    ->label('Reject')
+                    ->label('')
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
+                    ->iconButton()
                     ->modalHeading('Reject borrow request?')
                     ->modalSubmitActionLabel('Yes, reject')
                     ->form([
@@ -107,6 +113,7 @@ class PendingBorrowsWidget extends BaseWidget
                             'approver_id'      => auth()->id(),
                             'rejection_reason' => $data['rejection_reason'] ?? null,
                         ]);
+                        Cache::forget('dashboard.pending_borrows');
                         Notification::make()->title('Request rejected')->danger()->send();
                         $this->dispatch('request-actioned');
                     }),

@@ -42,7 +42,7 @@
                 wire:click="markRead('{{ $n['id'] }}')"
                 @class([
                     'flex items-start gap-4 px-4 py-4 cursor-pointer transition-colors duration-150',
-                    'bg-blue-50/60 dark:bg-blue-950/20 hover:bg-blue-50 dark:hover:bg-blue-950/30' => $n['is_unread'],
+                    'bg-primary-50/60 dark:bg-primary-950/20 hover:bg-primary-50 dark:hover:bg-primary-950/30' => $n['is_unread'],
                     'bg-white dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.08]'          => ! $n['is_unread'],
                 ])
             >

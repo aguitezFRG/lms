@@ -11,7 +11,7 @@ class ListMaterialAccessEvents extends ListRecords
 {
     protected static string $resource = MaterialAccessEventsResource::class;
 
-    protected ?string $pollingInterval = '30s';
+    protected ?string $pollingInterval = '60s';
 
     protected $listeners = ['request-actioned' => '$refresh'];
 

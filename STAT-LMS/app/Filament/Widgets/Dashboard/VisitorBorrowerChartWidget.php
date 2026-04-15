@@ -10,11 +10,11 @@ class VisitorBorrowerChartWidget extends ChartWidget
 {
     protected ?string $heading = 'Visitor & Borrower';
 
-    protected static bool $isLazy = false;
-
     protected int | string | array $columnSpan = 1;
 
-    protected ?string $pollingInterval = '120s';
+    protected ?string $pollingInterval = null;
+
+    protected static bool $isLazy = false;
 
     protected ?int $numDays = 4;
 

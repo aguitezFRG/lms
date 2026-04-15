@@ -9,7 +9,6 @@
         @if ($canViewGeneral)
             <x-filament::tabs.item
                 :active="$activeTab === 'general'"
-                icon="heroicon-o-chart-bar"
                 wire:click="setTab('general')"
             >
                 General
@@ -19,7 +18,6 @@
         @if ($canViewBorrows)
             <x-filament::tabs.item
                 :active="$activeTab === 'borrows'"
-                icon="heroicon-o-book-open"
                 wire:click="setTab('borrows')"
             >
                 Borrow Requests
@@ -34,7 +32,6 @@
         @if ($canViewAccess)
             <x-filament::tabs.item
                 :active="$activeTab === 'access'"
-                icon="heroicon-o-paper-airplane"
                 wire:click="setTab('access')"
             >
                 Access Requests

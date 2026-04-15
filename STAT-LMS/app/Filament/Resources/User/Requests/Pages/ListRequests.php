@@ -18,7 +18,7 @@ class ListRequests extends ListRecords
 {
     protected static string $resource = RequestsResource::class;
 
-    protected ?string $pollingInterval = '20s';
+    protected ?string $pollingInterval = '60s';
 
     public function getTablePollingInterval(): ?string
     {

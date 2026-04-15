@@ -11,7 +11,7 @@ class ListRrMaterialParents extends ListRecords
 {
     protected static string $resource = RrMaterialParentsResource::class;
 
-    protected ?string $pollingInterval = '60s';
+    protected ?string $pollingInterval = '120s';
 
     public function getTablePollingInterval(): ?string
     {

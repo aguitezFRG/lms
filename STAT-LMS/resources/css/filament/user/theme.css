@@ -3,6 +3,21 @@
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
 
+/* UP Visual Identity Guide — Typeface: Montserrat (Avenir/Helvetica substitute for unofficial materials) */
+:root {
+    --font-sans: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+}
+
+.fi-header-heading {
+    font-family: 'Montserrat', ui-sans-serif, sans-serif;
+    font-weight: 700;
+}
+
+.fi-sidebar-nav-item-label {
+    font-family: 'Montserrat', ui-sans-serif, sans-serif;
+    font-weight: 500;
+}
+
 .fi-section {
     min-height: 250px;
 }
@@ -13,5 +28,5 @@
 }
 
 .fi-ac-btn-action.fi-color-danger {
-    --c-500: #8D1436 !important; /* UP Maroon / Danger */
+    --c-500: #8D1436 !important; /* UP Maroon */
 }
