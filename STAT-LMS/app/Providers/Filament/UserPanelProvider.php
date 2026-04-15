@@ -34,9 +34,9 @@ class UserPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/user/theme.css')
             ->brandLogoHeight('2.5rem')
             ->brandLogo(new HtmlString('
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <img src="' . asset('images/up-seal.png') . '" alt="UP Seal" style="height: 2.5rem; width: auto;" />
-                    <span style="font-size: 1.25rem; white-space: nowrap;">
+                <div style="display: flex; align-items: center; gap: 16px; padding: 4px 0;">
+                    <img src="' . asset('images/up-seal.png') . '" alt="UP Seal" style="height: 2.5rem; width: auto; flex-shrink: 0;" />
+                    <span style="font-family: Montserrat, ui-sans-serif, sans-serif; font-size: 1.1rem; font-weight: 600; white-space: nowrap; letter-spacing: 0.01em;">
                         INSTAT-RR-SPRIS
                     </span>
                 </div>
@@ -44,16 +44,12 @@ class UserPanelProvider extends PanelProvider
             ->brandName('INSTAT-RR-SPRIS')
             ->login(UserLogin::class)
             ->colors([
-                'primary'     => Color::hex('#8D1436'), // UP Maroon
-                'success'     => Color::hex('#014421'), // UP Forest Green
-                'warning'     => Color::hex('#F3AA2C'), // UP Yellow/Gold
-                'danger'      => Color::hex('#8D1436'), // UP Maroon
-                'info'        => Color::hex('#014421'), // UP Green
-                'gray'        => Color::Slate,
-                'black'       => Color::hex('#000000'),
-                'white'       => Color::hex('#FFFFFF'),
-                'stat-blue'   => Color::hex('#00007d'),
-                'stat-yellow' => Color::hex('#fffd0d'),
+                'primary' => Color::hex('#8D1436'), // UP Maroon (PANTONE 1955C)
+                'success' => Color::hex('#014421'), // UP Forest Green (PANTONE 7484C)
+                'warning' => Color::hex('#F3AA2C'), // UP Gold (PANTONE 1235C)
+                'danger'  => Color::hex('#8D1436'), // UP Maroon
+                'info'    => Color::hex('#014421'), // UP Forest Green
+                'gray'    => Color::Slate,
             ])
             ->discoverResources(
                 in: app_path('Filament/Resources/User'),

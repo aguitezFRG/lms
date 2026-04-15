@@ -77,9 +77,10 @@ class PendingAccessesWidget extends BaseWidget
             ])
             ->actions([
                 Action::make('approve')
-                    ->label('Approve')
+                    ->label('')
                     ->icon('heroicon-o-check')
                     ->color('success')
+                    ->iconButton()
                     ->requiresConfirmation()
                     ->modalHeading('Approve access request?')
                     ->modalDescription('The user will be notified and granted access to the digital material.')
@@ -97,9 +98,10 @@ class PendingAccessesWidget extends BaseWidget
                     }),
 
                 Action::make('reject')
-                    ->label('Reject')
+                    ->label('')
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
+                    ->iconButton()
                     ->modalHeading('Reject access request?')
                     ->modalSubmitActionLabel('Yes, reject')
                     ->form([

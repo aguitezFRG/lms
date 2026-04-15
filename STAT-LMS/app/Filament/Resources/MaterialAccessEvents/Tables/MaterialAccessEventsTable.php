@@ -62,7 +62,6 @@ class MaterialAccessEventsTable
                     ->default('-----------')
                     ->toggleable(isToggledHiddenByDefault: false),
             ])
-            ->defaultSort('created_at', 'desc')
             ->filters([
                 TrashedFilter::make(),
                 Filter::make('Status')

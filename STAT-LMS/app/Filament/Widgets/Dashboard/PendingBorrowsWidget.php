@@ -64,9 +64,10 @@ class PendingBorrowsWidget extends BaseWidget
             ])
             ->actions([
                 Action::make('approve')
-                    ->label('Approve')
+                    ->label('')
                     ->icon('heroicon-o-check')
                     ->color('success')
+                    ->iconButton()
                     ->requiresConfirmation()
                     ->modalHeading('Approve borrow request?')
                     ->modalSubmitActionLabel('Yes, approve')
@@ -83,9 +84,10 @@ class PendingBorrowsWidget extends BaseWidget
                     }),
 
                 Action::make('reject')
-                    ->label('Reject')
+                    ->label('')
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
+                    ->iconButton()
                     ->modalHeading('Reject borrow request?')
                     ->modalSubmitActionLabel('Yes, reject')
                     ->form([

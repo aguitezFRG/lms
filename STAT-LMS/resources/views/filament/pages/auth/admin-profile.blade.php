@@ -7,10 +7,10 @@
     <x-filament::section class="mb-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
 
-            {{-- Initials avatar --}}
-            <div class="flex h-14 w-14 shrink-0 items-center justify-center
-                        rounded-full bg-primary-600 text-xl font-bold text-white shadow">
-                {{ $initials }}
+            {{-- Avatar icon circle --}}
+            <div class="flex h-16 w-16 shrink-0 items-center justify-center
+                        rounded-full bg-primary-800 shadow">
+                <x-heroicon-o-user class="h-8 w-8 text-white" />
             </div>
 
             {{-- Profile fields via Filament infolist --}}
@@ -26,7 +26,6 @@
 
         <x-filament::tabs.item
             :active="$activeTab === 'history'"
-            icon="heroicon-o-clock"
             wire:click="setTab('history')"
         >
             Access History
@@ -34,7 +33,6 @@
 
         <x-filament::tabs.item
             :active="$activeTab === 'notifications'"
-            icon="heroicon-o-bell"
             wire:click="setTab('notifications')"
         >
             Notifications
