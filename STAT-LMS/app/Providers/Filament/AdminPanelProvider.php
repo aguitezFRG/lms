@@ -52,9 +52,11 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::hex('#8D1436'), // UP Maroon (PANTONE 1955C)
                 'success' => Color::hex('#014421'), // UP Forest Green (PANTONE 7484C)
-                'warning' => Color::hex('#F3AA2C'), // UP Gold (PANTONE 1235C)
+                'warning' => Color::hex('#f55536'), // UP Gold (PANTONE 1235C)
                 'danger'  => Color::hex('#8D1436'), // UP Maroon
                 'info'    => Color::hex('#014421'), // UP Forest Green
+                'stat-yellow' => Color::hex('#F3AA2C'),
+                'stat-blue' => Color::hex('#1a3a8f'),
                 'gray'    => Color::Slate,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
