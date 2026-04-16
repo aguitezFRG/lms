@@ -12,7 +12,7 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
     }
 
     /**
@@ -20,7 +20,7 @@ class UserPolicy
      */
     public function view(User $user, User $model): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
     }
 
     /**
@@ -28,7 +28,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
     }
 
     /**
@@ -36,12 +36,12 @@ class UserPolicy
      */
     public function update(User $user, User $model): bool
     {
-        return (in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value])) && $user->id !== $model->id;
+        return (in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value])) && $user->id !== $model->id;
     }
 
     public function deleteAny(User $user): bool
     {
-        return (in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]));
+        return (in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]));
     }
 
     /**
@@ -49,12 +49,15 @@ class UserPolicy
      */
     public function delete(User $user, User $model): bool
     {
-        return (in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value])) && $user->id !== $model->id;
+        $privilege_level = UserRole::from($user->role)->getPrivilegeLevel();
+        $model_privilege_level = UserRole::from($model->role)->getPrivilegeLevel();
+
+        return (in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value])) && $user->id !== $model->id && $privilege_level > $model_privilege_level;
     }
 
     public function restoreAny(User $user): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
     }
 
     /**
@@ -62,7 +65,7 @@ class UserPolicy
      */
     public function restore(User $user, User $model): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
     }
 
     /**
@@ -70,6 +73,6 @@ class UserPolicy
      */
     public function forceDelete(User $user, User $model): bool
     {
-        return (in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value])) && $user->id !== $model->id;
+        return (in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value])) && $user->id !== $model->id;
     }
 }

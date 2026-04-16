@@ -25,7 +25,7 @@ class MaterialAccessEventsPolicy
     {
         // Users can view their own requests, as well as committee, IT, and RR staff can view all requests
         return $materialAccessEvents->user_id == $user->id ||
-               in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value]);
+               in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value]);
     }
 
     /**
@@ -33,7 +33,7 @@ class MaterialAccessEventsPolicy
      */
     public function create(User $user): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
     }
 
     /**
@@ -48,7 +48,7 @@ class MaterialAccessEventsPolicy
         // Allow the user who last updated the event to update it again, as well as committee and IT
         // RR staff can only update if the material access event is of an open material copy
         // Users can update if they're the one who initiated the request, but only if it hasn't been approved yet (i.e. approver_id is null)
-        return in_array($user_role, [UserRole::COMMITTEE->value, UserRole::IT->value]) ||
+        return in_array($user_role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]) ||
                $updated_by == $user->id ||
                ($user_role == UserRole::RR->value && $materialAccessEvents->material?->parent?->access_level == 1) ||
                ($materialAccessEvents->user_id == $user->id && $materialAccessEvents->approver_id == null);
@@ -81,7 +81,7 @@ class MaterialAccessEventsPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
     }
 
     /**
@@ -89,7 +89,7 @@ class MaterialAccessEventsPolicy
      */
     public function restore(User $user, MaterialAccessEvents $materialAccessEvents): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
     }
 
     public function forceDeleteAny(User $user): bool

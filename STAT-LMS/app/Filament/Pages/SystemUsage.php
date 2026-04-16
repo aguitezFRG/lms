@@ -41,6 +41,7 @@ class SystemUsage extends Page
     {
         $user = Auth::user();
         return $user && in_array($user->role, [
+            UserRole::SUPER_ADMIN->value,
             UserRole::COMMITTEE->value,
             UserRole::IT->value,
             UserRole::RR->value,
