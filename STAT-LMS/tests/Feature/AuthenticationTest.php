@@ -90,6 +90,28 @@ class AuthenticationTest extends TestCase
             ->assertForbidden();
     }
 
+    // ── Super Admin Role ──────────────────────────────────────────────────────
+
+    /** @test */
+    public function super_admin_can_access_admin_panel(): void
+    {
+        $user = $this->makeUser('super_admin');
+
+        $this->actingAs($user)
+            ->get('/admin')
+            ->assertOk();
+    }
+
+    /** @test */
+    public function super_admin_is_denied_from_user_panel(): void
+    {
+        $user = $this->makeUser('super_admin');
+
+        $this->actingAs($user)
+            ->get('/app')
+            ->assertForbidden();
+    }
+
     // ── IT Role ───────────────────────────────────────────────────────────────
 
     /** @test */
