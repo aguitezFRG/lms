@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
-use App\Models\User;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -58,7 +57,7 @@ class UserInfolist
                     ])->columns(2),
 
                 Section::make('Account Details')
-                    ->columnSpanFull()  
+                    ->columnSpanFull()
                     ->components([
                         TextEntry::make('created_at')
                             ->label('Account Created')

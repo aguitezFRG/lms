@@ -9,7 +9,6 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -20,7 +19,6 @@ use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Select;
 
-use Filament\Actions\Action;
 use App\Models\MaterialAccessEvents;
 
 class MaterialAccessEventsTable
@@ -87,8 +85,7 @@ class MaterialAccessEventsTable
                     ViewAction::make(),
                     EditAction::make()
                         ->visible(fn ($record) =>
-                            in_array($record->status, ['pending', 'rejected', 'approved']
-                            )
+                            in_array($record->status, ['pending', 'rejected', 'approved'])
                         )
                         ->mutateFormDataUsing(fn (array $data) => array_merge($data, [
                             'approver_id' => auth()->id(),

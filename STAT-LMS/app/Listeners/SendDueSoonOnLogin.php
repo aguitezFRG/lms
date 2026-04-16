@@ -43,7 +43,9 @@ class SendDueSoonOnLogin
                     ->whereDate('created_at', today())
                     ->exists();
 
-                if ($alreadyNotified) continue;
+                if ($alreadyNotified) {
+                    continue;
+                }
 
                 $user->notify(new BorrowDueSoon($borrow, $days));
             }

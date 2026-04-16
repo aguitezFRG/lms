@@ -2,10 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Listeners\SendDueSoonOnLogin;
 use App\Models\MaterialAccessEvents;
 use App\Models\RrMaterialParents;
-use App\Models\RrMaterials;
 use App\Models\User;
 use App\Notifications\AccessLevelChanged;
 use App\Notifications\AccountDetailsChanged;

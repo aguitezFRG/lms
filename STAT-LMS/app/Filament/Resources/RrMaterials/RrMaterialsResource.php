@@ -19,7 +19,6 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-use Illuminate\Support\Facades\Auth;
 use App\Enums\UserRole;
 
 class RrMaterialsResource extends Resource

@@ -3,17 +3,14 @@
 namespace App\Models;
 
 use App\Notifications\AccessLevelChanged;
-use App\Models\MaterialAccessEvents;
-use App\Models\User;
-
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class RrMaterialParents extends Model
 {
-    use HasFactory, SoftDeletes, HasUuids;
+    use HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
         'material_type',
@@ -34,7 +31,7 @@ class RrMaterialParents extends Model
         'sdgs' => 'array',
     ];
 
-    protected static function booted() : void
+    protected static function booted(): void
     {
         static::updated(function (RrMaterialParents $material) {
             if (! $material->wasChanged('access_level')) {
@@ -46,13 +43,12 @@ class RrMaterialParents extends Model
 
             // Notify all users who have any access event (borrow or request)
             // linked to a copy of this material
-            $affectedUserIds = MaterialAccessEvents::whereHas('material', fn ($q) =>
-                $q->where('material_parent_id', $material->id)
+            $affectedUserIds = MaterialAccessEvents::whereHas('material', fn ($q) => $q->where('material_parent_id', $material->id)
             )
-            ->whereIn('event_type', ['borrow', 'request'])
-            ->whereIn('status', ['pending', 'approved'])
-            ->pluck('user_id')
-            ->unique();
+                ->whereIn('event_type', ['borrow', 'request'])
+                ->whereIn('status', ['pending', 'approved'])
+                ->pluck('user_id')
+                ->unique();
 
             User::whereIn('id', $affectedUserIds)->each(function (User $user) use ($material, $oldLevel, $newLevel) {
                 $user->notify(new AccessLevelChanged($material, $oldLevel, $newLevel));

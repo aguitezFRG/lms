@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\RrMaterials\Schemas;
 
-use App\Models\RrMaterials;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;

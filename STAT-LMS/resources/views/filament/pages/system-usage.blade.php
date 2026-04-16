@@ -175,6 +175,7 @@
                     <input
                         type="date"
                         wire:model.live="filterDateFrom"
+                        max="{{ $filterDateTo ?: date('Y-m-d') }}"
                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     />
                 </div>
@@ -184,6 +185,8 @@
                     <input
                         type="date"
                         wire:model.live="filterDateTo"
+                        min="{{ $filterDateFrom ?: '' }}"
+                        max="{{ date('Y-m-d') }}"
                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     />
                 </div>

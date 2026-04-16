@@ -6,8 +6,6 @@ use App\Models\MaterialAccessEvents;
 use App\Models\RrMaterials;
 use App\Enums\MaterialEventType;
 use App\Enums\UserRole;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class MaterialStreamController extends Controller
 {
