@@ -52,15 +52,15 @@ class AppServiceProvider extends ServiceProvider
         //     URL::forceScheme('https');
         // }
 
-        RateLimiter::for('login', function (Request $request) {
-            $email = (string) $request->email;
+        // RateLimiter::for('login', function (Request $request) {
+        //     $email = (string) $request->email;
 
-            return [
-                Limit::perMinute(3)->by($email),                  // 3 attempts per minute per email
-                Limit::perMinute(3)->by($email . $request->ip()), // 3 attempts per minute per email+IP
-                Limit::perMinute(10, 5)->by($request->ip()),      // 10 attempts every 5 minutes per IP
-        ];
-        });
+        //     return [
+        //         Limit::perMinute(3)->by($email),                  // 3 attempts per minute per email
+        //         Limit::perMinute(3)->by($email . $request->ip()), // 3 attempts per minute per email+IP
+        //         Limit::perMinute(10, 5)->by($request->ip()),      // 10 attempts every 5 minutes per IP
+        //     ];
+        // });
 
         MaterialAccessEvents::observe(MaterialAccessEventsObserver::class);
         User::observe(UserObserver::class);
