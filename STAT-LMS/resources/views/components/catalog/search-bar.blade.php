@@ -31,17 +31,16 @@
         @click.outside="open = false"
         @keydown.escape="open = false"
     >
-        <button
+        <x-filament::button
             type="button"
+            color="gray"
             @click="open = !open"
-            class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition
-                    hover:border-gray-400 focus:outline-none
-                    dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-white/25"
+            class="flex items-center gap-2"
         >
             <span x-text="label"></span>
             <x-heroicon-m-chevron-down class="h-3.5 w-3.5 text-gray-400 transition-transform duration-150"
                 x-bind:class="open ? 'rotate-180' : ''" />
-        </button>
+        </x-filament::button>
 
         <div
             x-show="open"
@@ -72,35 +71,31 @@
 
     {{-- Search input --}}
     <div class="relative flex-1">
-        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <x-heroicon-o-magnifying-glass class="h-4 w-4 text-gray-400" />
-        </div>
-        <input
-            wire:model.live.debounce.300ms="search"
-            type="text"
-            placeholder="{{ match($searchScope) {
-                'title'   => 'Search by title…',
-                'author'  => 'Search by author name…',
-                'keyword' => 'Search by keyword…',
-                default   => 'Search by title, author, or keyword…',
-            } }}"
-            class="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-4 text-sm shadow-sm
-                    focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500
-                    dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-gray-500"
-        />
+        <x-filament::input.wrapper class="w-full">
+            <x-slot name="prefix">
+                <x-heroicon-o-magnifying-glass class="h-4 w-4 text-gray-400" />
+            </x-slot>
+            <x-filament::input
+                wire:model.live.debounce.300ms="search"
+                type="text"
+                placeholder="{{ match($searchScope) {
+                    'title'   => 'Search by title…',
+                    'author'  => 'Search by author name…',
+                    'keyword' => 'Search by keyword…',
+                    default   => 'Search by title, author, or keyword…',
+                } }}"
+            />
+        </x-filament::input.wrapper>
     </div>
 
     {{-- Filter toggle button --}}
-    <button
+    <x-filament::button
         type="button"
         wire:click="toggleFilterPanel"
-        @class([
-            'relative flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-sm shadow-sm transition focus:outline-none',
-            'border-primary-600 bg-primary-600 text-white hover:bg-primary-700 dark:border-primary-400 dark:bg-primary-400 dark:hover:bg-primary-500' => $filterPanelOpen,
-            'border-gray-300 bg-white text-gray-700 hover:border-gray-400 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-white/25' => ! $filterPanelOpen,
-        ])
+        :color="$filterPanelOpen ? 'primary' : 'gray'"
+        icon="heroicon-o-funnel"
+        class="relative shrink-0"
     >
-        <x-heroicon-o-funnel class="h-4 w-4" />
         <span>Filter</span>
         @if ($activeFilterCount > 0)
             <span @class([
@@ -109,6 +104,6 @@
                 'bg-primary-600 text-white dark:bg-primary-400' => ! $filterPanelOpen,
             ])>{{ $activeFilterCount }}</span>
         @endif
-    </button>
+    </x-filament::button>
 
 </div>

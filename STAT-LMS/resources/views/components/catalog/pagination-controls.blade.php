@@ -3,13 +3,17 @@
 ])
 
 <div class="mt-8 flex flex-wrap items-center justify-center gap-1">
-    <button
+    <x-filament::button
         wire:click="previousPage"
         @disabled($paginator->onFirstPage())
-        class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-600 shadow-sm
-                transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40
-                dark:border-white/10 dark:bg-white/5 dark:text-gray-300"
-    >&larr; Prev</button>
+        color="gray"
+        outlined
+        size="sm"
+        icon="heroicon-o-arrow-left"
+        icon-position="before"
+    >
+        Prev
+    </x-filament::button>
 
     @php
         $current  = $paginator->currentPage();
@@ -31,21 +35,24 @@
         @if ($p === '...')
             <span class="px-1 py-1.5 text-sm text-gray-400 select-none">…</span>
         @else
-            <button
+            <x-filament::button
                 wire:click="goToPage({{ $p }})"
-                class="rounded-lg border px-3 py-1.5 text-sm transition
-                        {{ $current === $p
-                            ? 'border-primary-600 bg-primary-600 text-white shadow-sm'
-                            : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-300' }}"
-            >{{ $p }}</button>
+                :color="$current === $p ? 'primary' : 'gray'"
+                :outlined="$current !== $p"
+                size="sm"
+            >{{ $p }}</x-filament::button>
         @endif
     @endforeach
 
-    <button
+    <x-filament::button
         wire:click="nextPage"
         @disabled(! $paginator->hasMorePages())
-        class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-600 shadow-sm
-                transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40
-                dark:border-white/10 dark:bg-white/5 dark:text-gray-300"
-    >Next &rarr;</button>
+        color="gray"
+        outlined
+        size="sm"
+        icon="heroicon-o-arrow-right"
+        icon-position="after"
+    >
+        Next
+    </x-filament::button>
 </div>

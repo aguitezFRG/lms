@@ -15,59 +15,77 @@
 
         @if ($typeFilter !== '')
             @php $typeChipLabel = match((int)$typeFilter) { 1=>'Book', 2=>'Thesis', 3=>'Journal', 4=>'Dissertation', 5=>'Others', default=>'Type' }; @endphp
-            <span class="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1
-                            text-xs font-medium text-primary-700 dark:bg-primary-900/40 dark:text-primary-300">
+            <x-filament::badge color="primary">
                 {{ $typeChipLabel }}
-                <button wire:click="removeFilter('typeFilter')" class="ml-0.5 rounded-full transition-colors hover:text-primary-900 hover:bg-primary-200 dark:hover:bg-primary-800/60">
-                    <x-heroicon-m-x-mark class="h-3 w-3" />
-                </button>
-            </span>
+                <x-filament::icon-button
+                    wire:click="removeFilter('typeFilter')"
+                    icon="heroicon-m-x-mark"
+                    size="xs"
+                    color="primary"
+                    class="ml-0.5"
+                />
+            </x-filament::badge>
         @endif
 
         @if ($formatFilter !== '')
-            <span class="inline-flex items-center gap-1 rounded-full bg-success-100 px-2.5 py-1
-                            text-xs font-medium text-success-700 dark:bg-success-900/40 dark:text-success-300">
+            <x-filament::badge color="success">
                 {{ $formatFilter === 'digital' ? 'Digital' : 'Physical' }}
-                <button wire:click="removeFilter('formatFilter')" class="ml-0.5 rounded-full transition-colors hover:text-success-900 hover:bg-success-200 dark:hover:bg-success-800/60">
-                    <x-heroicon-m-x-mark class="h-3 w-3" />
-                </button>
-            </span>
+                <x-filament::icon-button
+                    wire:click="removeFilter('formatFilter')"
+                    icon="heroicon-m-x-mark"
+                    size="xs"
+                    color="success"
+                    class="ml-0.5"
+                />
+            </x-filament::badge>
         @endif
 
         @if ($pubDateFrom !== '' || $pubDateTo !== '')
-            <span class="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2.5 py-1
-                            text-xs font-medium text-warning-700 dark:bg-warning-900/40 dark:text-warning-300">
+            <x-filament::badge color="warning">
                 {{ $pubDateFrom ?: '…' }} – {{ $pubDateTo ?: '…' }}
-                <button wire:click="removeFilter('pubDate')" class="ml-0.5 rounded-full transition-colors hover:text-warning-900 hover:bg-warning-200 dark:hover:bg-warning-800/60">
-                    <x-heroicon-m-x-mark class="h-3 w-3" />
-                </button>
-            </span>
+                <x-filament::icon-button
+                    wire:click="removeFilter('pubDate')"
+                    icon="heroicon-m-x-mark"
+                    size="xs"
+                    color="warning"
+                    class="ml-0.5"
+                />
+            </x-filament::badge>
         @endif
 
         @foreach ($sdgFilter as $sdg)
-            <span class="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2.5 py-1
-                            text-xs font-medium text-warning-700 dark:bg-warning-900/40 dark:text-warning-300">
+            <x-filament::badge color="warning">
                 SDG: {{ $sdg }}
-                <button wire:click="removeFilter('sdg', '{{ $sdg }}')" class="ml-0.5 rounded-full transition-colors hover:text-warning-900 hover:bg-warning-200 dark:hover:bg-warning-800/60">
-                    <x-heroicon-m-x-mark class="h-3 w-3" />
-                </button>
-            </span>
+                <x-filament::icon-button
+                    wire:click="removeFilter('sdg', '{{ $sdg }}')"
+                    icon="heroicon-m-x-mark"
+                    size="xs"
+                    color="warning"
+                    class="ml-0.5"
+                />
+            </x-filament::badge>
         @endforeach
 
         @if (!$availableOnly)
-            <span class="inline-flex items-center gap-1 rounded-full bg-success-100 px-2.5 py-1
-                            text-xs font-medium text-success-700 dark:bg-success-900/40 dark:text-success-300">
+            <x-filament::badge color="success">
                 Including unavailable
-                <button wire:click="removeFilter('availableOnly')" class="ml-0.5 rounded-full transition-colors hover:text-success-900 hover:bg-success-200 dark:hover:bg-success-800/60">
-                    <x-heroicon-m-x-mark class="h-3 w-3" />
-                </button>
-            </span>
+                <x-filament::icon-button
+                    wire:click="removeFilter('availableOnly')"
+                    icon="heroicon-m-x-mark"
+                    size="xs"
+                    color="success"
+                    class="ml-0.5"
+                />
+            </x-filament::badge>
         @endif
 
-        <button wire:click="clearAllFilters"
-                class="ml-1 text-xs font-medium text-gray-400 underline underline-offset-2
-                        hover:text-danger-600 dark:hover:text-danger-400">
+        <x-filament::button
+            wire:click="clearAllFilters"
+            color="danger"
+            size="xs"
+            class="ml-1"
+        >
             Clear all
-        </button>
+        </x-filament::button>
     </div>
 @endif
