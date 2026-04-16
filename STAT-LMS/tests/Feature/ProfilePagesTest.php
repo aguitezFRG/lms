@@ -35,29 +35,30 @@ class ProfilePagesTest extends TestCase
     private function makeParentAndCopy(int $accessLevel = 1): array
     {
         $parent = $this->makeMaterialParent([
-            'access_level'     => $accessLevel,
-            'material_type'    => 1,
-            'author'           => 'Profile Test Author',
+            'access_level' => $accessLevel,
+            'material_type' => 1,
+            'author' => 'Profile Test Author',
             'publication_date' => now()->subYear(),
-            'keywords'         => json_encode(['stats']),
-            'sdgs'             => json_encode(['Education']),
-            'adviser'          => json_encode(['Adviser']),
+            'keywords' => json_encode(['stats']),
+            'sdgs' => json_encode(['Education']),
+            'adviser' => json_encode(['Adviser']),
         ]);
         $copy = $this->makeMaterialCopy([
             'material_parent_id' => $parent->id,
-            'is_digital'         => true,
-            'is_available'       => true,
+            'is_digital' => true,
+            'is_available' => true,
         ]);
+
         return [$parent, $copy];
     }
 
     private function makeEvent(User $user, RrMaterials $copy, string $status): MaterialAccessEvents
     {
         return MaterialAccessEvents::create([
-            'user_id'        => $user->id,
+            'user_id' => $user->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => $status,
+            'event_type' => 'request',
+            'status' => $status,
         ]);
     }
 
@@ -106,13 +107,15 @@ class ProfilePagesTest extends TestCase
     // ── Initials ──────────────────────────────────────────────────────────────
 
     /** @test */
-    public function user_profile_displays_correct_initials_from_name_parts(): void
+    public function user_profile_displays_avatar_icon_instead_of_initials(): void
     {
         $student = $this->makeUser('student', ['f_name' => 'Maria', 'l_name' => 'Santos']);
         $this->actingAs($student);
 
+        // The profile header now renders a heroicon avatar (not text initials).
+        // Assert the user's name appears in the welcome title instead.
         Livewire::test(\App\Filament\Pages\User\UserProfile::class)
-            ->assertSee('MS'); // initials
+            ->assertSee('Maria'); // f_name appears in the page title "Welcome, Maria!"
     }
 
     // ── Request Counts ────────────────────────────────────────────────────────
@@ -164,7 +167,7 @@ class ProfilePagesTest extends TestCase
         [$parent, $copy] = $this->makeParentAndCopy();
         $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
 
-        $pending  = $this->makeEvent($student, $copy, 'pending');
+        $pending = $this->makeEvent($student, $copy, 'pending');
         $approved = $this->makeEvent($student, $copy, 'approved');
 
         $this->actingAs($student);
@@ -182,7 +185,7 @@ class ProfilePagesTest extends TestCase
         [$parent, $copy] = $this->makeParentAndCopy();
         $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
 
-        $pending  = $this->makeEvent($student, $copy, 'pending');
+        $pending = $this->makeEvent($student, $copy, 'pending');
         $approved = $this->makeEvent($student, $copy, 'approved');
 
         $this->actingAs($student);
@@ -200,9 +203,9 @@ class ProfilePagesTest extends TestCase
         [$parent, $copy] = $this->makeParentAndCopy();
         $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
 
-        $rejected  = $this->makeEvent($student, $copy, 'rejected');
+        $rejected = $this->makeEvent($student, $copy, 'rejected');
         $cancelled = $this->makeEvent($student, $copy, 'cancelled');
-        $pending   = $this->makeEvent($student, $copy, 'pending');
+        $pending = $this->makeEvent($student, $copy, 'pending');
 
         $this->actingAs($student);
 
@@ -258,11 +261,11 @@ class ProfilePagesTest extends TestCase
     public function admin_profile_history_scoped_to_current_admin_user(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
-        $committee  = $this->makeUser('committee', ['f_name' => 'Test', 'l_name' => 'User']);
+        $committee = $this->makeUser('committee', ['f_name' => 'Test', 'l_name' => 'User']);
         $otherAdmin = $this->makeUser('it', ['f_name' => 'Test', 'l_name' => 'User']);
 
         // Create events for both admins
-        $myEvent    = $this->makeEvent($committee, $copy, 'approved');
+        $myEvent = $this->makeEvent($committee, $copy, 'approved');
         $otherEvent = $this->makeEvent($otherAdmin, $copy, 'pending');
 
         $this->actingAs($committee);

@@ -73,7 +73,7 @@
                 {{-- Unread dot --}}
                 <div class="shrink-0 self-center w-4 flex justify-center">
                     @if ($n['is_unread'])
-                        <span class="block w-2.5 h-2.5 rounded-full bg-blue-500 dark:bg-blue-400"></span>
+                        <x-filament::badge color="info" size="xs"></x-filament::badge>
                     @endif
                 </div>
             </div>

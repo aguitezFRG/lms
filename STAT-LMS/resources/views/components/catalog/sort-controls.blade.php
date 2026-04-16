@@ -43,17 +43,17 @@
             @click.outside="open = false"
             @keydown.escape="open = false"
         >
-            <button
+            <x-filament::button
                 type="button"
+                color="gray"
+                outlined
+                size="xs"
                 @click="open = !open"
-                class="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs shadow-sm transition
-                        hover:border-gray-400 focus:outline-none
-                        dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-white/25"
             >
                 <span x-text="label"></span>
                 <x-heroicon-m-chevron-down class="h-3 w-3 text-gray-400 transition-transform duration-150"
                     x-bind:class="open ? 'rotate-180' : ''" />
-            </button>
+            </x-filament::button>
 
             <div
                 x-show="open"
@@ -82,20 +82,16 @@
             </div>
         </div>
 
-        <button
+        <x-filament::button
             wire:click="toggleSortDir"
             title="{{ $sortDir === 'desc' ? 'Descending — click for Ascending' : 'Ascending — click for Descending' }}"
-            class="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-500
-                    shadow-sm transition hover:bg-gray-50
-                    dark:border-white/10 dark:bg-white/5 dark:text-gray-300"
+            color="gray"
+            outlined
+            size="xs"
+            :icon="$sortDir === 'desc' ? 'heroicon-o-arrow-down' : 'heroicon-o-arrow-up'"
+            icon-position="before"
         >
-            @if ($sortDir === 'desc')
-                <x-heroicon-o-arrow-down class="h-4 w-4" />
-                <span>Desc</span>
-            @else
-                <x-heroicon-o-arrow-up class="h-4 w-4" />
-                <span>Asc</span>
-            @endif
-        </button>
+            {{ $sortDir === 'desc' ? 'Desc' : 'Asc' }}
+        </x-filament::button>
     </div>
 </div>

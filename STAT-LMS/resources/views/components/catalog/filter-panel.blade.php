@@ -47,14 +47,11 @@
                     </p>
                     <div class="flex flex-wrap gap-1.5">
                         @foreach (['' => 'All', '1' => 'Book', '2' => 'Thesis', '3' => 'Journal', '4' => 'Dissertation', '5' => 'Others'] as $val => $label)
-                            <button
+                            <x-filament::button
                                 wire:click="$set('draftTypeFilter', '{{ $val }}')"
-                                @class([
-                                    'rounded-full px-3 py-1 text-xs font-medium transition border',
-                                    'border-primary-600 bg-primary-600 text-white dark:border-primary-400 dark:bg-primary-400' => $draftTypeFilter === (string) $val,
-                                    'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:text-gray-300' => $draftTypeFilter !== (string) $val,
-                                ])
-                            >{{ $label }}</button>
+                                :color="$draftTypeFilter === (string) $val ? 'primary' : 'gray'"
+                                size="xs"
+                            >{{ $label }}</x-filament::button>
                         @endforeach
                     </div>
                 </div>
@@ -70,17 +67,12 @@
                             'digital'  => ['label' => 'Digital',     'icon' => 'heroicon-o-computer-desktop'],
                             'physical' => ['label' => 'Physical',    'icon' => 'heroicon-o-book-open'],
                         ] as $val => $cfg)
-                            <button
+                            <x-filament::button
                                 wire:click="$set('draftFormatFilter', '{{ $val }}')"
-                                @class([
-                                    'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition border',
-                                    'border-primary-600 bg-primary-600 text-white dark:border-primary-400 dark:bg-primary-400' => $draftFormatFilter === (string) $val,
-                                    'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:text-gray-300' => $draftFormatFilter !== (string) $val,
-                                ])
-                            >
-                                <x-dynamic-component :component="$cfg['icon']" class="h-3 w-3" />
-                                {{ $cfg['label'] }}
-                            </button>
+                                :color="$draftFormatFilter === (string) $val ? 'primary' : 'gray'"
+                                :icon="$cfg['icon']"
+                                size="xs"
+                            >{{ $cfg['label'] }}</x-filament::button>
                         @endforeach
                     </div>
                 </div>
@@ -92,7 +84,7 @@
                     </p>
                     <label class="flex cursor-pointer items-center gap-2.5">
                         <div class="relative">
-                            <input type="checkbox" wire:model="draftAvailableOnly" class="sr-only peer" />
+                            <x-filament::input.checkbox wire:model="draftAvailableOnly" class="sr-only peer" />
                             <div class="h-5 w-9 rounded-full bg-gray-200 transition peer-checked:bg-primary-600
                                         dark:bg-gray-700 dark:peer-checked:bg-primary-500
                                         after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4
@@ -113,33 +105,32 @@
                     </p>
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <div class="flex flex-1 items-center gap-2">
-                            <label class="w-8 shrink-0 text-xs text-gray-400">From</label>
-                            <input
-                                wire:model="draftPubDateFrom"
-                                type="date"
-                                max="{{ date('Y-m-d') }}"
-                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm
-                                        focus:border-primary-500 focus:outline-none
-                                        dark:border-white/10 dark:bg-white/5 dark:text-white dark:[color-scheme:dark]"
-                            />
+                            <span class="w-8 shrink-0 text-xs text-gray-400">From</span>
+                            <x-filament::input.wrapper class="flex-1">
+                                <x-filament::input
+                                    wire:model="draftPubDateFrom"
+                                    type="date"
+                                    max="{{ date('Y-m-d') }}"
+                                />
+                            </x-filament::input.wrapper>
                         </div>
                         <span class="hidden text-gray-300 sm:block">—</span>
                         <div class="flex flex-1 items-center gap-2">
-                            <label class="w-8 shrink-0 text-xs text-gray-400">To</label>
-                            <input
-                                wire:model="draftPubDateTo"
-                                type="date"
-                                max="{{ date('Y-m-d') }}"
-                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm
-                                        focus:border-primary-500 focus:outline-none
-                                        dark:border-white/10 dark:bg-white/5 dark:text-white dark:[color-scheme:dark]"
-                            />
+                            <span class="w-8 shrink-0 text-xs text-gray-400">To</span>
+                            <x-filament::input.wrapper class="flex-1">
+                                <x-filament::input
+                                    wire:model="draftPubDateTo"
+                                    type="date"
+                                    max="{{ date('Y-m-d') }}"
+                                />
+                            </x-filament::input.wrapper>
                         </div>
                         @if ($draftPubDateFrom !== '' || $draftPubDateTo !== '')
-                            <button
+                            <x-filament::button
+                                color="danger"
+                                size="xs"
                                 @click="$wire.set('draftPubDateFrom', ''); $wire.set('draftPubDateTo', '')"
-                                class="shrink-0 text-xs text-gray-400 underline underline-offset-2 hover:text-danger-500"
-                            >Clear</button>
+                            >Clear</x-filament::button>
                         @endif
                     </div>
                 </div>
@@ -165,14 +156,12 @@
                         @endphp
                         @foreach ($sdgs as $sdg)
                             @php $active = in_array($sdg, $draftSdgFilter); @endphp
-                            <button
+                            <x-filament::button
                                 wire:click="toggleDraftSdg('{{ $sdg }}')"
-                                @class([
-                                    'rounded-lg px-2.5 py-1.5 text-left text-xs font-medium transition border',
-                                    'border-warning-500 bg-warning-500 text-white dark:border-warning-400' => $active,
-                                    'border-gray-200 bg-gray-50 text-gray-600 hover:border-warning-300 hover:bg-warning-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-300' => ! $active,
-                                ])
-                            >{{ $sdg }}</button>
+                                :color="$active ? 'warning' : 'gray'"
+                                size="xs"
+                                class="text-left"
+                            >{{ $sdg }}</x-filament::button>
                         @endforeach
                     </div>
                 </div>
@@ -181,21 +170,19 @@
 
             {{-- Panel Footer --}}
             <div class="flex items-center justify-between border-t border-gray-100 px-5 py-3 dark:border-white/10">
-                <button
+                <x-filament::button
                     wire:click="clearDraftFilters"
-                    class="rounded-lg border border-danger-200 px-4 py-2 text-xs font-medium text-danger-600
-                            transition hover:bg-danger-50 dark:border-danger-500/40 dark:text-danger-400
-                            dark:hover:bg-danger-500/10"
+                    color="danger"
+                    outlined
                 >
                     Clear All Filters
-                </button>
-                <button
+                </x-filament::button>
+                <x-filament::button
                     wire:click="applyFilters"
-                    class="rounded-lg bg-primary-600 px-5 py-2 text-xs font-semibold text-white shadow-sm
-                            transition hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-400"
+                    color="primary"
                 >
                     Apply Filters
-                </button>
+                </x-filament::button>
             </div>
         </div>
 </div>

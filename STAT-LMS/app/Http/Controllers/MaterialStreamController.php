@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MaterialAccessEvents;
-use App\Models\RrMaterials;
 use App\Enums\MaterialEventType;
 use App\Enums\UserRole;
+use App\Models\MaterialAccessEvents;
+use App\Models\RrMaterials;
+use Illuminate\Support\Facades\Log;
 
 class MaterialStreamController extends Controller
 {
@@ -17,17 +18,17 @@ class MaterialStreamController extends Controller
     {
         $this->authorizeAccess($record);
 
-        $path = storage_path('app/private/' . $record->file_name);
+        $path = storage_path('app/private/'.$record->file_name);
 
         if (! file_exists($path)) {
             abort(404);
         }
 
         return view('filament.pdf.viewer', [
-            'record'    => $record,
+            'record' => $record,
             'streamUrl' => route('materials.stream', ['record' => $record->id]),
-            'user'      => auth()->user(),
-            'title'     => $record->parent?->title ?? basename($record->file_name),
+            'user' => auth()->user(),
+            'title' => $record->parent?->title ?? basename($record->file_name),
         ]);
     }
 
@@ -39,7 +40,7 @@ class MaterialStreamController extends Controller
     {
         $this->authorizeAccess($record);
 
-        $path = storage_path('app/private/' . $record->file_name);
+        $path = storage_path('app/private/'.$record->file_name);
 
         if (! file_exists($path)) {
             Log::error("Stream failed: File not found at {$path}");
@@ -47,13 +48,13 @@ class MaterialStreamController extends Controller
         }
 
         return response()->file($path, [
-            'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . basename($record->file_name) . '"',
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.basename($record->file_name).'"',
             // Prevent the browser from caching the authenticated PDF URL
-            'Cache-Control'       => 'no-store, no-cache, must-revalidate, private',
-            'Pragma'              => 'no-cache',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, private',
+            'Pragma' => 'no-cache',
             // Block embedding in third-party iframes
-            'X-Frame-Options'     => 'SAMEORIGIN',
+            'X-Frame-Options' => 'SAMEORIGIN',
             // Tell browsers not to sniff the content type
             'X-Content-Type-Options' => 'nosniff',
         ]);
@@ -70,7 +71,7 @@ class MaterialStreamController extends Controller
             abort(403, 'Unauthorized access to secured library material.');
         }
 
-        $level           = (int) ($record->parent?->access_level ?? 1);
+        $level = (int) ($record->parent?->access_level ?? 1);
         $userAccessLevel = UserRole::from($user->role)->getAccessLevel();
 
         if ($userAccessLevel < $level) {

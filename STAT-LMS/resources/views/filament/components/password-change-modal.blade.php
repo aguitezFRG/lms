@@ -5,76 +5,64 @@
 >
     {{-- Current Password --}}
     <div class="space-y-1">
-        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Current Password
-            <span class="text-danger-600 dark:text-danger-400">*</span>
-        </label>
-        <div class="relative">
-            <input
-                :type="showCurrent ? 'text' : 'password'"
-                x-model="currentPassword"
-                autocomplete="current-password"
-                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm
-                       focus:border-primary-500 focus:ring-1 focus:ring-primary-500
-                       dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                placeholder="Enter your current password"
-            >
-            <button type="button" x-on:click="showCurrent = !showCurrent"
-                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-                <x-heroicon-o-eye x-show="!showCurrent" class="h-4 w-4"/>
-                <x-heroicon-o-eye-slash x-show="showCurrent" class="h-4 w-4"/>
-            </button>
-        </div>
+        <x-filament::input.wrapper label="Current Password" required>
+            <div class="relative w-full">
+                <x-filament::input
+                    type="password" x-bind:type="showCurrent ? 'text' : 'password'"
+                    x-model="currentPassword"
+                    autocomplete="current-password"
+                    placeholder="Enter your current password"
+                    class="pr-10"
+                />
+                <button type="button" x-on:click="showCurrent = !showCurrent"
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <x-heroicon-o-eye x-show="!showCurrent" class="h-4 w-4"/>
+                    <x-heroicon-o-eye-slash x-show="showCurrent" class="h-4 w-4"/>
+                </button>
+            </div>
+        </x-filament::input.wrapper>
         <p x-show="errors.currentPassword" x-text="errors.currentPassword" class="text-sm text-danger-600 dark:text-danger-400"></p>
     </div>
 
     {{-- New Password --}}
     <div class="space-y-1">
-        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            New Password
-            <span class="text-danger-600 dark:text-danger-400">*</span>
-        </label>
-        <div class="relative">
-            <input
-                :type="showNew ? 'text' : 'password'"
-                x-model="newPassword"
-                autocomplete="new-password"
-                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm
-                       focus:border-primary-500 focus:ring-1 focus:ring-primary-500
-                       dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                placeholder="At least 8 chars, upper/lowercase, number, symbol"
-            >
-            <button type="button" x-on:click="showNew = !showNew"
-                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-                <x-heroicon-o-eye x-show="!showNew" class="h-4 w-4"/>
-                <x-heroicon-o-eye-slash x-show="showNew" class="h-4 w-4"/>
-            </button>
-        </div>
+        <x-filament::input.wrapper label="New Password" required>
+            <div class="relative w-full">
+                <x-filament::input
+                    type="password" x-bind:type="showNew ? 'text' : 'password'"
+                    x-model="newPassword"
+                    autocomplete="new-password"
+                    placeholder="At least 8 chars, upper/lowercase, number, symbol"
+                    class="pr-10"
+                />
+                <button type="button" x-on:click="showNew = !showNew"
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <x-heroicon-o-eye x-show="!showNew" class="h-4 w-4"/>
+                    <x-heroicon-o-eye-slash x-show="showNew" class="h-4 w-4"/>
+                </button>
+            </div>
+        </x-filament::input.wrapper>
         <p x-show="errors.newPassword" x-text="errors.newPassword" class="text-sm text-danger-600 dark:text-danger-400"></p>
     </div>
 
     {{-- Confirm New Password --}}
     <div class="space-y-1">
-        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Confirm New Password
-            <span class="text-danger-600 dark:text-danger-400">*</span>
-        </label>
-        <div class="relative">
-            <input
-                :type="showConfirm ? 'text' : 'password'"
-                x-model="confirmPassword"
-                autocomplete="new-password"
-                class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm
-                       focus:border-primary-500 focus:ring-1 focus:ring-primary-500
-                       dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                placeholder="Re-enter your new password"
-            >
-            <button type="button" x-on:click="showConfirm = !showConfirm"
-                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-                <x-heroicon-o-eye x-show="!showConfirm" class="h-4 w-4"/>
-                <x-heroicon-o-eye-slash x-show="showConfirm" class="h-4 w-4"/>
-            </button>
-        </div>
+        <x-filament::input.wrapper label="Confirm New Password" required>
+            <div class="relative w-full">
+                <x-filament::input
+                    type="password" x-bind:type="showConfirm ? 'text' : 'password'"
+                    x-model="confirmPassword"
+                    autocomplete="new-password"
+                    placeholder="Re-enter your new password"
+                    class="pr-10"
+                />
+                <button type="button" x-on:click="showConfirm = !showConfirm"
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <x-heroicon-o-eye x-show="!showConfirm" class="h-4 w-4"/>
+                    <x-heroicon-o-eye-slash x-show="showConfirm" class="h-4 w-4"/>
+                </button>
+            </div>
+        </x-filament::input.wrapper>
         <p x-show="errors.confirmPassword" x-text="errors.confirmPassword" class="text-sm text-danger-600 dark:text-danger-400"></p>
     </div>
 

@@ -144,11 +144,10 @@
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-                <div>
-                    <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Status</label>
+                <x-filament::input.wrapper label="Status">
                     <select
                         wire:model.live="filterStatus"
-                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                        class="fi-select-input block w-full border-none bg-transparent pe-9 text-base text-gray-950 outline-none transition duration-75 focus:ring-0 sm:text-sm sm:leading-6 dark:text-white [&_optgroup]:bg-gray-50 [&_optgroup]:dark:bg-gray-900 [&_option]:bg-gray-50 [&_option]:dark:bg-gray-900"
                     >
                         <option value="">All statuses</option>
                         <option value="pending">Pending</option>
@@ -156,40 +155,35 @@
                         <option value="rejected">Rejected</option>
                         <option value="revoked">Revoked</option>
                     </select>
-                </div>
+                </x-filament::input.wrapper>
 
-                <div>
-                    <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Event Type</label>
+                <x-filament::input.wrapper label="Event Type">
                     <select
                         wire:model.live="filterType"
-                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                        class="fi-select-input block w-full border-none bg-transparent pe-9 text-base text-gray-950 outline-none transition duration-75 focus:ring-0 sm:text-sm sm:leading-6 dark:text-white [&_optgroup]:bg-gray-50 [&_optgroup]:dark:bg-gray-900 [&_option]:bg-gray-50 [&_option]:dark:bg-gray-900"
                     >
                         <option value="">All types</option>
                         <option value="request">Request (digital)</option>
                         <option value="borrow">Borrow (physical)</option>
                     </select>
-                </div>
+                </x-filament::input.wrapper>
 
-                <div>
-                    <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Date From</label>
-                    <input
+                <x-filament::input.wrapper label="Date From">
+                    <x-filament::input
                         type="date"
                         wire:model.live="filterDateFrom"
                         max="{{ $filterDateTo ?: date('Y-m-d') }}"
-                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     />
-                </div>
+                </x-filament::input.wrapper>
 
-                <div>
-                    <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Date To</label>
-                    <input
+                <x-filament::input.wrapper label="Date To">
+                    <x-filament::input
                         type="date"
                         wire:model.live="filterDateTo"
                         min="{{ $filterDateFrom ?: '' }}"
                         max="{{ date('Y-m-d') }}"
-                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     />
-                </div>
+                </x-filament::input.wrapper>
 
             </div>
 
