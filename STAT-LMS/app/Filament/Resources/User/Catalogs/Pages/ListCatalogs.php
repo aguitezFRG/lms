@@ -359,7 +359,7 @@ class ListCatalogs extends Page
             $this->formatFilter !== '',
             $this->pubDateFrom !== '',
             $this->pubDateTo !== '',
-            count($this->sdgFilter),
+            ...array_fill(0, count($this->sdgFilter), true),
             $this->availableOnly === false,  // only count if it's hiding unavailable items (non-default)
         ])->filter()->count();
 
@@ -369,7 +369,7 @@ class ListCatalogs extends Page
             $this->draftFormatFilter !== '',
             $this->draftPubDateFrom !== '',
             $this->draftPubDateTo !== '',
-            count($this->draftSdgFilter),
+            ...array_fill(0, count($this->draftSdgFilter), true),
             $this->draftAvailableOnly === false,  // only count if it's hiding unavailable items (non-default)
         ])->filter()->count();
 
