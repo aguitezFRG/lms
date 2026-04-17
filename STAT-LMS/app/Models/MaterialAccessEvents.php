@@ -14,7 +14,6 @@ class MaterialAccessEvents extends Model
     protected $fillable = [
         'user_id',
         'rr_material_id',
-        'approver_id',
         'event_type',
         'status',
         'due_at',

@@ -247,7 +247,7 @@ return [
     |
     */
 
-    'release_token' => 'a',
+    'release_token' => env('LIVEWIRE_RELEASE_TOKEN', \Illuminate\Support\Str::random(32)),
 
     /*
     |---------------------------------------------------------------------------

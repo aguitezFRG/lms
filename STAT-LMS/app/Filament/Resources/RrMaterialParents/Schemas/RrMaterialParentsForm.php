@@ -59,6 +59,7 @@ class RrMaterialParentsForm
                         TextInput::make('author')
                             ->label('Author')
                             ->columnSpanFull()
+                            ->maxLength(255)
                             ->datalist(User::all()->pluck('name')->toArray())
                             ->required(),
 
@@ -68,7 +69,7 @@ class RrMaterialParentsForm
                             ->columnSpanFull()
                             ->suggestions(fn () => User::pluck('name')->toArray())
                             ->required()
-                            // This ensures it stores the data as a clean array in your JSON column
+                            ->rules(['array', 'max:10'])
                             ->nestedRecursiveRules([
                                 'string',
                                 'max:255',
@@ -79,6 +80,7 @@ class RrMaterialParentsForm
                             ->placeholder('Type keyword and press Enter')
                             ->columnSpanFull()
                             ->required()
+                            ->rules(['array', 'max:20'])
                             ->suggestions([
                                 'Regression Analysis',
                                 'Hypothesis Testing',
@@ -115,6 +117,7 @@ class RrMaterialParentsForm
                             ->label('SDGs (Sustainable Development Goals)')
                             ->placeholder('Type SDG and press Enter')
                             ->columnSpanFull()
+                            ->rules(['array', 'max:17'])
                             ->suggestions([
                                 'No Poverty',
                                 'Zero Hunger',

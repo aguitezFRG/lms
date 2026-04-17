@@ -14,6 +14,15 @@ class EditMaterialAccessEvents extends EditRecord
 {
     protected static string $resource = MaterialAccessEventsResource::class;
 
+    public function mount(int|string $record): void
+    {
+        parent::mount($record);
+
+        if ($this->record->trashed()) {
+            abort(403, 'Editing a deleted/revoked record is not permitted.');
+        }
+    }
+
     public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
     {
         return $this->record->material->parent->title;

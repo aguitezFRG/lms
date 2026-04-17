@@ -40,7 +40,7 @@ class RrMaterialsPolicy
      */
     public function update(User $user, RrMaterials $rrMaterials): bool
     {
-        return $user->id === $rrMaterials->created_by || in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value, UserRole::FACULTY->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value, UserRole::FACULTY->value]);
     }
 
     public function deleteAny(User $user): bool
@@ -53,7 +53,7 @@ class RrMaterialsPolicy
      */
     public function delete(User $user, RrMaterials $rrMaterials): bool
     {
-        return $user->id === $rrMaterials->created_by || in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
     }
 
     public function restoreAny(User $user): bool
@@ -66,7 +66,7 @@ class RrMaterialsPolicy
      */
     public function restore(User $user, RrMaterials $rrMaterials): bool
     {
-        return $user->id === $rrMaterials->created_by || in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
     }
 
     /**

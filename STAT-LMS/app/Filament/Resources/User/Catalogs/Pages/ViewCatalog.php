@@ -10,6 +10,7 @@ use App\Models\RrMaterials;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Facades\DB;
 
 class ViewCatalog extends ViewRecord
 {
@@ -117,45 +118,62 @@ class ViewCatalog extends ViewRecord
             return;
         }
 
-        $copy = RrMaterials::where('material_parent_id', $this->record->id)
-            ->where('is_digital', $digital)
-            ->where('is_available', true)
-            ->whereNull('deleted_at')
-            ->first();
-
-        if (! $copy) {
-            Notification::make()
-                ->title('No copies available')
-                ->body('All copies of this type are currently unavailable. Please try again later.')
-                ->warning()
-                ->send();
-
-            return;
-        }
-
         $eventType = $digital ? MaterialEventType::REQUEST : MaterialEventType::BORROW;
 
-        $duplicate = MaterialAccessEvents::where('user_id', auth()->id())
-            ->where('rr_material_id', $copy->id)
-            ->whereIn('status', ['pending', 'approved'])
-            ->exists();
+        try {
+            DB::transaction(function () use ($digital, $eventType) {
+                $duplicate = MaterialAccessEvents::where('user_id', auth()->id())
+                    ->whereIn('status', ['pending', 'approved'])
+                    ->whereHas('material', fn ($q) => $q
+                        ->where('material_parent_id', $this->record->id)
+                        ->where('is_digital', $digital)
+                    )
+                    ->lockForUpdate()
+                    ->exists();
 
-        if ($duplicate) {
-            Notification::make()
-                ->title('Duplicate request')
-                ->body('You already have an active request for this material.')
-                ->warning()
-                ->send();
+                if ($duplicate) {
+                    throw new \RuntimeException('duplicate');
+                }
+
+                $copy = RrMaterials::where('material_parent_id', $this->record->id)
+                    ->where('is_digital', $digital)
+                    ->where('is_available', true)
+                    ->whereNull('deleted_at')
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $copy) {
+                    throw new \RuntimeException('unavailable');
+                }
+
+                MaterialAccessEvents::create([
+                    'user_id' => auth()->id(),
+                    'rr_material_id' => $copy->id,
+                    'event_type' => $eventType->value,
+                    'status' => 'pending',
+                ]);
+            });
+        } catch (\RuntimeException $e) {
+            match ($e->getMessage()) {
+                'duplicate' => Notification::make()
+                    ->title('Duplicate request')
+                    ->body('You already have an active request for this material.')
+                    ->warning()
+                    ->send(),
+                'unavailable' => Notification::make()
+                    ->title('No copies available')
+                    ->body('All copies of this type are currently unavailable. Please try again later.')
+                    ->warning()
+                    ->send(),
+                default => Notification::make()
+                    ->title('Request failed')
+                    ->body('An unexpected error occurred. Please try again.')
+                    ->danger()
+                    ->send(),
+            };
 
             return;
         }
-
-        MaterialAccessEvents::create([
-            'user_id' => auth()->id(),
-            'rr_material_id' => $copy->id,
-            'event_type' => $eventType->value,
-            'status' => 'pending',
-        ]);
 
         Notification::make()
             ->title($digital ? 'Digital request submitted!' : 'Borrow request submitted!')
