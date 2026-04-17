@@ -3,15 +3,20 @@
 namespace App\Filament\Resources\RrMaterialParents\Pages;
 
 use App\Filament\Resources\RrMaterialParents\RrMaterialParentsResource;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
-use Filament\Actions\Action;
 
 class EditRrMaterialParents extends EditRecord
 {
     protected static string $resource = RrMaterialParentsResource::class;
+
+    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    {
+        return $this->record->title;
+    }
 
     protected function getHeaderActions(): array
     {

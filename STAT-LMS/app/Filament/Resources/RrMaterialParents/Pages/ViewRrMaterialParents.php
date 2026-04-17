@@ -11,6 +11,11 @@ class ViewRrMaterialParents extends ViewRecord
 {
     protected static string $resource = RrMaterialParentsResource::class;
 
+    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    {
+        return $this->record->title;
+    }
+
     protected function getHeaderActions(): array
     {
         return [

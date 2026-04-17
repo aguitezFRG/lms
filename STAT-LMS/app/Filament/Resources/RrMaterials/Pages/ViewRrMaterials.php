@@ -2,20 +2,23 @@
 
 namespace App\Filament\Resources\RrMaterials\Pages;
 
+use App\Enums\MaterialEventType;
+use App\Enums\UserRole;
 use App\Filament\Resources\RrMaterials\RrMaterialsResource;
+use App\Models\MaterialAccessEvents;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
-use Filament\Actions\Action;
-
-use App\Enums\UserRole;
-use App\Enums\MaterialEventType;
-use App\Models\MaterialAccessEvents;
-
 use Filament\Support\Facades\FilamentView;
 
 class ViewRrMaterials extends ViewRecord
 {
     protected static string $resource = RrMaterialsResource::class;
+
+    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    {
+        return $this->record->parent->title;
+    }
 
     public function boot(): void
     {
@@ -27,7 +30,7 @@ class ViewRrMaterials extends ViewRecord
         );
     }
 
-    public function mount(int | string $record): void
+    public function mount(int|string $record): void
     {
         parent::mount($record);
     }
@@ -62,12 +65,12 @@ class ViewRrMaterials extends ViewRecord
     protected function canViewDocument($record): bool
     {
         // 1. Must be a digital copy
-        if (!$record->is_digital || empty($record->file_name)) {
+        if (! $record->is_digital || empty($record->file_name)) {
             return false;
         }
 
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return false; // Not logged in, deny access
         }
 
@@ -106,9 +109,9 @@ class ViewRrMaterials extends ViewRecord
     public function logAccessedEvent(): void
     {
         MaterialAccessEvents::create([
-            'user_id'        => auth()->id(),
+            'user_id' => auth()->id(),
             'rr_material_id' => $this->record->id,
-            'event_type'     => MaterialEventType::ACCESSED->value,
+            'event_type' => MaterialEventType::ACCESSED->value,
         ]);
     }
 }
