@@ -2,16 +2,14 @@
 
 namespace App\Filament\Resources\RrMaterialParents\Schemas;
 
+use App\Models\User;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Schemas\Schema;
-
-use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
-
-use App\Models\User;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 
 class RrMaterialParentsForm
 {
@@ -20,7 +18,6 @@ class RrMaterialParentsForm
         return $schema
             ->components([
                 Section::make('Material Details')
-                    ->columnSpanFull()
                     ->components([
                         TextInput::make('id')
                             ->label('RR Material Parent ID (UUID)')
@@ -52,22 +49,23 @@ class RrMaterialParentsForm
                             ->options([
                                 1 => 'Open Access',
                                 2 => 'Restricted Access (Faculty Only)',
-                                3 => 'Confidential Access (Committee and Head Only)'
+                                3 => 'Confidential Access (Committee and Head Only)',
                             ])
                             ->required(),
                     ])->columns(2),
 
                 Section::make('Authors & Metadata')
-                    ->columnSpanFull()
                     ->components([
                         TextInput::make('author')
                             ->label('Author')
+                            ->columnSpanFull()
                             ->datalist(User::all()->pluck('name')->toArray())
                             ->required(),
 
                         TagsInput::make('adviser')
                             ->label('Adviser(s)')
                             ->placeholder('Type name and press Enter')
+                            ->columnSpanFull()
                             ->suggestions(fn () => User::pluck('name')->toArray())
                             ->required()
                             // This ensures it stores the data as a clean array in your JSON column
@@ -79,6 +77,7 @@ class RrMaterialParentsForm
                         TagsInput::make('keywords')
                             ->label('Keywords')
                             ->placeholder('Type keyword and press Enter')
+                            ->columnSpanFull()
                             ->required()
                             ->suggestions([
                                 'Regression Analysis',
@@ -115,6 +114,7 @@ class RrMaterialParentsForm
                         TagsInput::make('sdgs')
                             ->label('SDGs (Sustainable Development Goals)')
                             ->placeholder('Type SDG and press Enter')
+                            ->columnSpanFull()
                             ->suggestions([
                                 'No Poverty',
                                 'Zero Hunger',
