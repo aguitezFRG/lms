@@ -2,16 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\MaterialAccessEvents\Pages\EditMaterialAccessEvents;
 use App\Models\MaterialAccessEvents;
-use App\Models\RrMaterialParents;
-use App\Models\RrMaterials;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Livewire\Livewire;
 use Tests\TestCase;
-
-use App\Filament\Resources\MaterialAccessEvents\Pages\EditMaterialAccessEvents;
 
 /**
  * Feature: Material Access Events (Request/Borrow Workflow)
@@ -38,20 +35,20 @@ class MaterialAccessEventsTest extends TestCase
     private function makeParentAndCopy(int $accessLevel = 1, bool $digital = true): array
     {
         $parent = $this->makeMaterialParent([
-            'access_level'     => $accessLevel,
-            'material_type'    => 1,
-            'author'           => 'Author',
+            'access_level' => $accessLevel,
+            'material_type' => 1,
+            'author' => 'Author',
             'publication_date' => now()->subYear(),
-            'keywords'         => json_encode(['stats']),
-            'sdgs'             => json_encode(['Education']),
-            'adviser'          => json_encode(['Adviser']),
+            'keywords' => json_encode(['stats']),
+            'sdgs' => json_encode(['Education']),
+            'adviser' => json_encode(['Adviser']),
         ]);
 
         $copy = $this->makeMaterialCopy([
             'material_parent_id' => $parent->id,
-            'is_digital'         => $digital,
-            'is_available'       => true,
-            'file_name'          => $digital ? 'repo/file.pdf' : null,
+            'is_digital' => $digital,
+            'is_available' => true,
+            'file_name' => $digital ? 'repo/file.pdf' : null,
         ]);
 
         return [$parent, $copy];
@@ -63,10 +60,10 @@ class MaterialAccessEventsTest extends TestCase
         $user = $this->makeUser('student');
 
         return MaterialAccessEvents::create(array_merge([
-            'user_id'        => $user->id,
+            'user_id' => $user->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'pending',
+            'event_type' => 'request',
+            'status' => 'pending',
         ], $overrides));
     }
 
@@ -84,10 +81,10 @@ class MaterialAccessEventsTest extends TestCase
         ])->callAction('requestDigital');
 
         $this->assertDatabaseHas('material_access_events', [
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'pending',
+            'event_type' => 'request',
+            'status' => 'pending',
         ]);
     }
 
@@ -103,9 +100,9 @@ class MaterialAccessEventsTest extends TestCase
         ])->callAction('borrowPhysical');
 
         $this->assertDatabaseHas('material_access_events', [
-            'user_id'    => $student->id,
+            'user_id' => $student->id,
             'event_type' => 'borrow',
-            'status'     => 'pending',
+            'status' => 'pending',
         ]);
     }
 
@@ -117,10 +114,10 @@ class MaterialAccessEventsTest extends TestCase
 
         // First request already exists
         MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'pending',
+            'event_type' => 'request',
+            'status' => 'pending',
         ]);
 
         $this->actingAs($student);
@@ -141,7 +138,7 @@ class MaterialAccessEventsTest extends TestCase
     {
         NotificationFacade::fake();
 
-        $event     = $this->makeEvent(['status' => 'pending']);
+        $event = $this->makeEvent(['status' => 'pending']);
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
@@ -154,7 +151,7 @@ class MaterialAccessEventsTest extends TestCase
             ->assertHasNoFormErrors();
 
         $this->assertDatabaseHas('material_access_events', [
-            'id'     => $event->id,
+            'id' => $event->id,
             'status' => 'approved',
         ]);
     }
@@ -171,7 +168,7 @@ class MaterialAccessEventsTest extends TestCase
     {
         NotificationFacade::fake();
 
-        $event     = $this->makeEvent(['status' => 'pending']);
+        $event = $this->makeEvent(['status' => 'pending']);
         $requester = User::find($event->user_id);
         $committee = $this->makeUser('committee');
 
@@ -189,7 +186,7 @@ class MaterialAccessEventsTest extends TestCase
     /** @test */
     public function due_date_must_be_in_the_future_when_approving(): void
     {
-        $event     = $this->makeEvent(['status' => 'pending']);
+        $event = $this->makeEvent(['status' => 'pending']);
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
@@ -227,7 +224,7 @@ class MaterialAccessEventsTest extends TestCase
             ->assertHasNoFormErrors();
 
         $this->assertDatabaseHas('material_access_events', [
-            'id'     => $event->id,
+            'id' => $event->id,
             'status' => 'rejected',
         ]);
     }
@@ -243,7 +240,7 @@ class MaterialAccessEventsTest extends TestCase
     {
         NotificationFacade::fake();
 
-        $event     = $this->makeEvent(['status' => 'pending']);
+        $event = $this->makeEvent(['status' => 'pending']);
         $requester = User::find($event->user_id);
         $committee = $this->makeUser('committee');
 
@@ -267,10 +264,10 @@ class MaterialAccessEventsTest extends TestCase
         $student = $this->makeUser('student');
 
         $event = MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'pending',
+            'event_type' => 'request',
+            'status' => 'pending',
         ]);
 
         $this->actingAs($student);
@@ -281,7 +278,7 @@ class MaterialAccessEventsTest extends TestCase
         )->callAction('cancel');
 
         $this->assertDatabaseHas('material_access_events', [
-            'id'     => $event->id,
+            'id' => $event->id,
             'status' => 'cancelled',
         ]);
     }
@@ -293,10 +290,10 @@ class MaterialAccessEventsTest extends TestCase
         $student = $this->makeUser('student');
 
         $event = MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'approved',
+            'event_type' => 'request',
+            'status' => 'approved',
         ]);
 
         $this->actingAs($student);
@@ -311,14 +308,14 @@ class MaterialAccessEventsTest extends TestCase
     public function student_cannot_cancel_another_students_request(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
-        $owner    = $this->makeUser('student');
+        $owner = $this->makeUser('student');
         $intruder = $this->makeUser('student');
 
         $event = MaterialAccessEvents::create([
-            'user_id'        => $owner->id,
+            'user_id' => $owner->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'pending',
+            'event_type' => 'request',
+            'status' => 'pending',
         ]);
 
         $this->actingAs($intruder)
@@ -335,12 +332,12 @@ class MaterialAccessEventsTest extends TestCase
         $student = $this->makeUser('student');
 
         $event = MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'borrow',
-            'status'         => 'approved',
-            'due_at'         => now()->subDays(3), // overdue
-            'is_overdue'     => false,
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->subDays(3), // overdue
+            'is_overdue' => false,
         ]);
 
         // Retrieving the event triggers the observer's `retrieved` hook
@@ -348,7 +345,7 @@ class MaterialAccessEventsTest extends TestCase
 
         $this->assertTrue((bool) $retrieved->is_overdue);
         $this->assertDatabaseHas('material_access_events', [
-            'id'         => $event->id,
+            'id' => $event->id,
             'is_overdue' => true,
         ]);
     }
@@ -360,12 +357,12 @@ class MaterialAccessEventsTest extends TestCase
         $student = $this->makeUser('student');
 
         $event = MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'borrow',
-            'status'         => 'approved',
-            'due_at'         => now()->addDays(5),
-            'is_overdue'     => false,
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->addDays(5),
+            'is_overdue' => false,
         ]);
 
         $retrieved = MaterialAccessEvents::find($event->id);
@@ -416,7 +413,7 @@ class MaterialAccessEventsTest extends TestCase
     /** @test */
     public function student_cannot_access_edit_page_of_access_events_in_admin_panel(): void
     {
-        $event   = $this->makeEvent();
+        $event = $this->makeEvent();
         $student = $this->makeUser('student');
 
         $this->actingAs($student)

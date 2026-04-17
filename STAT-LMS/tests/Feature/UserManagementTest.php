@@ -30,13 +30,13 @@ class UserManagementTest extends TestCase
     private function validUserPayload(array $overrides = []): array
     {
         return array_merge([
-            'f_name'     => 'Maria',
-            'm_name'     => 'Santos',
-            'l_name'     => 'Cruz',
-            'name'       => 'Maria Santos Cruz',
-            'email'      => 'maria.cruz@up.edu.ph',
-            'password'   => 'SecurePass@123',
-            'role'       => 'student',
+            'f_name' => 'Maria',
+            'm_name' => 'Santos',
+            'l_name' => 'Cruz',
+            'name' => 'Maria Santos Cruz',
+            'email' => 'maria.cruz@up.edu.ph',
+            'password' => 'SecurePass@123',
+            'role' => 'student',
             // Omit std_number by default so the unique mask rule doesn't
             // interfere with tests that don't care about it.
         ], $overrides);
@@ -48,7 +48,7 @@ class UserManagementTest extends TestCase
     public function committee_member_can_list_users(): void
     {
         $committee = $this->makeUser('committee');
-        $student   = $this->makeUser('student');
+        $student = $this->makeUser('student');
         $this->actingAs($committee);
 
         Livewire::test(\App\Filament\Resources\Users\Pages\ListUsers::class)
@@ -59,7 +59,7 @@ class UserManagementTest extends TestCase
     /** @test */
     public function it_admin_can_list_users(): void
     {
-        $it      = $this->makeUser('it');
+        $it = $this->makeUser('it');
         $faculty = $this->makeUser('faculty');
         $this->actingAs($it);
 
@@ -102,9 +102,9 @@ class UserManagementTest extends TestCase
 
         Livewire::test(\App\Filament\Resources\Users\Pages\CreateUser::class)
             ->fillForm([
-                'f_name'   => '',
-                'l_name'   => '',
-                'email'    => '',
+                'f_name' => '',
+                'l_name' => '',
+                'email' => '',
                 'password' => 'pass',
             ])
             ->call('create')
@@ -114,7 +114,7 @@ class UserManagementTest extends TestCase
     /** @test */
     public function duplicate_email_is_rejected_on_create(): void
     {
-        $existing  = $this->makeUser('student');
+        $existing = $this->makeUser('student');
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
@@ -151,8 +151,8 @@ class UserManagementTest extends TestCase
                 'f_name' => 'Juan',
                 'm_name' => 'dela',
                 'l_name' => 'Cruz',
-                'name'   => 'Juan dela Cruz',
-                'email'  => 'juan.cruz@up.edu.ph',
+                'name' => 'Juan dela Cruz',
+                'email' => 'juan.cruz@up.edu.ph',
             ]))
             ->call('create')
             ->assertHasNoFormErrors();
@@ -164,7 +164,7 @@ class UserManagementTest extends TestCase
     public function password_is_required_on_create_but_optional_on_edit(): void
     {
         // Create target with a null std_number to avoid the unique mask rule
-        $target    = $this->makeUser('student', ['std_number' => null]);
+        $target = $this->makeUser('student', ['std_number' => null]);
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
@@ -183,7 +183,7 @@ class UserManagementTest extends TestCase
     /** @test */
     public function committee_can_view_user_infolist(): void
     {
-        $target    = $this->makeUser('student');
+        $target = $this->makeUser('student');
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
@@ -200,7 +200,7 @@ class UserManagementTest extends TestCase
     public function committee_member_can_update_another_users_role(): void
     {
         // Null std_number avoids the unique mask validation on a field we aren't testing
-        $target    = $this->makeUser('student', ['std_number' => null]);
+        $target = $this->makeUser('student', ['std_number' => null]);
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
@@ -228,8 +228,8 @@ class UserManagementTest extends TestCase
     /** @test */
     public function email_uniqueness_is_enforced_ignoring_own_record_on_edit(): void
     {
-        $target    = $this->makeUser('student', ['std_number' => null]);
-        $other     = $this->makeUser('faculty');
+        $target = $this->makeUser('student', ['std_number' => null]);
+        $other = $this->makeUser('faculty');
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
@@ -248,7 +248,7 @@ class UserManagementTest extends TestCase
     /** @test */
     public function committee_member_can_soft_delete_another_user(): void
     {
-        $target    = $this->makeUser('student');
+        $target = $this->makeUser('student');
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
@@ -290,7 +290,7 @@ class UserManagementTest extends TestCase
     /** @test */
     public function soft_deleted_users_are_hidden_by_default(): void
     {
-        $active  = $this->makeUser('student');
+        $active = $this->makeUser('student');
         $deleted = $this->makeUser('student');
         $deleted->delete();
 
@@ -325,7 +325,7 @@ class UserManagementTest extends TestCase
     public function table_search_finds_user_by_email(): void
     {
         $target = $this->makeUser('student', ['email' => 'unique.student@up.edu.ph']);
-        $other  = $this->makeUser('faculty');
+        $other = $this->makeUser('faculty');
 
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);

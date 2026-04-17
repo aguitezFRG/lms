@@ -2,10 +2,9 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\RrMaterials;
 use App\Models\User;
-
-use App\Enums\UserRole;
 
 class RrMaterialsPolicy
 {
@@ -24,6 +23,7 @@ class RrMaterialsPolicy
     {
         $user_access_level = UserRole::from($user->role)->getAccessLevel();
         $RR_access_level = $rrMaterials->parent->access_level ?? 1;
+
         return $user_access_level >= $RR_access_level;
     }
 

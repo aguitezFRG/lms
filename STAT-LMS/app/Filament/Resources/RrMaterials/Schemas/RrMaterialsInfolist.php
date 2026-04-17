@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\RrMaterials\Schemas;
 
 use Filament\Infolists\Components\TextEntry;
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 
 class RrMaterialsInfolist
 {
@@ -73,7 +73,7 @@ class RrMaterialsInfolist
                                 3 => 'Confidential',
                                 default => 'Unknown',
                             }),
-                        ]),
+                    ]),
 
                     TextEntry::make('is_available')
                         ->label('Circulation Status')

@@ -37,10 +37,10 @@ class UserFactory extends Factory
                 return trim(implode(' ', array_filter([
                     $attributes['f_name'],
                     $attributes['m_name'],
-                    $attributes['l_name']
+                    $attributes['l_name'],
                 ])));
             },
-            'std_number' => fake()->numberBetween(1908, 2025) . '-' . fake()->numerify('#####'),
+            'std_number' => fake()->numberBetween(1908, 2025).'-'.fake()->numerify('#####'),
             'revoked_at' => null,
         ];
     }
@@ -125,7 +125,7 @@ class UserFactory extends Factory
             'email' => 'student.user@gmail.com',
             'password' => Hash::make('STUDENTpass@1234'),
             'role' => 'student',
-            'std_number' => fake()->numberBetween(1908, 2025) . '-' . fake()->numerify('#####'),
+            'std_number' => fake()->numberBetween(1908, 2025).'-'.fake()->numerify('#####'),
         ]);
     }
 

@@ -2,24 +2,20 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Enums\UserRole;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\RestoreBulkAction;
-
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Actions\RestoreAction;
-
-use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Table;
-
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
-
-use App\Enums\UserRole;
+use Filament\Tables\Table;
 
 class UsersTable
 {
@@ -112,12 +108,12 @@ class UsersTable
                         ->color('warning'),
                     RestoreAction::make()
                         ->visible(fn ($record) => $record && $record->trashed())
-                         ->color('success'),
+                        ->color('success'),
                     DeleteAction::make()
-                        ->visible(fn ($record) => $record && !$record->trashed())
+                        ->visible(fn ($record) => $record && ! $record->trashed())
                         ->color('danger'),
                 ])
-                ->color('gray'),
+                    ->color('gray'),
             ])
             ->bulkActions([
                 BulkActionGroup::make([

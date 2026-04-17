@@ -11,6 +11,11 @@ class ViewRequests extends ViewRecord
 {
     protected static string $resource = RequestsResource::class;
 
+    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    {
+        return $this->record->material->parent->title;
+    }
+
     protected ?string $pollingInterval = '60s';
 
     protected function getHeaderActions(): array

@@ -2,17 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-
 use Illuminate\Support\Facades\Storage;
 
 class RrMaterials extends Model
 {
-    use HasFactory, SoftDeletes, HasUuids;
-
+    use HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
         'material_parent_id',
@@ -28,8 +26,7 @@ class RrMaterials extends Model
 
     protected static function booted(): void
     {
-        static::updating(function (RrMaterials $copy)
-        {
+        static::updating(function (RrMaterials $copy) {
             if (! $copy->isDirty('file_name')) {
                 return;
             }

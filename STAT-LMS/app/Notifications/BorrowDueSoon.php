@@ -23,12 +23,12 @@ class BorrowDueSoon extends Notification
     public function toDatabase(object $notifiable): array
     {
         $title = $this->event->material?->parent?->title ?? 'a material';
-        $due   = $this->event->due_at?->format('F d, Y') ?? 'soon';
+        $due = $this->event->due_at?->format('F d, Y') ?? 'soon';
 
         return [
-            'type'     => 'borrow_due_soon',
-            'title'    => $this->daysUntilDue === 1 ? 'Borrow Due Tomorrow!' : "Borrow Due in {$this->daysUntilDue} Days",
-            'message'  => "Your borrowed copy of \"{$title}\" is due on {$due}. Please return it on time to avoid overdue penalties.",
+            'type' => 'borrow_due_soon',
+            'title' => $this->daysUntilDue === 1 ? 'Borrow Due Tomorrow!' : "Borrow Due in {$this->daysUntilDue} Days",
+            'message' => "Your borrowed copy of \"{$title}\" is due on {$due}. Please return it on time to avoid overdue penalties.",
             'event_id' => $this->event->id,
             'days_until_due' => $this->daysUntilDue,
         ];

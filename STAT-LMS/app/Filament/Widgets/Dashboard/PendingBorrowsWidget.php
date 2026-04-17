@@ -2,21 +2,20 @@
 
 namespace App\Filament\Widgets\Dashboard;
 
+use App\Filament\Pages\Dashboard;
 use App\Models\MaterialAccessEvents;
-use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TagsInput;
-use Filament\Widgets\TableWidget as BaseWidget;
 use Filament\Notifications\Notification;
-
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
-use App\Filament\Pages\Dashboard;
 
 class PendingBorrowsWidget extends BaseWidget
 {
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     protected static ?string $heading = 'Pending Borrow Requests';
 
@@ -73,10 +72,10 @@ class PendingBorrowsWidget extends BaseWidget
                     ->modalSubmitActionLabel('Yes, approve')
                     ->action(function (MaterialAccessEvents $record): void {
                         $record->update([
-                            'status'      => 'approved',
+                            'status' => 'approved',
                             'approver_id' => auth()->id(),
                             'approved_at' => now(),
-                            'due_at'      => now()->addDays(14)->endOfDay(),
+                            'due_at' => now()->addDays(14)->endOfDay(),
                         ]);
                         Cache::forget('dashboard.pending_borrows');
                         Notification::make()->title('Request approved')->success()->send();
@@ -109,8 +108,8 @@ class PendingBorrowsWidget extends BaseWidget
                     ])
                     ->action(function (array $data, MaterialAccessEvents $record): void {
                         $record->update([
-                            'status'           => 'rejected',
-                            'approver_id'      => auth()->id(),
+                            'status' => 'rejected',
+                            'approver_id' => auth()->id(),
                             'rejection_reason' => $data['rejection_reason'] ?? null,
                         ]);
                         Cache::forget('dashboard.pending_borrows');

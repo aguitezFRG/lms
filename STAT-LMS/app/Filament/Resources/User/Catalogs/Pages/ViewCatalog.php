@@ -15,6 +15,11 @@ class ViewCatalog extends ViewRecord
 {
     protected static string $resource = CatalogResource::class;
 
+    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    {
+        return $this->record->title;
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -94,9 +99,8 @@ class ViewCatalog extends ViewRecord
                 : MaterialEventType::BORROW->value
             )
             ->whereIn('status', ['pending', 'approved'])
-            ->whereHas('material', fn ($q) =>
-                $q->where('material_parent_id', $this->record->id)
-                  ->where('is_digital', $digital)
+            ->whereHas('material', fn ($q) => $q->where('material_parent_id', $this->record->id)
+                ->where('is_digital', $digital)
             )
             ->exists();
     }
@@ -109,6 +113,7 @@ class ViewCatalog extends ViewRecord
                 ->body('Your account has been banned. You are not allowed to submit new requests.')
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -124,6 +129,7 @@ class ViewCatalog extends ViewRecord
                 ->body('All copies of this type are currently unavailable. Please try again later.')
                 ->warning()
                 ->send();
+
             return;
         }
 
@@ -140,14 +146,15 @@ class ViewCatalog extends ViewRecord
                 ->body('You already have an active request for this material.')
                 ->warning()
                 ->send();
+
             return;
         }
 
         MaterialAccessEvents::create([
-            'user_id'        => auth()->id(),
+            'user_id' => auth()->id(),
             'rr_material_id' => $copy->id,
-            'event_type'     => $eventType->value,
-            'status'         => 'pending',
+            'event_type' => $eventType->value,
+            'status' => 'pending',
         ]);
 
         Notification::make()
@@ -160,7 +167,9 @@ class ViewCatalog extends ViewRecord
     protected function canViewDocument(): bool
     {
         $user = auth()->user();
-        if (! $user) return false;
+        if (! $user) {
+            return false;
+        }
 
         // Committee and IT bypass approval requirement
         if (in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value])) {
@@ -171,17 +180,18 @@ class ViewCatalog extends ViewRecord
                 ->exists();
         }
 
-        $userLevel   = UserRole::from($user->role)->getAccessLevel();
+        $userLevel = UserRole::from($user->role)->getAccessLevel();
         $accessLevel = (int) $this->record->access_level;
 
-        if ($userLevel < $accessLevel) return false;
+        if ($userLevel < $accessLevel) {
+            return false;
+        }
 
         // Approved request is always required for students and faculty
         return MaterialAccessEvents::where('user_id', $user->id)
             ->where('event_type', MaterialEventType::REQUEST->value)
             ->where('status', 'approved')
-            ->whereHas('material', fn ($q) =>
-                $q->where('material_parent_id', $this->record->id)
+            ->whereHas('material', fn ($q) => $q->where('material_parent_id', $this->record->id)
                 ->where('is_digital', true)
             )
             ->exists();
@@ -206,12 +216,14 @@ class ViewCatalog extends ViewRecord
             ->whereNull('deleted_at')
             ->first();
 
-        if (! $copy) return;
+        if (! $copy) {
+            return;
+        }
 
         MaterialAccessEvents::create([
-            'user_id'        => auth()->id(),
+            'user_id' => auth()->id(),
             'rr_material_id' => $copy->id,
-            'event_type'     => MaterialEventType::ACCESSED->value,
+            'event_type' => MaterialEventType::ACCESSED->value,
         ]);
     }
 }

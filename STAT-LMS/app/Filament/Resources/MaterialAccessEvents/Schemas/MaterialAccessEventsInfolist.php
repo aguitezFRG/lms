@@ -2,14 +2,11 @@
 
 namespace App\Filament\Resources\MaterialAccessEvents\Schemas;
 
-use App\Models\MaterialAccessEvents;
-use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Schemas\Schema;
-
-use Filament\Schemas\Components\Section;
-
 use App\Enums\MaterialEventType;
+use App\Models\MaterialAccessEvents;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 
 class MaterialAccessEventsInfolist
 {
@@ -86,7 +83,9 @@ class MaterialAccessEventsInfolist
                             ->color(fn (MaterialAccessEvents $record) => $record->returned_at ? 'success' : 'danger')
                             ->icon(fn (MaterialAccessEvents $record) => $record->returned_at ? 'heroicon-m-check-circle' : 'heroicon-m-banknotes')
                             ->formatStateUsing(function (MaterialAccessEvents $record) {
-                                if (! $record->is_overdue) return 'No fee — not overdue.';
+                                if (! $record->is_overdue) {
+                                    return 'No fee — not overdue.';
+                                }
 
                                 $feePerDay = config('reading_room.overdue_fee_per_day', 10);
                                 $daysOverdue = (int) now()->diffInDays($record->due_at, absolute: true);

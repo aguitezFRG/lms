@@ -2,10 +2,9 @@
 
 namespace App\Filament\Pages\Auth;
 
-use Filament\Auth\Pages\Login;
 use Filament\Actions\Action;
+use Filament\Auth\Pages\Login;
 use Filament\Facades\Filament;
-
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\HtmlString;
 
@@ -32,8 +31,8 @@ class UserLogin extends Login
         // poisons redirect()->intended() on the next login — sending the new
         // user to a panel they cannot access → 403.
         if (request()->hasSession()) {
-            $intended    = request()->session()->get('url.intended', '');
-            $panelPrefix = '/' . Filament::getCurrentPanel()->getPath();
+            $intended = request()->session()->get('url.intended', '');
+            $panelPrefix = '/'.Filament::getCurrentPanel()->getPath();
 
             if ($intended && ! str_starts_with($intended, $panelPrefix)) {
                 request()->session()->forget('url.intended');

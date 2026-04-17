@@ -2,10 +2,10 @@
 
 namespace App\Enums;
 
-use Filament\Support\Contracts\HasLabel;
 use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
 
-enum MaterialEventType: string implements HasLabel, HasColor
+enum MaterialEventType: string implements HasColor, HasLabel
 {
     case VIEW = 'view';
     case REQUEST = 'request';
@@ -22,7 +22,7 @@ enum MaterialEventType: string implements HasLabel, HasColor
         };
     }
 
-    public function getColor(): string | array | null
+    public function getColor(): string|array|null
     {
         return match ($this) {
             self::VIEW => 'gray',

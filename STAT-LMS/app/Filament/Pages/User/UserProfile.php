@@ -5,6 +5,7 @@ namespace App\Filament\Pages\User;
 use App\Enums\MaterialEventType;
 use App\Enums\UserRole;
 use App\Models\MaterialAccessEvents;
+use App\Services\PasswordEncryptionService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -21,14 +22,12 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-
-use App\Services\PasswordEncryptionService;
 use Illuminate\Support\Facades\Hash;
 
-class UserProfile extends Page implements HasTable, HasInfolists
+class UserProfile extends Page implements HasInfolists, HasTable
 {
-    use InteractsWithTable;
     use InteractsWithInfolists;
+    use InteractsWithTable;
 
     protected string $view = 'filament.pages.user.user-profile';
 
@@ -42,7 +41,7 @@ class UserProfile extends Page implements HasTable, HasInfolists
 
     public function getTitle(): string
     {
-        return 'Welcome, ' . (auth()->user()->f_name ?? auth()->user()->name) . '!';
+        return 'Welcome, '.(auth()->user()->f_name ?? auth()->user()->name).'!';
     }
 
     // ── Routing ───────────────────────────────────────────────────────────────
@@ -83,8 +82,7 @@ class UserProfile extends Page implements HasTable, HasInfolists
                 ->label('Mark All as Read')
                 ->icon('heroicon-o-check-circle')
                 ->color('gray')
-                ->visible(fn () =>
-                    $this->activeTab === 'notifications' &&
+                ->visible(fn () => $this->activeTab === 'notifications' &&
                     auth()->user()->unreadNotifications()->count() > 0
                 )
                 ->action(fn () => auth()->user()->unreadNotifications->markAsRead()),
@@ -99,14 +97,16 @@ class UserProfile extends Page implements HasTable, HasInfolists
 
         try {
             $currentPassword = $service->decrypt($this->stripEncPrefix($encryptedCurrent));
-            $newPassword     = $service->decrypt($this->stripEncPrefix($encryptedNew));
+            $newPassword = $service->decrypt($this->stripEncPrefix($encryptedNew));
         } catch (\Throwable) {
             Notification::make()->title('Security error')->body('Password could not be decrypted. Please try again.')->danger()->send();
+
             return;
         }
 
         if (! Hash::check($currentPassword, auth()->user()->password)) {
             Notification::make()->title('Incorrect password')->body('Your current password is wrong.')->danger()->send();
+
             return;
         }
 
@@ -148,7 +148,7 @@ class UserProfile extends Page implements HasTable, HasInfolists
 
         $fullName = trim(implode(' ', array_filter([
             $user->f_name,
-            $user->m_name ? mb_substr($user->m_name, 0, 1) . '.' : null,
+            $user->m_name ? mb_substr($user->m_name, 0, 1).'.' : null,
             $user->l_name,
         ]))) ?: $user->name;
 
@@ -191,10 +191,10 @@ class UserProfile extends Page implements HasTable, HasInfolists
         $notifications = auth()->user()->notifications()->latest()->get();
 
         $items = $notifications->map(fn ($n) => [
-            'id'        => $n->id,
-            'title'     => $n->data['title'] ?? 'Notification',
-            'message'   => $n->data['message'] ?? '',
-            'since'     => $n->created_at->diffForHumans(),
+            'id' => $n->id,
+            'title' => $n->data['title'] ?? 'Notification',
+            'message' => $n->data['message'] ?? '',
+            'since' => $n->created_at->diffForHumans(),
             'is_unread' => is_null($n->read_at),
         ])->values()->toArray();
 
@@ -247,10 +247,10 @@ class UserProfile extends Page implements HasTable, HasInfolists
             ->whereIn('event_type', ['request', 'borrow']);
 
         $query = match ($this->activeTab) {
-            'pending'  => $query->where('status', 'pending'),
+            'pending' => $query->where('status', 'pending'),
             'approved' => $query->where('status', 'approved'),
-            'closed'   => $query->whereIn('status', ['rejected', 'cancelled', 'completed']),
-            default    => $query->where('status', 'pending'),
+            'closed' => $query->whereIn('status', ['rejected', 'cancelled', 'completed']),
+            default => $query->where('status', 'pending'),
         };
 
         return $table
@@ -274,12 +274,12 @@ class UserProfile extends Page implements HasTable, HasInfolists
                     ->label('Status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'pending'   => 'warning',
-                        'approved'  => 'success',
-                        'rejected'  => 'danger',
+                        'pending' => 'warning',
+                        'approved' => 'success',
+                        'rejected' => 'danger',
                         'completed' => 'gray',
                         'cancelled' => 'gray',
-                        default     => 'gray',
+                        default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state) => ucfirst($state)),
 
@@ -302,7 +302,7 @@ class UserProfile extends Page implements HasTable, HasInfolists
                     ->label('Type')
                     ->options([
                         'request' => 'Digital Request',
-                        'borrow'  => 'Physical Borrow',
+                        'borrow' => 'Physical Borrow',
                     ]),
             ])
             ->actions([
@@ -327,16 +327,16 @@ class UserProfile extends Page implements HasTable, HasInfolists
                 ])->color('gray'),
             ])
             ->emptyStateHeading(match ($this->activeTab) {
-                'pending'  => 'No pending requests',
+                'pending' => 'No pending requests',
                 'approved' => 'No approved requests',
-                'closed'   => 'No closed requests',
-                default    => 'No requests found',
+                'closed' => 'No closed requests',
+                default => 'No requests found',
             })
             ->emptyStateDescription(match ($this->activeTab) {
-                'pending'  => 'Browse the catalog to submit a request.',
+                'pending' => 'Browse the catalog to submit a request.',
                 'approved' => 'Approved requests will appear here.',
-                'closed'   => 'Rejected or cancelled requests will appear here.',
-                default    => '',
+                'closed' => 'Rejected or cancelled requests will appear here.',
+                default => '',
             })
             ->emptyStateIcon('heroicon-o-clipboard-document-list');
     }
@@ -345,29 +345,29 @@ class UserProfile extends Page implements HasTable, HasInfolists
 
     protected function getViewData(): array
     {
-        $user   = auth()->user();
+        $user = auth()->user();
         $userId = $user->id;
 
         return [
-            'initials'      => strtoupper(substr($user->f_name ?? $user->name, 0, 1))
-                             . strtoupper(substr($user->l_name ?? '', 0, 1)),
-            'pendingCount'  => MaterialAccessEvents::where('user_id', $userId)
-                                ->where('status', 'pending')->count(),
+            'initials' => strtoupper(substr($user->f_name ?? $user->name, 0, 1))
+                             .strtoupper(substr($user->l_name ?? '', 0, 1)),
+            'pendingCount' => MaterialAccessEvents::where('user_id', $userId)
+                ->where('status', 'pending')->count(),
             'approvedCount' => MaterialAccessEvents::where('user_id', $userId)
-                                ->where('status', 'approved')->count(),
-            'totalCount'    => MaterialAccessEvents::where('user_id', $userId)
-                                ->whereIn('event_type', ['request', 'borrow'])->count(),
-            'unreadCount'   => $user->unreadNotifications()->count(),
-            'activeTab'     => $this->activeTab,
+                ->where('status', 'approved')->count(),
+            'totalCount' => MaterialAccessEvents::where('user_id', $userId)
+                ->whereIn('event_type', ['request', 'borrow'])->count(),
+            'unreadCount' => $user->unreadNotifications()->count(),
+            'activeTab' => $this->activeTab,
 
             'notifications' => $user->notifications()->latest()->get()->map(fn ($n) => [
-            'id'        => $n->id,
-            'title'     => $n->data['title']   ?? 'Notification',
-            'message'   => $n->data['message'] ?? '',
-            'type'      => $n->data['type']    ?? 'general',
-            'since'     => $n->created_at->diffForHumans(),
-            'is_unread' => is_null($n->read_at),
-        ])->values()->toArray(),
+                'id' => $n->id,
+                'title' => $n->data['title'] ?? 'Notification',
+                'message' => $n->data['message'] ?? '',
+                'type' => $n->data['type'] ?? 'general',
+                'since' => $n->created_at->diffForHumans(),
+                'is_unread' => is_null($n->read_at),
+            ])->values()->toArray(),
         ];
     }
 }

@@ -2,23 +2,18 @@
 
 namespace App\Filament\Resources\RrMaterialParents\Tables;
 
-use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
-
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\RestoreAction;
-use Filament\Actions\DeleteAction;
-
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
-
+use Filament\Actions\ViewAction;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-
 use Filament\Tables\Filters\TrashedFilter;
-
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 class RrMaterialParentsTable
@@ -106,7 +101,7 @@ class RrMaterialParentsTable
                         ->visible(fn ($record) => $record && $record->trashed())
                         ->color('success'),
                     DeleteAction::make()
-                        ->visible(fn ($record) => $record && !$record->trashed())
+                        ->visible(fn ($record) => $record && ! $record->trashed())
                         ->color('danger'),
                 ],
                 )->color('gray'),
@@ -121,5 +116,4 @@ class RrMaterialParentsTable
                 ]),
             ]);
     }
-
 }

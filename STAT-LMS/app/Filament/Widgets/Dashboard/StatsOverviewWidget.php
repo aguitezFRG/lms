@@ -2,18 +2,17 @@
 
 namespace App\Filament\Widgets\Dashboard;
 
+use App\Filament\Pages\Dashboard;
 use App\Models\MaterialAccessEvents;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-
 use Illuminate\Support\Facades\Gate;
-use App\Filament\Pages\Dashboard;
 
 class StatsOverviewWidget extends BaseWidget
 {
     protected static bool $isLazy = false;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     protected ?string $pollingInterval = '60s';
 

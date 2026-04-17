@@ -2,10 +2,10 @@
 
 namespace App\Enums;
 
-use Filament\Support\Contracts\HasLabel;
 use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
 
-enum UserRole: string implements HasLabel, HasColor
+enum UserRole: string implements HasColor, HasLabel
 {
     case SUPER_ADMIN = 'super_admin';
     case COMMITTEE = 'committee';
@@ -26,7 +26,7 @@ enum UserRole: string implements HasLabel, HasColor
         };
     }
 
-    public function getColor(): string | array | null
+    public function getColor(): string|array|null
     {
         return match ($this) {
             self::SUPER_ADMIN => 'stat-yellow',

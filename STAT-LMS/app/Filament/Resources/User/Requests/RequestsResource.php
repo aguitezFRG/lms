@@ -7,15 +7,14 @@ use App\Filament\Resources\User\Requests\Pages\ListRequests;
 use App\Filament\Resources\User\Requests\Pages\ViewRequests;
 use App\Models\MaterialAccessEvents;
 use BackedEnum;
-use UnitEnum;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-
-use Filament\Facades\Filament;
+use UnitEnum;
 
 class RequestsResource extends Resource
 {
@@ -76,7 +75,7 @@ class RequestsResource extends Resource
     {
         return [
             'index' => ListRequests::route('/'),
-            'view'  => ViewRequests::route('/{record}'),
+            'view' => ViewRequests::route('/{record}'),
         ];
     }
 }

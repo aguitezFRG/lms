@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\RrMaterials\Tables;
 
+use App\Enums\MaterialEventType;
+use App\Models\MaterialAccessEvents;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -11,17 +13,13 @@ use Filament\Actions\EditAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-
-use App\Models\MaterialAccessEvents;
-use App\Enums\MaterialEventType;
-
-use Filament\Notifications\Notification;
 
 class RrMaterialsTable
 {
@@ -100,7 +98,7 @@ class RrMaterialsTable
                         ->label(fn ($record) => $record?->is_digital ? 'Request Copy' : 'Borrow Copy')
                         ->icon(fn ($record) => $record?->is_digital ? 'heroicon-o-paper-airplane' : 'heroicon-o-book-open')
                         ->color('info')
-                        ->visible(fn ($record) => $record && !$record->trashed())
+                        ->visible(fn ($record) => $record && ! $record->trashed())
                         ->action(function ($record) {
                             $eventType = $record->is_digital
                                 ? MaterialEventType::REQUEST
@@ -122,11 +120,11 @@ class RrMaterialsTable
                         ->visible(fn ($record) => $record && $record->trashed())
                         ->color('success'),
                     DeleteAction::make()
-                        ->visible(fn ($record) => $record && !$record->trashed())
+                        ->visible(fn ($record) => $record && ! $record->trashed())
                         ->color('danger'),
 
                 ])
-                ->color('gray'),
+                    ->color('gray'),
             ])
             ->bulkActions([
                 BulkActionGroup::make([

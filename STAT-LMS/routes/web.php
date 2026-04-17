@@ -1,19 +1,20 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Enums\UserRole;
 use App\Http\Controllers\MaterialStreamController;
 use App\Http\Controllers\PasswordEncryptionKeyController;
-
-use App\Enums\UserRole;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     // TO FIX: Users still need to manually setup the login page they want to access (admin or user) instead of being redirected based on their role
-    if(auth()->check()) {
+    if (auth()->check()) {
         $role = auth()->user()->role;
+
         return in_array($role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value])
             ? redirect('/admin')
             : redirect('/app');
     }
+
     return redirect('/app/login');
 });
 

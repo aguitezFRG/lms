@@ -11,11 +11,11 @@ use App\Filament\Resources\RepositoryChangeLogs\Schemas\RepositoryChangeLogsInfo
 use App\Filament\Resources\RepositoryChangeLogs\Tables\RepositoryChangeLogsTable;
 use App\Models\RepositoryChangeLogs;
 use BackedEnum;
-use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class RepositoryChangeLogsResource extends Resource
 {
@@ -25,7 +25,7 @@ class RepositoryChangeLogsResource extends Resource
 
     protected static ?string $navigationLabel = 'Repository Change Logs';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Logs';
+    protected static string|UnitEnum|null $navigationGroup = 'Logs';
 
     protected static ?int $navigationSort = 3;
 

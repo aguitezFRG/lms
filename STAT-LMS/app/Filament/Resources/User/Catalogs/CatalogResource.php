@@ -8,6 +8,7 @@ use App\Filament\Resources\User\Catalogs\Pages\ListCatalogs;
 use App\Filament\Resources\User\Catalogs\Pages\ViewCatalog;
 use App\Models\RrMaterialParents;
 use BackedEnum;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -15,8 +16,6 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-
-use Filament\Facades\Filament;
 
 class CatalogResource extends Resource
 {
@@ -62,7 +61,7 @@ class CatalogResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $user  = Auth::user();
+        $user = Auth::user();
         $query = parent::getEloquentQuery();
 
         if (! $user) {
@@ -94,7 +93,7 @@ class CatalogResource extends Resource
     {
         return [
             'index' => ListCatalogs::route('/'),
-            'view'  => ViewCatalog::route('/{record}'),
+            'view' => ViewCatalog::route('/{record}'),
         ];
     }
 }
