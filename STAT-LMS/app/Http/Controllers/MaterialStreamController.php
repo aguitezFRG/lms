@@ -47,6 +47,14 @@ class MaterialStreamController extends Controller
             abort(404);
         }
 
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $detectedMime = $finfo->file($path);
+
+        if ($detectedMime !== 'application/pdf') {
+            Log::error("Stream blocked: non-PDF file detected at {$path} (detected: {$detectedMime})");
+            abort(415, 'The stored file is not a valid PDF.');
+        }
+
         return response()->file($path, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="'.basename($record->file_name).'"',

@@ -67,6 +67,7 @@ class UserForm
                             ->mask('9999-99999')
                             ->placeholder('e.g. 2020-12345')
                             ->length(10)
+                            ->maxLength(10)
                             ->rules(['nullable', 'regex:/^\d{4}-\d{5}$/']),
                         Select::make('role')
                             ->options([

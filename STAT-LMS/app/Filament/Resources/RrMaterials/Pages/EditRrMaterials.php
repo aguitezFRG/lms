@@ -12,6 +12,15 @@ class EditRrMaterials extends EditRecord
 {
     protected static string $resource = RrMaterialsResource::class;
 
+    public function mount(int|string $record): void
+    {
+        parent::mount($record);
+
+        if ($this->record->trashed()) {
+            abort(403, 'Editing a deleted material copy is not permitted.');
+        }
+    }
+
     public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
     {
         return $this->record->parent->title;

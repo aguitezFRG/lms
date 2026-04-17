@@ -24,16 +24,14 @@ class RepositoryChangeLogsObserver
      */
     public function created(Model $model): void
     {
-        if (! auth()->check()) {
-            return;
-        } // Don't log if no authenticated user
+        $editorId = auth()->check() ? auth()->id() : null;
 
         if ($model instanceof RepositoryChangeLogs) {
             return;
         } // Prevent recursive logging
 
         RepositoryChangeLogs::create([
-            'editor_id' => auth()->id(),
+            'editor_id' => $editorId,
             'material_parent_id' => $this->getParentId($model),
             'rr_material_id' => $this->getCopyId($model),
             'target_user_id' => $this->getTargetUserId($model),
@@ -52,12 +50,10 @@ class RepositoryChangeLogsObserver
      */
     public function updated(Model $model): void
     {
-        if (! auth()->check()) {
-            return;
-        } // Don't log if no authenticated user
+        $editorId = auth()->check() ? auth()->id() : null;
 
         RepositoryChangeLogs::create([
-            'editor_id' => auth()->id(),
+            'editor_id' => $editorId,
             'material_parent_id' => $this->getParentId($model),
             'rr_material_id' => $this->getCopyId($model),
             'target_user_id' => $this->getTargetUserId($model),
@@ -101,12 +97,10 @@ class RepositoryChangeLogsObserver
      */
     public function deleted(Model $model): void
     {
-        if (! auth()->check()) {
-            return;
-        } // Don't log if no authenticated user
+        $editorId = auth()->check() ? auth()->id() : null;
 
         RepositoryChangeLogs::create([
-            'editor_id' => auth()->id(),
+            'editor_id' => $editorId,
             'material_parent_id' => $this->getParentId($model),
             'rr_material_id' => $this->getCopyId($model),
             'target_user_id' => $this->getTargetUserId($model),
@@ -125,12 +119,10 @@ class RepositoryChangeLogsObserver
      */
     public function restored(Model $model): void
     {
-        if (! auth()->check()) {
-            return;
-        } // Don't log if no authenticated user
+        $editorId = auth()->check() ? auth()->id() : null;
 
         RepositoryChangeLogs::create([
-            'editor_id' => auth()->id(),
+            'editor_id' => $editorId,
             'material_parent_id' => $this->getParentId($model),
             'rr_material_id' => $this->getCopyId($model),
             'target_user_id' => $this->getTargetUserId($model),
@@ -149,12 +141,10 @@ class RepositoryChangeLogsObserver
      */
     public function forceDeleted(Model $model): void
     {
-        if (! auth()->check()) {
-            return;
-        } // Don't log if no authenticated user
+        $editorId = auth()->check() ? auth()->id() : null;
 
         RepositoryChangeLogs::create([
-            'editor_id' => auth()->id(),
+            'editor_id' => $editorId,
             'material_parent_id' => $this->getParentId($model),
             'rr_material_id' => $this->getCopyId($model),
             'target_user_id' => $this->getTargetUserId($model),

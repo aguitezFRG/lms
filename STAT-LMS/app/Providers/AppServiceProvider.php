@@ -38,19 +38,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // if (config('app.env') === 'production' || request()->hasHeader('X-Forwarded-Proto')) {
-        //     URL::forceScheme('https');
-        // }
+        if (app()->environment('production') || request()->hasHeader('X-Forwarded-Proto')) {
+            URL::forceScheme('https');
+        }
 
-        // RateLimiter::for('login', function (Request $request) {
-        //     $email = (string) $request->email;
+        RateLimiter::for('login', function (Request $request) {
+            $email = (string) $request->email;
 
-        //     return [
-        //         Limit::perMinute(3)->by($email),                  // 3 attempts per minute per email
-        //         Limit::perMinute(3)->by($email . $request->ip()), // 3 attempts per minute per email+IP
-        //         Limit::perMinute(10, 5)->by($request->ip()),      // 10 attempts every 5 minutes per IP
-        //     ];
-        // });
+            return [
+                Limit::perMinute(3)->by($email),
+                Limit::perMinute(3)->by($email.$request->ip()),
+                Limit::perMinute(10, 5)->by($request->ip()),
+            ];
+        });
 
         MaterialAccessEvents::observe(MaterialAccessEventsObserver::class);
         User::observe(UserObserver::class);
