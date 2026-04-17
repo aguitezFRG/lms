@@ -10,7 +10,7 @@ class VisitorBorrowerChartWidget extends ChartWidget
 {
     protected ?string $heading = 'Visitor & Borrower';
 
-    protected int | string | array $columnSpan = 1;
+    protected int|string|array $columnSpan = 1;
 
     protected ?string $pollingInterval = null;
 
@@ -27,10 +27,10 @@ class VisitorBorrowerChartWidget extends ChartWidget
     protected function getFilters(): ?array
     {
         return [
-            'daily'  => 'Daily',
-            'weekly'  => 'Weekly',
+            'daily' => 'Daily',
+            'weekly' => 'Weekly',
             'monthly' => 'Monthly',
-            'yearly'  => 'Yearly',
+            'yearly' => 'Yearly',
         ];
     }
 
@@ -44,21 +44,21 @@ class VisitorBorrowerChartWidget extends ChartWidget
         [$labels, $visitors, $borrowers] = $this->buildSeries();
 
         return [
-            'labels'   => $labels,
+            'labels' => $labels,
             'datasets' => [
                 [
-                    'label'           => 'Visitor',
-                    'data'            => $visitors,
+                    'label' => 'Visitor',
+                    'data' => $visitors,
                     'backgroundColor' => '#1a3a8f',
-                    'borderRadius'    => 4,
-                    'barThickness'    => 50,
+                    'borderRadius' => 4,
+                    'barThickness' => 50,
                 ],
                 [
-                    'label'           => 'Borrower',
-                    'data'            => $borrowers,
+                    'label' => 'Borrower',
+                    'data' => $borrowers,
                     'backgroundColor' => '#F3AA2C',
-                    'borderRadius'    => 4,
-                    'barThickness'    => 50,
+                    'borderRadius' => 4,
+                    'barThickness' => 50,
                 ],
             ],
         ];
@@ -68,7 +68,7 @@ class VisitorBorrowerChartWidget extends ChartWidget
     {
         return [
             'plugins' => ['legend' => ['display' => true]],
-            'scales'  => [
+            'scales' => [
                 'x' => ['grid' => ['color' => 'rgba(156,163,175,0.2)']],
                 'y' => ['grid' => ['color' => 'rgba(156,163,175,0.2)'], 'beginAtZero' => true],
             ],
@@ -85,8 +85,8 @@ class VisitorBorrowerChartWidget extends ChartWidget
                 for ($i = $this->numDays; $i >= 0; $i--) {
                     $date = Carbon::today()->subDays($i);
 
-                    $labels[]    = $i === 0 ? 'Today' : $date->format('D, M d');
-                    $visitors[]  = MaterialAccessEvents::whereDate('created_at', $date)
+                    $labels[] = $i === 0 ? 'Today' : $date->format('D, M d');
+                    $visitors[] = MaterialAccessEvents::whereDate('created_at', $date)
                         ->distinct('user_id')->count('user_id');
                     $borrowers[] = MaterialAccessEvents::where('event_type', 'borrow')
                         ->whereDate('created_at', $date)->count();
@@ -96,10 +96,10 @@ class VisitorBorrowerChartWidget extends ChartWidget
             'weekly' => (function () use (&$labels, &$visitors, &$borrowers) {
                 for ($i = $this->numWeeks; $i >= 0; $i--) {
                     $start = Carbon::today()->startOfWeek()->subWeeks($i);
-                    $end   = $start->copy()->endOfWeek();
+                    $end = $start->copy()->endOfWeek();
 
-                    $labels[]    = $start->format('M d') . '–' . $end->format('M d');
-                    $visitors[]  = MaterialAccessEvents::whereBetween('created_at', [$start, $end])
+                    $labels[] = $start->format('M d').'–'.$end->format('M d');
+                    $visitors[] = MaterialAccessEvents::whereBetween('created_at', [$start, $end])
                         ->distinct('user_id')->count('user_id');
                     $borrowers[] = MaterialAccessEvents::where('event_type', 'borrow')
                         ->whereBetween('created_at', [$start, $end])->count();
@@ -110,10 +110,10 @@ class VisitorBorrowerChartWidget extends ChartWidget
                 for ($i = $this->numMonths; $i >= 0; $i--) {
                     $month = Carbon::today()->startOfMonth()->subMonths($i);
                     $start = $month->copy()->startOfMonth();
-                    $end   = $month->copy()->endOfMonth();
+                    $end = $month->copy()->endOfMonth();
 
-                    $labels[]    = $month->format('M Y');
-                    $visitors[]  = MaterialAccessEvents::whereBetween('created_at', [$start, $end])
+                    $labels[] = $month->format('M Y');
+                    $visitors[] = MaterialAccessEvents::whereBetween('created_at', [$start, $end])
                         ->distinct('user_id')->count('user_id');
                     $borrowers[] = MaterialAccessEvents::where('event_type', 'borrow')
                         ->whereBetween('created_at', [$start, $end])->count();
@@ -122,12 +122,12 @@ class VisitorBorrowerChartWidget extends ChartWidget
 
             'yearly' => (function () use (&$labels, &$visitors, &$borrowers) {
                 for ($i = $this->numYears; $i >= 0; $i--) {
-                    $year  = Carbon::today()->startOfYear()->subYears($i);
+                    $year = Carbon::today()->startOfYear()->subYears($i);
                     $start = $year->copy()->startOfYear();
-                    $end   = $year->copy()->endOfYear();
+                    $end = $year->copy()->endOfYear();
 
-                    $labels[]    = $year->format('Y');
-                    $visitors[]  = MaterialAccessEvents::whereBetween('created_at', [$start, $end])
+                    $labels[] = $year->format('Y');
+                    $visitors[] = MaterialAccessEvents::whereBetween('created_at', [$start, $end])
                         ->distinct('user_id')->count('user_id');
                     $borrowers[] = MaterialAccessEvents::where('event_type', 'borrow')
                         ->whereBetween('created_at', [$start, $end])->count();

@@ -5,11 +5,13 @@ namespace App\Filament\Pages\Auth;
 use App\Enums\MaterialEventType;
 use App\Enums\UserRole;
 use App\Models\MaterialAccessEvents;
+use App\Services\PasswordEncryptionService;
 use Filament\Actions\Action;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
 use Filament\Infolists\Contracts\HasInfolists;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -19,15 +21,12 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-
-use App\Services\PasswordEncryptionService;
-use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Hash;
 
-class AdminProfile extends Page implements HasTable, HasInfolists
+class AdminProfile extends Page implements HasInfolists, HasTable
 {
-    use InteractsWithTable;
     use InteractsWithInfolists;
+    use InteractsWithTable;
 
     protected string $view = 'filament.pages.auth.admin-profile';
 
@@ -41,7 +40,7 @@ class AdminProfile extends Page implements HasTable, HasInfolists
 
     public function getTitle(): string
     {
-        return 'Welcome, ' . (auth()->user()->f_name ?? auth()->user()->name) . '!';
+        return 'Welcome, '.(auth()->user()->f_name ?? auth()->user()->name).'!';
     }
 
     // ── Routing ───────────────────────────────────────────────────────────────
@@ -54,7 +53,6 @@ class AdminProfile extends Page implements HasTable, HasInfolists
     ): string {
         return parent::getUrl($parameters, $isAbsolute, $panel ?? 'admin', $tenant);
     }
-
 
     // ── Header Actions ────────────────────────────────────────────────────────
 
@@ -83,8 +81,7 @@ class AdminProfile extends Page implements HasTable, HasInfolists
                 ->label('Mark All as Read')
                 ->icon('heroicon-o-check-circle')
                 ->color('gray')
-                ->visible(fn () =>
-                    $this->activeTab === 'notifications' &&
+                ->visible(fn () => $this->activeTab === 'notifications' &&
                     auth()->user()->unreadNotifications()->count() > 0
                 )
                 ->action(fn () => auth()->user()->unreadNotifications->markAsRead()),
@@ -101,14 +98,16 @@ class AdminProfile extends Page implements HasTable, HasInfolists
 
         try {
             $currentPassword = $service->decrypt($this->stripEncPrefix($encryptedCurrent));
-            $newPassword     = $service->decrypt($this->stripEncPrefix($encryptedNew));
+            $newPassword = $service->decrypt($this->stripEncPrefix($encryptedNew));
         } catch (\Throwable) {
             Notification::make()->title('Security error')->body('Password could not be decrypted. Please try again.')->danger()->send();
+
             return;
         }
 
         if (! Hash::check($currentPassword, auth()->user()->password)) {
             Notification::make()->title('Incorrect password')->body('Your current password is wrong.')->danger()->send();
+
             return;
         }
 
@@ -190,10 +189,10 @@ class AdminProfile extends Page implements HasTable, HasInfolists
         $notifications = auth()->user()->notifications()->latest()->get();
 
         $items = $notifications->map(fn ($n) => [
-            'id'        => $n->id,
-            'title'     => $n->data['title'] ?? 'Notification',
-            'message'   => $n->data['message'] ?? '',
-            'since'     => $n->created_at->diffForHumans(),
+            'id' => $n->id,
+            'title' => $n->data['title'] ?? 'Notification',
+            'message' => $n->data['message'] ?? '',
+            'since' => $n->created_at->diffForHumans(),
             'is_unread' => is_null($n->read_at),
         ])->values()->toArray();
 
@@ -264,12 +263,12 @@ class AdminProfile extends Page implements HasTable, HasInfolists
                     ->label('Status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'pending'   => 'warning',
-                        'approved'  => 'success',
-                        'rejected'  => 'danger',
+                        'pending' => 'warning',
+                        'approved' => 'success',
+                        'rejected' => 'danger',
                         'completed' => 'gray',
                         'cancelled' => 'gray',
-                        default     => 'gray',
+                        default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state) => ucfirst($state)),
 
@@ -289,9 +288,9 @@ class AdminProfile extends Page implements HasTable, HasInfolists
             ->filters([
                 SelectFilter::make('status')
                     ->options([
-                        'pending'   => 'Pending',
-                        'approved'  => 'Approved',
-                        'rejected'  => 'Rejected',
+                        'pending' => 'Pending',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
                     ]),
@@ -300,7 +299,7 @@ class AdminProfile extends Page implements HasTable, HasInfolists
                     ->label('Type')
                     ->options([
                         'request' => 'Digital Request',
-                        'borrow'  => 'Physical Borrow',
+                        'borrow' => 'Physical Borrow',
                     ]),
             ])
             ->emptyStateHeading('No access history yet.')
@@ -312,17 +311,17 @@ class AdminProfile extends Page implements HasTable, HasInfolists
     protected function getViewData(): array
     {
         return [
-            'initials'    => strtoupper(substr(auth()->user()->f_name ?? auth()->user()->name, 0, 1))
-                           . strtoupper(substr(auth()->user()->l_name ?? '', 0, 1)),
+            'initials' => strtoupper(substr(auth()->user()->f_name ?? auth()->user()->name, 0, 1))
+                           .strtoupper(substr(auth()->user()->l_name ?? '', 0, 1)),
             'unreadCount' => auth()->user()->unreadNotifications()->count(),
-            'activeTab'   => $this->activeTab,
+            'activeTab' => $this->activeTab,
 
             'notifications' => auth()->user()->notifications()->latest()->get()->map(fn ($n) => [
-                'id'        => $n->id,
-                'title'     => $n->data['title']   ?? 'Notification',
-                'message'   => $n->data['message'] ?? '',
-                'type'      => $n->data['type']    ?? 'general',
-                'since'     => $n->created_at->diffForHumans(),
+                'id' => $n->id,
+                'title' => $n->data['title'] ?? 'Notification',
+                'message' => $n->data['message'] ?? '',
+                'type' => $n->data['type'] ?? 'general',
+                'since' => $n->created_at->diffForHumans(),
                 'is_unread' => is_null($n->read_at),
             ])->values()->toArray(),
         ];

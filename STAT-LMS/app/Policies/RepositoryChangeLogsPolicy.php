@@ -2,10 +2,9 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\RepositoryChangeLogs;
 use App\Models\User;
-
-use App\Enums\UserRole;
 
 class RepositoryChangeLogsPolicy
 {
@@ -14,7 +13,7 @@ class RepositoryChangeLogsPolicy
      */
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
     }
 
     /**
@@ -22,7 +21,7 @@ class RepositoryChangeLogsPolicy
      */
     public function view(User $user, RepositoryChangeLogs $repositoryChangeLogs): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
     }
 
     /**
@@ -30,7 +29,7 @@ class RepositoryChangeLogsPolicy
      */
     public function create(User $user): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
     }
 
     /**
@@ -38,7 +37,7 @@ class RepositoryChangeLogsPolicy
      */
     public function update(User $user, RepositoryChangeLogs $repositoryChangeLogs): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
     }
 
     public function deleteAny(User $user): bool
@@ -56,7 +55,7 @@ class RepositoryChangeLogsPolicy
 
     public function restoreAny(User $user): bool
     {
-        return in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
     }
 
     /**

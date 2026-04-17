@@ -21,7 +21,7 @@ class DecryptLivewirePasswords
     public function handle(Request $request, Closure $next): Response
     {
         if (preg_match('#/livewire[^/]*/update#', $request->getPathInfo()) && $request->isJson()) {
-            $payload  = $request->json()->all();
+            $payload = $request->json()->all();
             $modified = false;
 
             if (isset($payload['components']) && is_array($payload['components'])) {
@@ -39,7 +39,7 @@ class DecryptLivewirePasswords
                             && $this->isPasswordKey($key)
                         ) {
                             try {
-                                $value    = $service->decrypt(substr($value, 4));
+                                $value = $service->decrypt(substr($value, 4));
                                 $modified = true;
                             } catch (\Throwable) {
                                 // If decryption fails, leave the value as-is;

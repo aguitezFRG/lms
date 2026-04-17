@@ -58,12 +58,12 @@ class ListRequests extends ListRecords
                     ->label('Status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'pending'   => 'warning',
-                        'approved'  => 'success',
-                        'rejected'  => 'danger',
+                        'pending' => 'warning',
+                        'approved' => 'success',
+                        'rejected' => 'danger',
                         'completed' => 'gray',
                         'cancelled' => 'gray',
-                        default     => 'gray',
+                        default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state) => ucfirst($state)),
 
@@ -85,9 +85,9 @@ class ListRequests extends ListRecords
                 SelectFilter::make('status')
                     ->label('Status')
                     ->options([
-                        'pending'   => 'Pending',
-                        'approved'  => 'Approved',
-                        'rejected'  => 'Rejected',
+                        'pending' => 'Pending',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
                     ]),
@@ -96,7 +96,7 @@ class ListRequests extends ListRecords
                     ->label('Type')
                     ->options([
                         'request' => 'Digital Request',
-                        'borrow'  => 'Physical Borrow',
+                        'borrow' => 'Physical Borrow',
                     ]),
             ])
             ->actions([

@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\DB;
 
 class SendDueSoonNotifications extends Command
 {
-    protected $signature   = 'notifications:due-soon';
+    protected $signature = 'notifications:due-soon';
+
     protected $description = 'Send due-soon notifications for borrows due in 1 or 3 days';
 
     public function handle(): void
@@ -28,7 +29,9 @@ class SendDueSoonNotifications extends Command
                 ->get();
 
             foreach ($events as $event) {
-                if (! $event->user) continue;
+                if (! $event->user) {
+                    continue;
+                }
 
                 // Suppress duplicate: skip if user already got this exact
                 // notification type for this event today
@@ -41,7 +44,9 @@ class SendDueSoonNotifications extends Command
                     ->whereDate('created_at', today())
                     ->exists();
 
-                if ($alreadyNotified) continue;
+                if ($alreadyNotified) {
+                    continue;
+                }
 
                 $event->user->notify(new BorrowDueSoon($event, $days));
             }

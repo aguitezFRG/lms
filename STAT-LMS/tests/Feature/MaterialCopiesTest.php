@@ -33,14 +33,14 @@ class MaterialCopiesTest extends TestCase
     private function makeParent(int $accessLevel = 1): RrMaterialParents
     {
         return $this->makeMaterialParent([
-            'access_level'     => $accessLevel,
-            'material_type'    => 1,
-            'title'            => "Parent L{$accessLevel}",
-            'author'           => 'Author Name',
+            'access_level' => $accessLevel,
+            'material_type' => 1,
+            'title' => "Parent L{$accessLevel}",
+            'author' => 'Author Name',
             'publication_date' => now()->subYear(),
-            'keywords'         => ['stats'],
-            'sdgs'             => ['Quality Education'],
-            'adviser'          => ['Adviser Name'],
+            'keywords' => ['stats'],
+            'sdgs' => ['Quality Education'],
+            'adviser' => ['Adviser Name'],
         ]);
     }
 
@@ -48,9 +48,9 @@ class MaterialCopiesTest extends TestCase
     {
         return $this->makeMaterialCopy([
             'material_parent_id' => $parent->id,
-            'is_digital'         => $digital,
-            'is_available'       => $available,
-            'file_name'          => $digital ? 'repository/access_level_1/book_test-uuid-v1.pdf' : null,
+            'is_digital' => $digital,
+            'is_available' => $available,
+            'file_name' => $digital ? 'repository/access_level_1/book_test-uuid-v1.pdf' : null,
         ]);
     }
 
@@ -65,38 +65,38 @@ class MaterialCopiesTest extends TestCase
     public function committee_member_can_create_a_physical_copy(): void
     {
         Storage::fake('local');
-        $parent    = $this->makeParent();
+        $parent = $this->makeParent();
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
         Livewire::test(\App\Filament\Resources\RrMaterials\Pages\CreateRrMaterials::class)
             ->fillForm([
                 'material_parent_id' => $parent->id,
-                'is_digital'         => false,
-                'is_available'       => true,
+                'is_digital' => false,
+                'is_available' => true,
             ])
             ->call('create')
             ->assertHasNoFormErrors();
 
         $this->assertDatabaseHas('rr_materials', [
             'material_parent_id' => $parent->id,
-            'is_digital'         => false,
+            'is_digital' => false,
         ]);
     }
 
     /** @test */
     public function creating_digital_copy_requires_a_pdf_file(): void
     {
-        $parent    = $this->makeParent();
+        $parent = $this->makeParent();
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
         Livewire::test(\App\Filament\Resources\RrMaterials\Pages\CreateRrMaterials::class)
             ->fillForm([
                 'material_parent_id' => $parent->id,
-                'is_digital'         => true,
-                'is_available'       => true,
-                'file_name'          => null,
+                'is_digital' => true,
+                'is_available' => true,
+                'file_name' => null,
             ])
             ->call('create')
             ->assertHasFormErrors(['file_name']);
@@ -106,7 +106,7 @@ class MaterialCopiesTest extends TestCase
     public function non_pdf_file_upload_is_rejected(): void
     {
         Storage::fake('local');
-        $parent    = $this->makeParent();
+        $parent = $this->makeParent();
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
@@ -115,9 +115,9 @@ class MaterialCopiesTest extends TestCase
         Livewire::test(\App\Filament\Resources\RrMaterials\Pages\CreateRrMaterials::class)
             ->fillForm([
                 'material_parent_id' => $parent->id,
-                'is_digital'         => true,
-                'is_available'       => true,
-                'file_name'          => $wordFile,
+                'is_digital' => true,
+                'is_available' => true,
+                'file_name' => $wordFile,
             ])
             ->call('create')
             ->assertHasFormErrors(['file_name']);
@@ -136,7 +136,7 @@ class MaterialCopiesTest extends TestCase
     public function pdf_file_larger_than_10mb_is_rejected(): void
     {
         Storage::fake('local');
-        $parent    = $this->makeParent();
+        $parent = $this->makeParent();
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
@@ -145,13 +145,13 @@ class MaterialCopiesTest extends TestCase
         $component = Livewire::test(\App\Filament\Resources\RrMaterials\Pages\CreateRrMaterials::class)
             ->fillForm([
                 'material_parent_id' => $parent->id,
-                'is_digital'         => true,
-                'is_available'       => true,
-                'file_name'          => $hugeFile,
+                'is_digital' => true,
+                'is_available' => true,
+                'file_name' => $hugeFile,
             ])
             ->call('create');
 
-        $hasError    = ! empty($component->errors('data.file_name'));
+        $hasError = ! empty($component->errors('data.file_name'));
         $noPersisted = RrMaterials::where('material_parent_id', $parent->id)->doesntExist();
 
         $this->assertTrue(
@@ -165,7 +165,7 @@ class MaterialCopiesTest extends TestCase
     /** @test */
     public function listing_shows_copies_of_accessible_parents_only(): void
     {
-        $publicParent       = $this->makeParent(1);
+        $publicParent = $this->makeParent(1);
         $confidentialParent = $this->makeParent(3);
 
         $this->makeCopy($publicParent, digital: false);
@@ -183,8 +183,8 @@ class MaterialCopiesTest extends TestCase
     /** @test */
     public function digital_format_filter_returns_only_digital_copies(): void
     {
-        $parent   = $this->makeParent();
-        $digital  = $this->makeCopy($parent, digital: true);
+        $parent = $this->makeParent();
+        $digital = $this->makeCopy($parent, digital: true);
         $physical = $this->makeCopy($parent, digital: false);
 
         $committee = $this->makeUser('committee');
@@ -200,8 +200,8 @@ class MaterialCopiesTest extends TestCase
     /** @test */
     public function availability_filter_returns_only_available_copies(): void
     {
-        $parent      = $this->makeParent();
-        $available   = $this->makeCopy($parent, available: true);
+        $parent = $this->makeParent();
+        $available = $this->makeCopy($parent, available: true);
         $unavailable = $this->makeCopy($parent, available: false);
 
         $committee = $this->makeUser('committee');
@@ -219,8 +219,8 @@ class MaterialCopiesTest extends TestCase
     /** @test */
     public function student_can_submit_a_borrow_request_for_physical_copy(): void
     {
-        $parent  = $this->makeParent(1);
-        $copy    = $this->makeCopy($parent, digital: false);
+        $parent = $this->makeParent(1);
+        $copy = $this->makeCopy($parent, digital: false);
         $student = $this->makeUser('student');
         $this->actingAs($student);
 
@@ -228,18 +228,18 @@ class MaterialCopiesTest extends TestCase
             ->callTableAction('requestCopy', $copy);
 
         $this->assertDatabaseHas('material_access_events', [
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'borrow',
-            'status'         => 'pending',
+            'event_type' => 'borrow',
+            'status' => 'pending',
         ]);
     }
 
     /** @test */
     public function student_can_submit_a_request_for_digital_copy(): void
     {
-        $parent  = $this->makeParent(1);
-        $copy    = $this->makeCopy($parent, digital: true);
+        $parent = $this->makeParent(1);
+        $copy = $this->makeCopy($parent, digital: true);
         $student = $this->makeUser('student');
         $this->actingAs($student);
 
@@ -247,10 +247,10 @@ class MaterialCopiesTest extends TestCase
             ->callTableAction('requestCopy', $copy);
 
         $this->assertDatabaseHas('material_access_events', [
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'pending',
+            'event_type' => 'request',
+            'status' => 'pending',
         ]);
     }
 
@@ -259,8 +259,8 @@ class MaterialCopiesTest extends TestCase
     /** @test */
     public function committee_member_can_soft_delete_a_copy(): void
     {
-        $parent    = $this->makeParent();
-        $copy      = $this->makeCopy($parent);
+        $parent = $this->makeParent();
+        $copy = $this->makeCopy($parent);
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
@@ -274,7 +274,7 @@ class MaterialCopiesTest extends TestCase
     public function committee_member_can_restore_a_soft_deleted_copy(): void
     {
         $parent = $this->makeParent();
-        $copy   = $this->makeCopy($parent);
+        $copy = $this->makeCopy($parent);
         $copy->delete();
 
         $committee = $this->makeUser('committee');
@@ -308,17 +308,17 @@ class MaterialCopiesTest extends TestCase
         );
 
         $parent = $this->makeParent(1);
-        $copy   = $this->makeCopy($parent, digital: true);
+        $copy = $this->makeCopy($parent, digital: true);
         $copy->file_name = 'repository/access_level_1/book_test.pdf';
         $copy->saveQuietly();
 
         $student = $this->makeUser('student');
 
         MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'approved',
+            'event_type' => 'request',
+            'status' => 'approved',
         ]);
 
         $response = $this->actingAs($student)
@@ -334,7 +334,7 @@ class MaterialCopiesTest extends TestCase
     public function student_cannot_stream_restricted_material(): void
     {
         $parent = $this->makeParent(2); // Restricted — faculty/above only
-        $copy   = $this->makeCopy($parent, digital: true);
+        $copy = $this->makeCopy($parent, digital: true);
 
         $student = $this->makeUser('student');
 
@@ -354,7 +354,7 @@ class MaterialCopiesTest extends TestCase
     public function unauthenticated_user_cannot_stream_any_material(): void
     {
         $parent = $this->makeParent(1);
-        $copy   = $this->makeCopy($parent, digital: true);
+        $copy = $this->makeCopy($parent, digital: true);
 
         $response = $this->get(route('materials.stream', $copy));
 
@@ -368,7 +368,7 @@ class MaterialCopiesTest extends TestCase
         Storage::fake('local'); // empty disk — file does not exist
 
         $parent = $this->makeParent(1);
-        $copy   = $this->makeCopy($parent, digital: true);
+        $copy = $this->makeCopy($parent, digital: true);
 
         $committee = $this->makeUser('committee');
 

@@ -2,36 +2,26 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Auth\Events\Login;
-use Illuminate\Support\Facades\Event;
-
+use App\Filament\Pages\Dashboard;
+use App\Listeners\SendDueSoonOnLogin;
 use App\Models\MaterialAccessEvents;
-
+use App\Models\RrMaterialParents;
+use App\Models\RrMaterials;
+use App\Models\User;
 use App\Observers\MaterialAccessEventsObserver;
 use App\Observers\RepositoryChangeLogsObserver;
 use App\Observers\UserObserver;
-
-use App\Listeners\SendDueSoonOnLogin;
-
-use App\Models\User;
-use App\Models\RrMaterialParents;
-use App\Models\RrMaterials;
-
-use Filament\Actions\Action;
-
-use Illuminate\Support\Facades\Log;
-
 use App\Policies\DashboardPolicy;
-use App\Filament\Pages\Dashboard;
-use Illuminate\Support\Facades\Gate;
-
+use Filament\Actions\Action;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Support\Facades\RateLimiter;
-
-use Illuminate\Support\Facades\URL;
-
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {

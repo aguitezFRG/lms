@@ -54,8 +54,8 @@ class PasswordEncryptionTest extends TestCase
             'components' => [
                 [
                     'snapshot' => '{}',
-                    'updates'  => $updates,
-                    'calls'    => [],
+                    'updates' => $updates,
+                    'calls' => [],
                 ],
             ],
         ]);
@@ -68,11 +68,12 @@ class PasswordEncryptionTest extends TestCase
             'CONTENT_TYPE' => 'application/json',
         ], $body);
 
-        $middleware = new DecryptLivewirePasswords();
-        $captured   = [];
+        $middleware = new DecryptLivewirePasswords;
+        $captured = [];
 
         $middleware->handle($request, function (Request $req) use (&$captured) {
             $captured = $req->json()->all();
+
             return response('ok');
         });
 
@@ -86,11 +87,11 @@ class PasswordEncryptionTest extends TestCase
     /** @test */
     public function service_can_decrypt_a_value_encrypted_with_the_public_key(): void
     {
-        $service   = app(PasswordEncryptionService::class);
+        $service = app(PasswordEncryptionService::class);
         $plaintext = 'S3cure!Pass#99';
 
         $ciphertext = $this->encryptWithPublicKey($plaintext);
-        $decrypted  = $service->decrypt($ciphertext);
+        $decrypted = $service->decrypt($ciphertext);
 
         $this->assertSame($plaintext, $decrypted);
     }
@@ -128,7 +129,7 @@ class PasswordEncryptionTest extends TestCase
     /** @test */
     public function middleware_decrypts_enc_prefixed_password_field(): void
     {
-        $enc     = 'ENC:' . $this->encryptWithPublicKey('secret123');
+        $enc = 'ENC:'.$this->encryptWithPublicKey('secret123');
         $payload = $this->runMiddleware($this->makeLivewirePayload(['data.password' => $enc]));
 
         $this->assertSame('secret123', $payload['components'][0]['updates']['data.password']);
@@ -137,7 +138,7 @@ class PasswordEncryptionTest extends TestCase
     /** @test */
     public function middleware_decrypts_enc_prefixed_current_password_field(): void
     {
-        $enc     = 'ENC:' . $this->encryptWithPublicKey('oldPass!1');
+        $enc = 'ENC:'.$this->encryptWithPublicKey('oldPass!1');
         $payload = $this->runMiddleware($this->makeLivewirePayload(['data.current_password' => $enc]));
 
         $this->assertSame('oldPass!1', $payload['components'][0]['updates']['data.current_password']);
@@ -164,7 +165,7 @@ class PasswordEncryptionTest extends TestCase
     public function middleware_leaves_value_as_is_when_decryption_fails(): void
     {
         // ENC: prefix but garbage ciphertext — should not throw, just leave it
-        $raw     = 'ENC:' . base64_encode('not-real-ciphertext');
+        $raw = 'ENC:'.base64_encode('not-real-ciphertext');
         $payload = $this->runMiddleware($this->makeLivewirePayload(['data.password' => $raw]));
 
         $this->assertSame($raw, $payload['components'][0]['updates']['data.password']);
@@ -173,16 +174,17 @@ class PasswordEncryptionTest extends TestCase
     /** @test */
     public function middleware_is_no_op_for_non_livewire_routes(): void
     {
-        $body    = json_encode(['components' => [['updates' => ['data.password' => 'ENC:foo']]]]);
+        $body = json_encode(['components' => [['updates' => ['data.password' => 'ENC:foo']]]]);
         $request = Request::create('/some/other/route', 'POST', [], [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], $body);
 
-        $middleware = new DecryptLivewirePasswords();
-        $captured   = null;
+        $middleware = new DecryptLivewirePasswords;
+        $captured = null;
 
         $middleware->handle($request, function (Request $req) use (&$captured) {
             $captured = $req->json()->all();
+
             return response('ok');
         });
 
@@ -193,7 +195,7 @@ class PasswordEncryptionTest extends TestCase
     /** @test */
     public function middleware_handles_component_with_no_updates_key(): void
     {
-        $body    = json_encode(['components' => [['snapshot' => '{}', 'calls' => []]]]);
+        $body = json_encode(['components' => [['snapshot' => '{}', 'calls' => []]]]);
         $payload = $this->runMiddleware($body);
 
         // Should not throw — component without updates is silently skipped
@@ -213,8 +215,8 @@ class PasswordEncryptionTest extends TestCase
         Livewire::test(\App\Filament\Pages\Auth\AdminProfile::class)
             ->call(
                 'submitEncryptedPasswordChange',
-                'ENC:' . $this->encryptWithPublicKey('OldPass!1'),
-                'ENC:' . $this->encryptWithPublicKey('NewPass!2'),
+                'ENC:'.$this->encryptWithPublicKey('OldPass!1'),
+                'ENC:'.$this->encryptWithPublicKey('NewPass!2'),
             )
             ->assertHasNoErrors()
             ->assertNotified();
@@ -231,8 +233,8 @@ class PasswordEncryptionTest extends TestCase
         Livewire::test(\App\Filament\Pages\Auth\AdminProfile::class)
             ->call(
                 'submitEncryptedPasswordChange',
-                'ENC:' . $this->encryptWithPublicKey('WrongPass!1'),
-                'ENC:' . $this->encryptWithPublicKey('NewPass!2'),
+                'ENC:'.$this->encryptWithPublicKey('WrongPass!1'),
+                'ENC:'.$this->encryptWithPublicKey('NewPass!2'),
             )
             ->assertNotified();
 
@@ -249,8 +251,8 @@ class PasswordEncryptionTest extends TestCase
         Livewire::test(\App\Filament\Pages\Auth\AdminProfile::class)
             ->call(
                 'submitEncryptedPasswordChange',
-                'ENC:' . base64_encode('garbage'),
-                'ENC:' . base64_encode('garbage'),
+                'ENC:'.base64_encode('garbage'),
+                'ENC:'.base64_encode('garbage'),
             )
             ->assertNotified(); // danger notification sent, no exception thrown
 
@@ -270,8 +272,8 @@ class PasswordEncryptionTest extends TestCase
         Livewire::test(\App\Filament\Pages\User\UserProfile::class)
             ->call(
                 'submitEncryptedPasswordChange',
-                'ENC:' . $this->encryptWithPublicKey('OldPass!1'),
-                'ENC:' . $this->encryptWithPublicKey('NewPass!2'),
+                'ENC:'.$this->encryptWithPublicKey('OldPass!1'),
+                'ENC:'.$this->encryptWithPublicKey('NewPass!2'),
             )
             ->assertHasNoErrors()
             ->assertNotified();
@@ -288,8 +290,8 @@ class PasswordEncryptionTest extends TestCase
         Livewire::test(\App\Filament\Pages\User\UserProfile::class)
             ->call(
                 'submitEncryptedPasswordChange',
-                'ENC:' . $this->encryptWithPublicKey('WrongPass!1'),
-                'ENC:' . $this->encryptWithPublicKey('NewPass!2'),
+                'ENC:'.$this->encryptWithPublicKey('WrongPass!1'),
+                'ENC:'.$this->encryptWithPublicKey('NewPass!2'),
             )
             ->assertNotified();
 
@@ -305,8 +307,8 @@ class PasswordEncryptionTest extends TestCase
         Livewire::test(\App\Filament\Pages\User\UserProfile::class)
             ->call(
                 'submitEncryptedPasswordChange',
-                'ENC:' . base64_encode('garbage'),
-                'ENC:' . base64_encode('garbage'),
+                'ENC:'.base64_encode('garbage'),
+                'ENC:'.base64_encode('garbage'),
             )
             ->assertNotified();
 

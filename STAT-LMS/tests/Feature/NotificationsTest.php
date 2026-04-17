@@ -26,20 +26,20 @@ class NotificationsTest extends TestCase
     private function makeParentAndCopy(int $accessLevel = 1, bool $digital = true): array
     {
         $parent = $this->makeMaterialParent([
-            'access_level'     => $accessLevel,
-            'material_type'    => 1,
-            'author'           => 'Notification Test Author',
+            'access_level' => $accessLevel,
+            'material_type' => 1,
+            'author' => 'Notification Test Author',
             'publication_date' => now()->subYear(),
-            'keywords'         => json_encode(['stats']),
-            'sdgs'             => json_encode(['Education']),
-            'adviser'          => json_encode(['Adviser']),
+            'keywords' => json_encode(['stats']),
+            'sdgs' => json_encode(['Education']),
+            'adviser' => json_encode(['Adviser']),
         ]);
 
         $copy = $this->makeMaterialCopy([
             'material_parent_id' => $parent->id,
-            'is_digital'         => $digital,
-            'is_available'       => true,
-            'file_name'          => $digital ? 'repo/file.pdf' : null,
+            'is_digital' => $digital,
+            'is_available' => true,
+            'file_name' => $digital ? 'repo/file.pdf' : null,
         ]);
 
         return [$parent, $copy];
@@ -56,10 +56,10 @@ class NotificationsTest extends TestCase
         $student = $this->makeUser('student');
 
         $event = MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'pending',
+            'event_type' => 'request',
+            'status' => 'pending',
         ]);
 
         $event->update(['status' => 'approved']);
@@ -76,10 +76,10 @@ class NotificationsTest extends TestCase
         $student = $this->makeUser('student');
 
         $event = MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'pending',
+            'event_type' => 'request',
+            'status' => 'pending',
         ]);
 
         $event->update(['status' => 'rejected']);
@@ -96,10 +96,10 @@ class NotificationsTest extends TestCase
         $student = $this->makeUser('student');
 
         $event = MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'pending',
+            'event_type' => 'request',
+            'status' => 'pending',
         ]);
 
         $event->update(['status' => 'cancelled']);
@@ -114,17 +114,17 @@ class NotificationsTest extends TestCase
         $student = $this->makeUser('student');
 
         $event = MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'pending',
+            'event_type' => 'request',
+            'status' => 'pending',
         ]);
 
         $event->update(['status' => 'approved']);
 
         $this->assertDatabaseHas('notifications', [
             'notifiable_type' => User::class,
-            'notifiable_id'   => $student->id,
+            'notifiable_id' => $student->id,
         ]);
     }
 
@@ -136,7 +136,7 @@ class NotificationsTest extends TestCase
         Notification::fake();
 
         $committee = $this->makeUser('committee');
-        $target    = $this->makeUser('student');
+        $target = $this->makeUser('student');
 
         $this->actingAs($committee);
         $target->update(['f_name' => 'ChangedName']);
@@ -161,7 +161,7 @@ class NotificationsTest extends TestCase
     public function account_details_changed_notification_lists_changed_fields(): void
     {
         $committee = $this->makeUser('committee');
-        $target    = $this->makeUser('student');
+        $target = $this->makeUser('student');
 
         $this->actingAs($committee);
         $target->update(['f_name' => 'NewFirst', 'l_name' => 'NewLast']);
@@ -182,11 +182,11 @@ class NotificationsTest extends TestCase
         $student = $this->makeUser('student');
 
         MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'borrow',
-            'status'         => 'approved',
-            'due_at'         => now()->addDay()->endOfDay(),
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->addDay()->endOfDay(),
         ]);
 
         event(new Login('web', $student, false));
@@ -206,11 +206,11 @@ class NotificationsTest extends TestCase
         $student = $this->makeUser('student');
 
         MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'borrow',
-            'status'         => 'approved',
-            'due_at'         => now()->addDays(3)->endOfDay(),
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->addDays(3)->endOfDay(),
         ]);
 
         event(new Login('web', $student, false));
@@ -230,12 +230,12 @@ class NotificationsTest extends TestCase
         $student = $this->makeUser('student');
 
         MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'borrow',
-            'status'         => 'approved',
-            'due_at'         => now()->addDay()->endOfDay(),
-            'returned_at'    => now(),
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->addDay()->endOfDay(),
+            'returned_at' => now(),
         ]);
 
         event(new Login('web', $student, false));
@@ -252,11 +252,11 @@ class NotificationsTest extends TestCase
         $student = $this->makeUser('student');
 
         MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'approved',
-            'due_at'         => now()->addDay()->endOfDay(),
+            'event_type' => 'request',
+            'status' => 'approved',
+            'due_at' => now()->addDay()->endOfDay(),
         ]);
 
         event(new Login('web', $student, false));
@@ -271,11 +271,11 @@ class NotificationsTest extends TestCase
         $student = $this->makeUser('student');
 
         $borrow = MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'borrow',
-            'status'         => 'approved',
-            'due_at'         => now()->addDay()->endOfDay(),
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->addDay()->endOfDay(),
         ]);
 
         event(new Login('web', $student, false));
@@ -296,11 +296,11 @@ class NotificationsTest extends TestCase
         $committee = $this->makeUser('committee');
 
         MaterialAccessEvents::create([
-            'user_id'        => $committee->id,
+            'user_id' => $committee->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'borrow',
-            'status'         => 'approved',
-            'due_at'         => now()->addDay()->endOfDay(),
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->addDay()->endOfDay(),
         ]);
 
         event(new Login('web', $committee, false));
@@ -336,10 +336,10 @@ class NotificationsTest extends TestCase
         $student = $this->makeUser('student');
 
         MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'approved',
+            'event_type' => 'request',
+            'status' => 'approved',
         ]);
 
         // Re-register RrMaterialParents boot listeners that were flushed by
@@ -361,10 +361,10 @@ class NotificationsTest extends TestCase
         $student = $this->makeUser('student');
 
         MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'approved',
+            'event_type' => 'request',
+            'status' => 'approved',
         ]);
 
         RrMaterialParents::clearBootedModels();
@@ -383,10 +383,10 @@ class NotificationsTest extends TestCase
         $student = $this->makeUser('student');
 
         $event = MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'request',
-            'status'         => 'pending',
+            'event_type' => 'request',
+            'status' => 'pending',
         ]);
 
         $event->update(['status' => 'approved']);
@@ -407,10 +407,10 @@ class NotificationsTest extends TestCase
 
         foreach (['approved', 'rejected'] as $status) {
             $event = MaterialAccessEvents::create([
-                'user_id'        => $student->id,
+                'user_id' => $student->id,
                 'rr_material_id' => $copy->id,
-                'event_type'     => 'request',
-                'status'         => 'pending',
+                'event_type' => 'request',
+                'status' => 'pending',
             ]);
             $event->update(['status' => $status]);
         }
@@ -433,11 +433,11 @@ class NotificationsTest extends TestCase
         $student = $this->makeUser('student');
 
         MaterialAccessEvents::create([
-            'user_id'        => $student->id,
+            'user_id' => $student->id,
             'rr_material_id' => $copy->id,
-            'event_type'     => 'borrow',
-            'status'         => 'approved',
-            'due_at'         => now()->addDay()->endOfDay(),
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->addDay()->endOfDay(),
         ]);
 
         $this->artisan('notifications:due-soon')->assertExitCode(0);

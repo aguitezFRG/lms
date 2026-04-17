@@ -13,8 +13,8 @@ class CreateMaterialAccessEvents extends CreateRecord
     {
         $data['approver_id'] = auth()->id();
 
-        if (!empty($data['due_at'])) {
-            $data['due_at'] = $data['due_at'] . ' 23:59:59';
+        if (! empty($data['due_at'])) {
+            $data['due_at'] = $data['due_at'].' 23:59:59';
         }
 
         return $data;

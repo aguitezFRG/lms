@@ -2,16 +2,15 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\MaterialAccessEvents;
-use App\Models\User;
 use App\Enums\UserRole;
+use App\Models\MaterialAccessEvents;
 use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Actions\Action;
-use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 
 class SystemUsage extends Page
 {
@@ -19,11 +18,11 @@ class SystemUsage extends Page
 
     protected string $view = 'filament.pages.system-usage';
 
-    protected static string | BackedEnum | null $navigationIcon = Heroicon::ArrowTrendingUp;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::ArrowTrendingUp;
 
     protected static ?string $navigationLabel = 'System Usage ';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Logs';
+    protected static string|\UnitEnum|null $navigationGroup = 'Logs';
 
     protected static ?int $navigationSort = 1;
 
@@ -32,15 +31,20 @@ class SystemUsage extends Page
     protected ?string $pollingInterval = '120s';
 
     // Filter state
-    public ?string $filterStatus   = null;
-    public ?string $filterType     = null;
+    public ?string $filterStatus = null;
+
+    public ?string $filterType = null;
+
     public ?string $filterDateFrom = null;
-    public ?string $filterDateTo   = null;
+
+    public ?string $filterDateTo = null;
 
     public static function canAccess(): bool
     {
         $user = Auth::user();
+
         return $user && in_array($user->role, [
+            UserRole::SUPER_ADMIN->value,
             UserRole::COMMITTEE->value,
             UserRole::IT->value,
             UserRole::RR->value,
@@ -60,12 +64,12 @@ class SystemUsage extends Page
             ->with(['material.parent', 'user'])
             ->whereIn('event_type', ['request', 'borrow']);
 
-        $total      = $query->count();
-        $pending    = (clone $query)->where('status', 'pending')->count();
-        $approved   = (clone $query)->where('status', 'approved')->count();
-        $rejected   = (clone $query)->where('status', 'rejected')->count();
-        $revoked    = (clone $query)->where('status', 'revoked')->count();
-        $overdue    = (clone $query)->where('is_overdue', true)->count();
+        $total = $query->count();
+        $pending = (clone $query)->where('status', 'pending')->count();
+        $approved = (clone $query)->where('status', 'approved')->count();
+        $rejected = (clone $query)->where('status', 'rejected')->count();
+        $revoked = (clone $query)->where('status', 'revoked')->count();
+        $overdue = (clone $query)->where('is_overdue', true)->count();
         $overdueRate = $total > 0 ? round(($overdue / $total) * 100, 1) : 0;
 
         // Most requested materials (top 5)
@@ -105,7 +109,7 @@ class SystemUsage extends Page
             ->with('user')
             ->get()
             ->map(fn ($row) => [
-                'name'  => $row->user?->name ?? 'Unknown',
+                'name' => $row->user?->name ?? 'Unknown',
                 'count' => $row->request_count,
             ]);
 
@@ -150,11 +154,11 @@ class SystemUsage extends Page
         }
 
         if ($this->filterDateFrom) {
-            $query->where('created_at', '>=', $this->filterDateFrom . ' 00:00:00');
+            $query->where('created_at', '>=', $this->filterDateFrom.' 00:00:00');
         }
 
         if ($this->filterDateTo) {
-            $query->where('created_at', '<=', $this->filterDateTo . ' 23:59:59');
+            $query->where('created_at', '<=', $this->filterDateTo.' 23:59:59');
         }
 
         $records = $query->orderBy('created_at', 'desc')->get();
@@ -184,7 +188,7 @@ class SystemUsage extends Page
             ];
         }
 
-        $filename = 'material_access_events_' . now()->format('Ymd_His') . '.csv';
+        $filename = 'material_access_events_'.now()->format('Ymd_His').'.csv';
 
         $callback = function () use ($csvRows) {
             $handle = fopen('php://output', 'w');
@@ -203,7 +207,7 @@ class SystemUsage extends Page
     {
         return [
             'activeTab' => $this->activeTab,
-            'stats'     => $this->activeTab === 'summary' ? $this->getSummaryStats() : [],
+            'stats' => $this->activeTab === 'summary' ? $this->getSummaryStats() : [],
         ];
     }
 }

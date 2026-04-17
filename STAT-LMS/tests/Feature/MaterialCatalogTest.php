@@ -29,14 +29,14 @@ class MaterialCatalogTest extends TestCase
     private function makeMaterial(int $accessLevel, array $overrides = []): RrMaterialParents
     {
         return RrMaterialParents::factory()->create(array_merge([
-            'access_level'     => $accessLevel,
-            'material_type'    => 1,
-            'title'            => "Test Material L{$accessLevel}",
-            'author'           => 'Test Author',
+            'access_level' => $accessLevel,
+            'material_type' => 1,
+            'title' => "Test Material L{$accessLevel}",
+            'author' => 'Test Author',
             'publication_date' => now()->subYear(),
-            'keywords'         => ['stats', 'research'],
-            'sdgs'             => ['Quality Education'],
-            'adviser'          => ['Dr. Adviser'],
+            'keywords' => ['stats', 'research'],
+            'sdgs' => ['Quality Education'],
+            'adviser' => ['Dr. Adviser'],
         ], $overrides));
     }
 
@@ -45,8 +45,8 @@ class MaterialCatalogTest extends TestCase
     /** @test */
     public function student_sees_only_public_materials(): void
     {
-        $public       = $this->makeMaterial(1, ['title' => 'Public Paper']);
-        $restricted   = $this->makeMaterial(2, ['title' => 'Restricted Paper']);
+        $public = $this->makeMaterial(1, ['title' => 'Public Paper']);
+        $restricted = $this->makeMaterial(2, ['title' => 'Restricted Paper']);
         $confidential = $this->makeMaterial(3, ['title' => 'Confidential Paper']);
 
         $student = $this->makeUser('student');
@@ -62,8 +62,8 @@ class MaterialCatalogTest extends TestCase
     /** @test */
     public function faculty_sees_public_and_restricted_materials(): void
     {
-        $public       = $this->makeMaterial(1, ['title' => 'Public Paper']);
-        $restricted   = $this->makeMaterial(2, ['title' => 'Restricted Paper']);
+        $public = $this->makeMaterial(1, ['title' => 'Public Paper']);
+        $restricted = $this->makeMaterial(2, ['title' => 'Restricted Paper']);
         $confidential = $this->makeMaterial(3, ['title' => 'Confidential Paper']);
 
         $faculty = $this->makeUser('faculty');
@@ -127,20 +127,20 @@ class MaterialCatalogTest extends TestCase
 
         Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\CreateRrMaterialParents::class)
             ->fillForm([
-                'title'            => 'New Statistical Journal',
-                'material_type'    => 3,
-                'access_level'     => 1,
-                'author'           => 'Dr. Santos',
-                'adviser'          => ['Dr. Reyes'],
-                'keywords'         => ['regression', 'ANOVA'],
-                'sdgs'             => ['Quality Education'],
+                'title' => 'New Statistical Journal',
+                'material_type' => 3,
+                'access_level' => 1,
+                'author' => 'Dr. Santos',
+                'adviser' => ['Dr. Reyes'],
+                'keywords' => ['regression', 'ANOVA'],
+                'sdgs' => ['Quality Education'],
                 'publication_date' => '2024-01-15',
             ])
             ->call('create')
             ->assertHasNoFormErrors();
 
         $this->assertDatabaseHas('rr_material_parents', [
-            'title'  => 'New Statistical Journal',
+            'title' => 'New Statistical Journal',
             'author' => 'Dr. Santos',
         ]);
     }
@@ -163,10 +163,10 @@ class MaterialCatalogTest extends TestCase
 
         Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\CreateRrMaterialParents::class)
             ->fillForm([
-                'title'         => '',
+                'title' => '',
                 'material_type' => 1,
-                'access_level'  => 1,
-                'author'        => '',
+                'access_level' => 1,
+                'author' => '',
             ])
             ->call('create')
             ->assertHasFormErrors(['title', 'author']);
@@ -177,7 +177,7 @@ class MaterialCatalogTest extends TestCase
     /** @test */
     public function committee_can_view_material_infolist(): void
     {
-        $material  = $this->makeMaterial(1, ['title' => 'Viewable Material']);
+        $material = $this->makeMaterial(1, ['title' => 'Viewable Material']);
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
@@ -192,7 +192,7 @@ class MaterialCatalogTest extends TestCase
     public function student_cannot_view_confidential_material(): void
     {
         $material = $this->makeMaterial(3, ['title' => 'Secret Thesis']);
-        $student  = $this->makeUser('student');
+        $student = $this->makeUser('student');
 
         $this->actingAs($student)
             ->get("/app/rr-material-parents/{$material->id}")
@@ -212,10 +212,10 @@ class MaterialCatalogTest extends TestCase
     public function it_admin_can_edit_material_title(): void
     {
         $material = $this->makeMaterial(1, [
-            'title'   => 'Original Title',
+            'title' => 'Original Title',
             'adviser' => ['Dr. Reyes'],
-            'keywords'=> ['stats'],
-            'sdgs'    => ['Quality Education'],
+            'keywords' => ['stats'],
+            'sdgs' => ['Quality Education'],
         ]);
         $it = $this->makeUser('it');
         $this->actingAs($it);
@@ -225,10 +225,10 @@ class MaterialCatalogTest extends TestCase
             ['record' => $material->id]
         )
             ->fillForm([
-                'title'   => 'Updated Title',
+                'title' => 'Updated Title',
                 'adviser' => ['Dr. Reyes'],
-                'keywords'=> ['stats'],
-                'sdgs'    => ['Quality Education'],
+                'keywords' => ['stats'],
+                'sdgs' => ['Quality Education'],
             ])
             ->call('save')
             ->assertHasNoFormErrors();
@@ -240,7 +240,7 @@ class MaterialCatalogTest extends TestCase
     public function faculty_user_cannot_edit_another_authors_material(): void
     {
         $material = $this->makeMaterial(2, ['title' => 'Faculty Material']);
-        $faculty  = $this->makeUser('faculty');
+        $faculty = $this->makeUser('faculty');
 
         // Faculty member who is NOT the author has no update permission
         $this->actingAs($faculty)
@@ -253,7 +253,7 @@ class MaterialCatalogTest extends TestCase
     /** @test */
     public function committee_member_can_soft_delete_material(): void
     {
-        $material  = $this->makeMaterial(1, ['title' => 'Deletable Material']);
+        $material = $this->makeMaterial(1, ['title' => 'Deletable Material']);
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
@@ -288,7 +288,7 @@ class MaterialCatalogTest extends TestCase
     /** @test */
     public function soft_deleted_materials_are_hidden_by_default_in_listing(): void
     {
-        $active  = $this->makeMaterial(1, ['title' => 'Active Material']);
+        $active = $this->makeMaterial(1, ['title' => 'Active Material']);
         $deleted = $this->makeMaterial(1, ['title' => 'Deleted Material']);
         $deleted->delete();
 

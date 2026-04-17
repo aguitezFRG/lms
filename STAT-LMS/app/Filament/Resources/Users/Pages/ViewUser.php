@@ -11,6 +11,11 @@ class ViewUser extends ViewRecord
 {
     protected static string $resource = UserResource::class;
 
+    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    {
+        return $this->record->name;
+    }
+
     protected function getHeaderActions(): array
     {
         return [

@@ -3,23 +3,19 @@
 namespace App\Observers;
 
 use App\Models\MaterialAccessEvents;
-
 use App\Notifications\RequestStatusChanged;
 
 class MaterialAccessEventsObserver
 {
-
     public function retrieved(MaterialAccessEvents $materialAccessEvents): void
     {
-        if
-        (
+        if (
             $materialAccessEvents->due_at &&
-            !$materialAccessEvents->returned_at &&
-            !$materialAccessEvents->completed_at &&
+            ! $materialAccessEvents->returned_at &&
+            ! $materialAccessEvents->completed_at &&
             $materialAccessEvents->due_at->isPast() &&
-            !$materialAccessEvents->is_overdue
-        )
-        {
+            ! $materialAccessEvents->is_overdue
+        ) {
             $materialAccessEvents->updateQuietly(['is_overdue' => true]);
         }
 

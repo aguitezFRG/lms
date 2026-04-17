@@ -2,14 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
-
 use App\Filament\Pages\Auth\AdminLogin;
 use App\Filament\Pages\Auth\UserLogin;
-
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\TestCase;
 
 /**
  * Feature: Authentication & Panel Access Control
@@ -84,6 +82,28 @@ class AuthenticationTest extends TestCase
     public function committee_user_is_denied_from_user_panel(): void
     {
         $user = $this->makeUser('committee');
+
+        $this->actingAs($user)
+            ->get('/app')
+            ->assertForbidden();
+    }
+
+    // ── Super Admin Role ──────────────────────────────────────────────────────
+
+    /** @test */
+    public function super_admin_can_access_admin_panel(): void
+    {
+        $user = $this->makeUser('super_admin');
+
+        $this->actingAs($user)
+            ->get('/admin')
+            ->assertOk();
+    }
+
+    /** @test */
+    public function super_admin_is_denied_from_user_panel(): void
+    {
+        $user = $this->makeUser('super_admin');
 
         $this->actingAs($user)
             ->get('/app')
@@ -216,7 +236,7 @@ class AuthenticationTest extends TestCase
 
         Livewire::test(AdminLogin::class)
             ->fillForm([
-                'email'    => $user->email,
+                'email' => $user->email,
                 'password' => 'password',
             ])
             ->call('authenticate')
@@ -256,7 +276,7 @@ class AuthenticationTest extends TestCase
 
         Livewire::test(AdminLogin::class)
             ->fillForm([
-                'email'    => $user->email,
+                'email' => $user->email,
                 'password' => 'wrong-password',
             ])
             ->call('authenticate')
@@ -275,7 +295,7 @@ class AuthenticationTest extends TestCase
 
         Livewire::test(UserLogin::class)
             ->fillForm([
-                'email'    => $user->email,
+                'email' => $user->email,
                 'password' => 'password',
             ])
             ->call('authenticate');

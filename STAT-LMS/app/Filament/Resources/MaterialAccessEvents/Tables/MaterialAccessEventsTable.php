@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MaterialAccessEvents\Tables;
 
+use App\Enums\MaterialEventType;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -9,17 +10,12 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-
-use App\Enums\MaterialEventType;
-
-use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Forms\Components\Select;
-
-use App\Models\MaterialAccessEvents;
 
 class MaterialAccessEventsTable
 {
@@ -70,9 +66,9 @@ class MaterialAccessEventsTable
                                 'approved' => 'Approved',
                                 'rejected' => 'Rejected',
                                 'revoked' => 'Revoked',
-                            ])
+                            ]),
                     ])
-                    ->query (function (Builder $query, array $data): Builder{
+                    ->query(function (Builder $query, array $data): Builder {
                         return $query->when(
                             filled($data['status']),
                             fn (Builder $query) => $query->where('status', $data['status'])
@@ -84,22 +80,21 @@ class MaterialAccessEventsTable
                 ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make()
-                        ->visible(fn ($record) =>
-                            in_array($record->status, ['pending', 'rejected', 'approved'])
+                        ->visible(fn ($record) => in_array($record->status, ['pending', 'rejected', 'approved'])
                         )
                         ->mutateFormDataUsing(fn (array $data) => array_merge($data, [
                             'approver_id' => auth()->id(),
                         ]))
                         ->color('warning'),
                 ])
-                ->color('gray')
+                    ->color('gray'),
             ]);
-            // ->bulkActions([
-            //     BulkActionGroup::make([
-            //         DeleteBulkAction::make(),
-            //         ForceDeleteBulkAction::make(),
-            //         RestoreBulkAction::make(),
-            //     ]),
-            // ]);
+        // ->bulkActions([
+        //     BulkActionGroup::make([
+        //         DeleteBulkAction::make(),
+        //         ForceDeleteBulkAction::make(),
+        //         RestoreBulkAction::make(),
+        //     ]),
+        // ]);
     }
 }

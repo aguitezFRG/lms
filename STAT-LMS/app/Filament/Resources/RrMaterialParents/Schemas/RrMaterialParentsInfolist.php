@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\RrMaterialParents\Schemas;
 
 use Filament\Infolists\Components\TextEntry;
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 
 class RrMaterialParentsInfolist
 {
@@ -38,17 +38,17 @@ class RrMaterialParentsInfolist
                                 TextEntry::make('access_level')
                                     ->badge()
                                     ->color(fn (int $state): string => match ($state) {
-                                    1 => 'success', // Public (UP Forest Green)
-                                    2 => 'danger',  // Restricted (Red)
-                                    3 => 'gray',    // Confidential (Black/Dark Gray)
-                                    default => 'gray',
-                                })
-                                ->formatStateUsing(fn (int $state): string => match ($state) {
-                                    1 => 'Public',
-                                    2 => 'Restricted',
-                                    3 => 'Confidential',
-                                    default => 'Unknown',
-                                }),
+                                        1 => 'success', // Public (UP Forest Green)
+                                        2 => 'danger',  // Restricted (Red)
+                                        3 => 'gray',    // Confidential (Black/Dark Gray)
+                                        default => 'gray',
+                                    })
+                                    ->formatStateUsing(fn (int $state): string => match ($state) {
+                                        1 => 'Public',
+                                        2 => 'Restricted',
+                                        3 => 'Confidential',
+                                        default => 'Unknown',
+                                    }),
                             ]),
                     ]),
 

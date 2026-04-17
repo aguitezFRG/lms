@@ -3,18 +3,21 @@
 namespace App\Filament\Resources\MaterialAccessEvents\Pages;
 
 use App\Filament\Resources\MaterialAccessEvents\MaterialAccessEventsResource;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
-use Filament\Actions\Action;
-
-use Illuminate\Support\Facades\Log;
 
 class EditMaterialAccessEvents extends EditRecord
 {
     protected static string $resource = MaterialAccessEventsResource::class;
+
+    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    {
+        return $this->record->material->parent->title;
+    }
 
     protected function getHeaderActions(): array
     {
@@ -35,7 +38,7 @@ class EditMaterialAccessEvents extends EditRecord
     {
         $data['approver_id'] = auth()->id();
 
-        if (!empty($data['due_at'])) {
+        if (! empty($data['due_at'])) {
             $data['due_at'] = \Carbon\Carbon::parse($data['due_at'])->endOfDay()->toDateTimeString();
         }
 

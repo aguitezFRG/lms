@@ -2,9 +2,9 @@
 
 namespace Tests;
 
-use App\Models\User;
-use App\Models\RrMaterials;
 use App\Models\RrMaterialParents;
+use App\Models\RrMaterials;
+use App\Models\User;
 use App\Observers\RepositoryChangeLogsObserver;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 

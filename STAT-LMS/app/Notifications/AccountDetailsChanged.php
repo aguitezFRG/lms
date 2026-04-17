@@ -26,8 +26,8 @@ class AccountDetailsChanged extends Notification
         ));
 
         return [
-            'type'    => 'account_details_changed',
-            'title'   => 'Account Details Updated',
+            'type' => 'account_details_changed',
+            'title' => 'Account Details Updated',
             'message' => "Your account details were updated by an administrator. Changed fields: {$fields}.",
         ];
     }

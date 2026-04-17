@@ -37,23 +37,37 @@ class UserFactory extends Factory
                 return trim(implode(' ', array_filter([
                     $attributes['f_name'],
                     $attributes['m_name'],
-                    $attributes['l_name']
+                    $attributes['l_name'],
                 ])));
             },
-            'std_number' => fake()->numberBetween(1908, 2025) . '-' . fake()->numerify('#####'),
+            'std_number' => fake()->numberBetween(1908, 2025).'-'.fake()->numerify('#####'),
             'revoked_at' => null,
         ];
     }
 
     public function superAdmin(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn () => [
             'f_name' => 'super',
             'm_name' => null,
             'l_name' => 'admin',
             'name' => 'super admin',
             'email' => 'admin@gmail.com',
             'password' => Hash::make('ADMINpass@1234'),
+            'role' => 'super_admin',
+            'std_number' => null,
+        ]);
+    }
+
+    public function committee(): static
+    {
+        return $this->state(fn () => [
+            'f_name' => 'Committee',
+            'm_name' => null,
+            'l_name' => 'Member',
+            'name' => 'Committee Member',
+            'email' => 'committee.member@gmail.com',
+            'password' => Hash::make('COMMITTEEpass@1234'),
             'role' => 'committee',
             'std_number' => null,
         ]);
@@ -61,7 +75,7 @@ class UserFactory extends Factory
 
     public function it(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn () => [
             'f_name' => 'IT',
             'm_name' => null,
             'l_name' => 'Support',
@@ -75,7 +89,7 @@ class UserFactory extends Factory
 
     public function staff(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn () => [
             'f_name' => 'Staff',
             'm_name' => null,
             'l_name' => 'Custodian',
@@ -89,7 +103,7 @@ class UserFactory extends Factory
 
     public function faculty(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn () => [
             'f_name' => 'Faculty',
             'm_name' => null,
             'l_name' => 'Member',
@@ -103,7 +117,7 @@ class UserFactory extends Factory
 
     public function student(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn () => [
             'f_name' => 'Student',
             'm_name' => null,
             'l_name' => 'User',
@@ -111,7 +125,7 @@ class UserFactory extends Factory
             'email' => 'student.user@gmail.com',
             'password' => Hash::make('STUDENTpass@1234'),
             'role' => 'student',
-            'std_number' => fake()->numberBetween(1908, 2025) . '-' . fake()->numerify('#####'),
+            'std_number' => fake()->numberBetween(1908, 2025).'-'.fake()->numerify('#####'),
         ]);
     }
 
@@ -120,7 +134,7 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn () => [
             'email_verified_at' => null,
         ]);
     }

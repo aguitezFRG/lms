@@ -7,12 +7,13 @@ use RuntimeException;
 class PasswordEncryptionService
 {
     private string $privatePath;
+
     private string $publicPath;
 
     public function __construct()
     {
         $this->privatePath = storage_path('app/keys/password_private.pem');
-        $this->publicPath  = storage_path('app/keys/password_public.pem');
+        $this->publicPath = storage_path('app/keys/password_public.pem');
     }
 
     /** Returns the PEM-encoded public key for the client to use. */

@@ -80,7 +80,7 @@ class User extends Authenticatable implements FilamentUser
         // }
 
         return match ($panel->getId()) {
-            'admin' => in_array($this->role, [UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value]),
+            'admin' => in_array($this->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value]),
             'user' => in_array($this->role, [UserRole::FACULTY->value, UserRole::STUDENT->value]),
             default => false,
         };

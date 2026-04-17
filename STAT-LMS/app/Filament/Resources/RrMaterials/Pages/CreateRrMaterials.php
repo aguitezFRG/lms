@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\RrMaterials\Pages;
 
 use App\Filament\Resources\RrMaterials\RrMaterialsResource;
-use Filament\Resources\Pages\CreateRecord;
 use Filament\Actions\Action;
+use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 
 class CreateRrMaterials extends CreateRecord

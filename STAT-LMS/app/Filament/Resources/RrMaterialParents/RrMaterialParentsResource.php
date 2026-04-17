@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RrMaterialParents;
 
+use App\Enums\UserRole;
 use App\Filament\Resources\RrMaterialParents\Pages\CreateRrMaterialParents;
 use App\Filament\Resources\RrMaterialParents\Pages\EditRrMaterialParents;
 use App\Filament\Resources\RrMaterialParents\Pages\ListRrMaterialParents;
@@ -11,17 +12,14 @@ use App\Filament\Resources\RrMaterialParents\Schemas\RrMaterialParentsInfolist;
 use App\Filament\Resources\RrMaterialParents\Tables\RrMaterialParentsTable;
 use App\Models\RrMaterialParents;
 use BackedEnum;
-use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
 use Illuminate\Support\Facades\Auth;
-use App\Enums\UserRole;
+use UnitEnum;
 
 class RrMaterialParentsResource extends Resource
 {
@@ -34,7 +32,7 @@ class RrMaterialParentsResource extends Resource
     protected static ?string $navigationLabel = 'RR Materials';
 
     // Sidebar Grouping
-    protected static string | UnitEnum | null $navigationGroup = 'Repository';
+    protected static string|UnitEnum|null $navigationGroup = 'Repository';
 
     // Header Breadcrumb
     protected static ?string $breadcrumb = 'Reading Room Materials';
@@ -98,7 +96,7 @@ class RrMaterialParentsResource extends Resource
 
         // If there is no user, or for some reason the role is missing,
         // we default to the most restrictive view (Level 1).
-        if (!$user) {
+        if (! $user) {
             return $query->where('access_level', '<=', 1);
         }
 

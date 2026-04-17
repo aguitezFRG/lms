@@ -2,15 +2,14 @@
 
 namespace App\Observers;
 
-use App\Notifications\AccountDetailsChanged;
+use App\Enums\RepositoryChangeType;
 use App\Models\RepositoryChangeLogs;
 use App\Models\User;
-use App\Enums\RepositoryChangeType;
+use App\Notifications\AccountDetailsChanged;
 use Illuminate\Database\Eloquent\Model;
 
 class RepositoryChangeLogsObserver
 {
-
     protected function filterAttributes(Model $model, array $attributes): array
     {
         $excluded = $model->excludedFromChangeLogs ?? [];
@@ -25,22 +24,26 @@ class RepositoryChangeLogsObserver
      */
     public function created(Model $model): void
     {
-        if (!auth()->check()) return; // Don't log if no authenticated user
+        if (! auth()->check()) {
+            return;
+        } // Don't log if no authenticated user
 
-        if ($model instanceof RepositoryChangeLogs) return; // Prevent recursive logging
+        if ($model instanceof RepositoryChangeLogs) {
+            return;
+        } // Prevent recursive logging
 
         RepositoryChangeLogs::create([
-            'editor_id'      => auth()->id(),
+            'editor_id' => auth()->id(),
             'material_parent_id' => $this->getParentId($model),
             'rr_material_id' => $this->getCopyId($model),
             'target_user_id' => $this->getTargetUserId($model),
-            'table_changed'  => $model->getTable(),
-            'change_type'    => RepositoryChangeType::CREATE->value,
-            'change_made'    => collect($this->filterAttributes($model, $model->getDirty()))
+            'table_changed' => $model->getTable(),
+            'change_type' => RepositoryChangeType::CREATE->value,
+            'change_made' => collect($this->filterAttributes($model, $model->getDirty()))
                 ->mapWithKeys(fn ($value, $key) => [
-                    $key => ['old' => null, 'new' => $value]
+                    $key => ['old' => null, 'new' => $value],
                 ])->toArray(),
-            'changed_at'     => now(),
+            'changed_at' => now(),
         ]);
     }
 
@@ -49,26 +52,27 @@ class RepositoryChangeLogsObserver
      */
     public function updated(Model $model): void
     {
-        if (!auth()->check()) return; // Don't log if no authenticated user
+        if (! auth()->check()) {
+            return;
+        } // Don't log if no authenticated user
 
         RepositoryChangeLogs::create([
-            'editor_id'      => auth()->id(),
+            'editor_id' => auth()->id(),
             'material_parent_id' => $this->getParentId($model),
             'rr_material_id' => $this->getCopyId($model),
             'target_user_id' => $this->getTargetUserId($model),
-            'table_changed'  => $model->getTable(),
-            'change_type'    => RepositoryChangeType::UPDATE->value,
-            'change_made'    => collect($this->filterAttributes($model, $model->getDirty()))
+            'table_changed' => $model->getTable(),
+            'change_type' => RepositoryChangeType::UPDATE->value,
+            'change_made' => collect($this->filterAttributes($model, $model->getDirty()))
                 ->filter(fn ($value, $key) => $model->getOriginal($key) !== $value)
                 ->mapWithKeys(fn ($value, $key) => [
                     $key => [
                         'old' => $model->getOriginal($key),
                         'new' => $value,
-                    ]
+                    ],
                 ])->toArray(),
-            'changed_at'     => now(),
+            'changed_at' => now(),
         ]);
-
 
         // Notify the user if an admin changed their account details
         // Only fires when the editor is a different person than the target
@@ -86,8 +90,7 @@ class RepositoryChangeLogsObserver
                 collect($model->getDirty())->except($excluded)->toArray()
             );
 
-            if (count($changedFields) > 0)
-            {
+            if (count($changedFields) > 0) {
                 $model->notify(new AccountDetailsChanged($changedFields));
             }
         }
@@ -98,20 +101,22 @@ class RepositoryChangeLogsObserver
      */
     public function deleted(Model $model): void
     {
-        if (!auth()->check()) return; // Don't log if no authenticated user
+        if (! auth()->check()) {
+            return;
+        } // Don't log if no authenticated user
 
         RepositoryChangeLogs::create([
-            'editor_id'      => auth()->id(),
+            'editor_id' => auth()->id(),
             'material_parent_id' => $this->getParentId($model),
             'rr_material_id' => $this->getCopyId($model),
             'target_user_id' => $this->getTargetUserId($model),
-            'table_changed'  => $model->getTable(),
-            'change_type'    => RepositoryChangeType::DELETE->value,
-            'change_made'    => collect($this->filterAttributes($model, $model->getDirty()))
+            'table_changed' => $model->getTable(),
+            'change_type' => RepositoryChangeType::DELETE->value,
+            'change_made' => collect($this->filterAttributes($model, $model->getDirty()))
                 ->mapWithKeys(fn ($value, $key) => [
-                    $key => ['old' => $model->getOriginal($key), 'new' => $value]
+                    $key => ['old' => $model->getOriginal($key), 'new' => $value],
                 ])->toArray(),
-            'changed_at'     => now(),
+            'changed_at' => now(),
         ]);
     }
 
@@ -120,20 +125,22 @@ class RepositoryChangeLogsObserver
      */
     public function restored(Model $model): void
     {
-        if (!auth()->check()) return; // Don't log if no authenticated user
+        if (! auth()->check()) {
+            return;
+        } // Don't log if no authenticated user
 
         RepositoryChangeLogs::create([
-            'editor_id'      => auth()->id(),
+            'editor_id' => auth()->id(),
             'material_parent_id' => $this->getParentId($model),
             'rr_material_id' => $this->getCopyId($model),
             'target_user_id' => $this->getTargetUserId($model),
-            'table_changed'  => $model->getTable(),
-            'change_type'    => RepositoryChangeType::RESTORE->value,
-            'change_made'    => collect($this->filterAttributes($model, $model->getDirty()))
+            'table_changed' => $model->getTable(),
+            'change_type' => RepositoryChangeType::RESTORE->value,
+            'change_made' => collect($this->filterAttributes($model, $model->getDirty()))
                 ->mapWithKeys(fn ($value, $key) => [
-                    $key => ['old' => $model->getOriginal($key), 'new' => $value]
+                    $key => ['old' => $model->getOriginal($key), 'new' => $value],
                 ])->toArray(),
-            'changed_at'     => now(),
+            'changed_at' => now(),
         ]);
     }
 
@@ -142,20 +149,22 @@ class RepositoryChangeLogsObserver
      */
     public function forceDeleted(Model $model): void
     {
-        if (!auth()->check()) return; // Don't log if no authenticated user
+        if (! auth()->check()) {
+            return;
+        } // Don't log if no authenticated user
 
         RepositoryChangeLogs::create([
-            'editor_id'      => auth()->id(),
+            'editor_id' => auth()->id(),
             'material_parent_id' => $this->getParentId($model),
             'rr_material_id' => $this->getCopyId($model),
             'target_user_id' => $this->getTargetUserId($model),
-            'table_changed'  => $model->getTable(),
-            'change_type'    => RepositoryChangeType::DELETE->value,
-            'change_made'    => collect($this->filterAttributes($model, $model->getDirty()))
+            'table_changed' => $model->getTable(),
+            'change_type' => RepositoryChangeType::DELETE->value,
+            'change_made' => collect($this->filterAttributes($model, $model->getDirty()))
                 ->mapWithKeys(fn ($value, $key) => [
-                    $key => ['old' => $model->getOriginal($key), 'new' => $value]
+                    $key => ['old' => $model->getOriginal($key), 'new' => $value],
                 ])->toArray(),
-            'changed_at'     => now(),
+            'changed_at' => now(),
         ]);
     }
 

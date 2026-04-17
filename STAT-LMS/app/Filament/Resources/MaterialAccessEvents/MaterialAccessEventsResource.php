@@ -11,13 +11,13 @@ use App\Filament\Resources\MaterialAccessEvents\Schemas\MaterialAccessEventsInfo
 use App\Filament\Resources\MaterialAccessEvents\Tables\MaterialAccessEventsTable;
 use App\Models\MaterialAccessEvents;
 use BackedEnum;
-use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use UnitEnum;
 
 class MaterialAccessEventsResource extends Resource
 {
@@ -27,7 +27,7 @@ class MaterialAccessEventsResource extends Resource
 
     protected static ?string $navigationLabel = 'Material Access Logs';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Logs';
+    protected static string|UnitEnum|null $navigationGroup = 'Logs';
 
     protected static ?int $navigationSort = 2;
 

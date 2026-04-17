@@ -1,6 +1,6 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
 
-@source '../../../../app/Filament/**/*';
+@source '../../../../app/Filament/**/*.php';
 @source '../../../../resources/views/filament/**/*.php';
 
 /* UP Visual Identity Guide — Typeface: Montserrat (Avenir/Helvetica substitute for unofficial materials) */

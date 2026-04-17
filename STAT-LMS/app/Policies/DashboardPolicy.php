@@ -10,6 +10,7 @@ class DashboardPolicy
     public function viewGeneral(User $user): bool
     {
         return in_array($user->role, [
+            UserRole::SUPER_ADMIN->value,
             UserRole::COMMITTEE->value,
             UserRole::IT->value,
             UserRole::RR->value,
@@ -19,6 +20,7 @@ class DashboardPolicy
     public function viewBorrows(User $user): bool
     {
         return in_array($user->role, [
+            UserRole::SUPER_ADMIN->value,
             UserRole::COMMITTEE->value,
             UserRole::IT->value,
             UserRole::RR->value,
@@ -28,6 +30,7 @@ class DashboardPolicy
     public function viewAccess(User $user): bool
     {
         return in_array($user->role, [
+            UserRole::SUPER_ADMIN->value,
             UserRole::COMMITTEE->value,
             UserRole::IT->value,
         ]);

@@ -6,14 +6,15 @@ use Illuminate\Console\Command;
 
 class GeneratePasswordEncryptionKeys extends Command
 {
-    protected $signature   = 'app:generate-password-keys {--force : Overwrite existing keys}';
+    protected $signature = 'app:generate-password-keys {--force : Overwrite existing keys}';
+
     protected $description = 'Generate RSA key pair for client-side password encryption';
 
     public function handle(): int
     {
-        $dir        = storage_path('app/keys');
+        $dir = storage_path('app/keys');
         $privatePath = "$dir/password_private.pem";
-        $publicPath  = "$dir/password_public.pem";
+        $publicPath = "$dir/password_public.pem";
 
         if (! is_dir($dir)) {
             mkdir($dir, 0700, true);
@@ -21,17 +22,19 @@ class GeneratePasswordEncryptionKeys extends Command
 
         if (file_exists($privatePath) && ! $this->option('force')) {
             $this->warn('Keys already exist. Use --force to regenerate.');
+
             return self::FAILURE;
         }
 
         $key = openssl_pkey_new([
             'private_key_bits' => 2048,
             'private_key_type' => OPENSSL_KEYTYPE_RSA,
-            'config'           => $this->opensslConfig(),
+            'config' => $this->opensslConfig(),
         ]);
 
         if ($key === false) {
-            $this->error('openssl_pkey_new() failed: ' . (openssl_error_string() ?: 'unknown error'));
+            $this->error('openssl_pkey_new() failed: '.(openssl_error_string() ?: 'unknown error'));
+
             return self::FAILURE;
         }
 
@@ -44,7 +47,7 @@ class GeneratePasswordEncryptionKeys extends Command
         file_put_contents($publicPath, $publicKey);
         chmod($publicPath, 0644);
 
-        $this->info("Keys written to storage/app/keys/");
+        $this->info('Keys written to storage/app/keys/');
         $this->line("  Private: $privatePath");
         $this->line("  Public:  $publicPath");
 
@@ -54,8 +57,11 @@ class GeneratePasswordEncryptionKeys extends Command
     private function opensslConfig(): string
     {
         foreach (['/etc/ssl/openssl.cnf', '/usr/lib/ssl/openssl.cnf', '/usr/local/etc/openssl/openssl.cnf'] as $path) {
-            if (file_exists($path)) return $path;
+            if (file_exists($path)) {
+                return $path;
+            }
         }
+
         return '/etc/ssl/openssl.cnf'; // best guess
     }
 }

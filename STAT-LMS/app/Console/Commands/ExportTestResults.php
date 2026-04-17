@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class ExportTestResults extends Command
 {
@@ -30,10 +30,10 @@ class ExportTestResults extends Command
      */
     public function handle()
     {
-        $xmlPath      = storage_path('app/junit.xml');
-        $outputPath   = $this->option('path');
+        $xmlPath = storage_path('app/junit.xml');
+        $outputPath = $this->option('path');
         $failuresOnly = $this->option('failures-only');
-        $basePath     = base_path();
+        $basePath = base_path();
 
         // Clean up any stale XML from a previous run
         File::delete($xmlPath);
@@ -55,6 +55,7 @@ class ExportTestResults extends Command
             $this->line($process->output());
             $this->line('--- PHPUnit stderr ---');
             $this->line($process->errorOutput());
+
             return 1;
         }
 
@@ -68,6 +69,7 @@ class ExportTestResults extends Command
             $errors = implode(', ', array_map(fn ($e) => $e->message, libxml_get_errors()));
             libxml_clear_errors();
             $this->error("Failed to parse JUnit XML: {$errors}");
+
             return 1;
         }
 
@@ -81,17 +83,17 @@ class ExportTestResults extends Command
             : $xml;
 
         $data = [
-            'date'          => now()->toDayDateTimeString(),
-            'total_tests'   => (int) ($mainSuite['tests']   ?? 0),
-            'failures'      => (int) ($mainSuite['failures'] ?? 0),
-            'errors'        => (int) ($mainSuite['errors']   ?? 0),
-            'time'          => round((float) ($mainSuite['time'] ?? 0), 2),
+            'date' => now()->toDayDateTimeString(),
+            'total_tests' => (int) ($mainSuite['tests'] ?? 0),
+            'failures' => (int) ($mainSuite['failures'] ?? 0),
+            'errors' => (int) ($mainSuite['errors'] ?? 0),
+            'time' => round((float) ($mainSuite['time'] ?? 0), 2),
             'failures_only' => $failuresOnly,
-            'suites'        => [],
+            'suites' => [],
         ];
 
         // 5. Gather every <testcase> node regardless of nesting depth
-        $testCases     = $xml->xpath('//testcase');
+        $testCases = $xml->xpath('//testcase');
         $groupedSuites = [];
 
         foreach ($testCases as $case) {
@@ -99,24 +101,24 @@ class ExportTestResults extends Command
 
             if (! isset($groupedSuites[$className])) {
                 $groupedSuites[$className] = [
-                    'name'     => class_basename($className),
-                    'tests'    => 0,
+                    'name' => class_basename($className),
+                    'tests' => 0,
                     'failures' => 0,
-                    'cases'    => [],
+                    'cases' => [],
                 ];
             }
 
             $groupedSuites[$className]['tests']++;
 
-            $status  = 'passed';
+            $status = 'passed';
             $message = '';
 
             if (isset($case->failure)) {
-                $status  = 'failed';
+                $status = 'failed';
                 $message = (string) $case->failure;
                 $groupedSuites[$className]['failures']++;
             } elseif (isset($case->error)) {
-                $status  = 'error';
+                $status = 'error';
                 $message = (string) $case->error;
                 $groupedSuites[$className]['failures']++;
             } elseif (isset($case->skipped)) {
@@ -124,10 +126,10 @@ class ExportTestResults extends Command
             }
 
             $groupedSuites[$className]['cases'][] = [
-                'name'    => (string) $case['name'],
-                'class'   => $className,
-                'time'    => round((float) ($case['time'] ?? 0), 3),
-                'status'  => $status,
+                'name' => (string) $case['name'],
+                'class' => $className,
+                'time' => round((float) ($case['time'] ?? 0), 3),
+                'status' => $status,
                 'message' => $message,
             ];
         }
@@ -176,7 +178,7 @@ class ExportTestResults extends Command
                 $passed,
                 $data['failures'],
                 $data['errors'],
-                $data['time'] . 's',
+                $data['time'].'s',
             ]]
         );
 

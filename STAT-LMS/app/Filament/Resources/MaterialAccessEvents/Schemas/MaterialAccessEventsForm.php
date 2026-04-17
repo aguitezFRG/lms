@@ -2,14 +2,11 @@
 
 namespace App\Filament\Resources\MaterialAccessEvents\Schemas;
 
-use Filament\Schemas\Schema;
-
-use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TagsInput;
-
 use Filament\Forms\Components\ToggleButtons;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 
 class MaterialAccessEventsForm
 {
@@ -68,11 +65,10 @@ class MaterialAccessEventsForm
                         DatePicker::make('due_at')
                             ->label('Due Date')
                             ->minDate(now()->addDays(1)->startOfDay())
-                            ->rules(['nullable', 'date', 'after_or_equal:' . now()->addDays(1)->toDateString()])
+                            ->rules(['nullable', 'date', 'after_or_equal:'.now()->addDays(1)->toDateString()])
                             ->formatStateUsing(fn ($state) => $state ?? now()->addDays(14)->toDateString())
                             ->live()
-                            ->afterStateUpdated(fn ($state, callable $set) =>
-                                $set('due_at', $state ? $state . ' 23:59:59' : null)
+                            ->afterStateUpdated(fn ($state, callable $set) => $set('due_at', $state ? $state.' 23:59:59' : null)
                             ),
 
                         DatePicker::make('returned_at')
@@ -80,8 +76,7 @@ class MaterialAccessEventsForm
                             ->maxDate(now())
                             ->rules(['nullable', 'date', 'before_or_equal:today'])
                             ->live()
-                            ->afterStateUpdated(fn ($state, callable $set) =>
-                                $set('returned_at', $state ? $state . ' 23:59:59' : null)
+                            ->afterStateUpdated(fn ($state, callable $set) => $set('returned_at', $state ? $state.' 23:59:59' : null)
                             ),
                     ])
                     ->columns(1)

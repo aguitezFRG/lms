@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RrMaterials;
 
+use App\Enums\UserRole;
 use App\Filament\Resources\RrMaterials\Pages\CreateRrMaterials;
 use App\Filament\Resources\RrMaterials\Pages\EditRrMaterials;
 use App\Filament\Resources\RrMaterials\Pages\ListRrMaterials;
@@ -11,15 +12,13 @@ use App\Filament\Resources\RrMaterials\Schemas\RrMaterialsInfolist;
 use App\Filament\Resources\RrMaterials\Tables\RrMaterialsTable;
 use App\Models\RrMaterials;
 use BackedEnum;
-use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
-use App\Enums\UserRole;
+use UnitEnum;
 
 class RrMaterialsResource extends Resource
 {
@@ -31,7 +30,7 @@ class RrMaterialsResource extends Resource
 
     protected static ?string $navigationLabel = 'Material Copy';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Repository';
+    protected static string|UnitEnum|null $navigationGroup = 'Repository';
 
     // Header Breadcrumb
     protected static ?string $breadcrumb = 'Reading Room Materials';
@@ -93,7 +92,9 @@ class RrMaterialsResource extends Resource
         $user = auth()->user();
         $query = parent::getEloquentQuery();
 
-        if (!$user) return $query->whereNull('id'); // cleaner than whereRaw
+        if (! $user) {
+            return $query->whereNull('id');
+        } // cleaner than whereRaw
 
         $userLevel = UserRole::from($user->role)->getAccessLevel();
 
