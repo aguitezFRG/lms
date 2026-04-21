@@ -54,6 +54,7 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_banned' => 'boolean',
+            'role' => UserRole::class,
         ];
     }
 
@@ -80,8 +81,8 @@ class User extends Authenticatable implements FilamentUser
         // }
 
         return match ($panel->getId()) {
-            'admin' => in_array($this->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value]),
-            'user' => in_array($this->role, [UserRole::FACULTY->value, UserRole::STUDENT->value]),
+            'admin' => in_array($this->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT, UserRole::RR]),
+            'user' => in_array($this->role, [UserRole::FACULTY, UserRole::STUDENT]),
             default => false,
         };
 

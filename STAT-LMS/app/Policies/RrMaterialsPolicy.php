@@ -21,7 +21,7 @@ class RrMaterialsPolicy
      */
     public function view(User $user, RrMaterials $rrMaterials): bool
     {
-        $user_access_level = UserRole::from($user->role)->getAccessLevel();
+        $user_access_level = $user->role->getAccessLevel();
         $RR_access_level = $rrMaterials->parent->access_level ?? 1;
 
         return $user_access_level >= $RR_access_level;
@@ -32,7 +32,7 @@ class RrMaterialsPolicy
      */
     public function create(User $user): bool
     {
-        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value, UserRole::FACULTY->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT, UserRole::RR, UserRole::FACULTY]);
     }
 
     /**
@@ -40,12 +40,12 @@ class RrMaterialsPolicy
      */
     public function update(User $user, RrMaterials $rrMaterials): bool
     {
-        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value, UserRole::FACULTY->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT, UserRole::RR, UserRole::FACULTY]);
     }
 
     public function deleteAny(User $user): bool
     {
-        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
     /**
@@ -53,12 +53,12 @@ class RrMaterialsPolicy
      */
     public function delete(User $user, RrMaterials $rrMaterials): bool
     {
-        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
     public function restoreAny(User $user): bool
     {
-        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
     /**
@@ -66,7 +66,7 @@ class RrMaterialsPolicy
      */
     public function restore(User $user, RrMaterials $rrMaterials): bool
     {
-        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
     /**
@@ -74,6 +74,6 @@ class RrMaterialsPolicy
      */
     public function forceDelete(User $user, RrMaterials $rrMaterials): bool
     {
-        return in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value]);
+        return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 }

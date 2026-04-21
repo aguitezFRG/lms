@@ -75,12 +75,12 @@ class ViewRrMaterials extends ViewRecord
         }
 
         // 2. Super Admin,IT and Committee can always view
-        if (in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::IT->value, UserRole::COMMITTEE->value])) {
+        if (in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::IT, UserRole::COMMITTEE])) {
             return true;
         }
 
         // 3. Check access level
-        $userAccessLevel = UserRole::from($user->role)->getAccessLevel();
+        $userAccessLevel = $user->role->getAccessLevel();
         $materialAccessLevel = (int) $record->parent->access_level;
 
         if ($userAccessLevel < $materialAccessLevel) {

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\RrMaterials;
 
-use App\Enums\UserRole;
 use App\Filament\Resources\RrMaterials\Pages\CreateRrMaterials;
 use App\Filament\Resources\RrMaterials\Pages\EditRrMaterials;
 use App\Filament\Resources\RrMaterials\Pages\ListRrMaterials;
@@ -96,7 +95,7 @@ class RrMaterialsResource extends Resource
             return $query->whereNull('id');
         } // cleaner than whereRaw
 
-        $userLevel = UserRole::from($user->role)->getAccessLevel();
+        $userLevel = $user->role->getAccessLevel();
 
         // Filter based on the access_level of the related Parent material
         return $query->whereHas('parent', function (Builder $query) use ($userLevel) {

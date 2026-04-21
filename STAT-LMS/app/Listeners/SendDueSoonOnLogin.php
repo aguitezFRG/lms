@@ -2,8 +2,10 @@
 
 namespace App\Listeners;
 
+use App\Enums\UserRole;
 use App\Models\MaterialAccessEvents;
 use App\Notifications\BorrowDueSoon;
+use App\Models\User;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\DB;
 
@@ -11,10 +13,11 @@ class SendDueSoonOnLogin
 {
     public function handle(Login $event): void
     {
+        /** @var User $user */
         $user = $event->user;
 
         // Only relevant for students and faculty who can borrow
-        if (! in_array($user->role, ['student', 'faculty'])) {
+        if (! in_array($user->role, [UserRole::STUDENT, UserRole::FACULTY])) {
             return;
         }
 

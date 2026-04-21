@@ -80,19 +80,19 @@ class MaterialStreamController extends Controller
         }
 
         $level = (int) ($record->parent?->access_level ?? 1);
-        $userAccessLevel = UserRole::from($user->role)->getAccessLevel();
+        $userAccessLevel = $user->role->getAccessLevel();
 
         if ($userAccessLevel < $level) {
             abort(403, 'Unauthorized access to secured library material.');
         }
 
         // Committee bypass approval requirement
-        if (in_array($user->role, [UserRole::SUPER_ADMIN->value,UserRole::COMMITTEE->value])) {
+        if (in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE])) {
             return;
         }
 
         // IT bypasses approval requirement only for level 1 and 2 materials
-        if ($user->role === UserRole::IT->value && $level <= 2) {
+        if ($user->role === UserRole::IT && $level <= 2) {
             return;
         }
 
