@@ -190,7 +190,7 @@ class ViewCatalog extends ViewRecord
         }
 
         // Committee and IT bypass approval requirement
-        if (in_array($user->role, [UserRole::COMMITTEE->value, UserRole::IT->value])) {
+        if (in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value])) {
             return RrMaterials::where('material_parent_id', $this->record->id)
                 ->where('is_digital', true)
                 ->whereNotNull('file_name')

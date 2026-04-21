@@ -87,7 +87,7 @@ class MaterialStreamController extends Controller
         }
 
         // Committee bypass approval requirement
-        if (in_array($user->role, [UserRole::COMMITTEE->value])) {
+        if (in_array($user->role, [UserRole::SUPER_ADMIN->value,UserRole::COMMITTEE->value])) {
             return;
         }
 

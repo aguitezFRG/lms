@@ -74,8 +74,8 @@ class ViewRrMaterials extends ViewRecord
             return false; // Not logged in, deny access
         }
 
-        // 2. IT and Committee can always view
-        if (in_array($user->role, [UserRole::IT->value, UserRole::COMMITTEE->value])) {
+        // 2. Super Admin,IT and Committee can always view
+        if (in_array($user->role, [UserRole::SUPER_ADMIN->value, UserRole::IT->value, UserRole::COMMITTEE->value])) {
             return true;
         }
 

@@ -38,7 +38,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (app()->environment('production') || request()->hasHeader('X-Forwarded-Proto')) {
+        // Only force HTTPS if X-Forwarded-Proto header is present (ngrok or reverse proxy)
+        if (request()->hasHeader('X-Forwarded-Proto')) {
             URL::forceScheme('https');
         }
 
