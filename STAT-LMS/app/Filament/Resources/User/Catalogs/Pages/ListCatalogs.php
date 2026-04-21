@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\User\Catalogs\Pages;
 
-use App\Enums\UserRole;
 use App\Filament\Resources\User\Catalogs\CatalogResource;
 use App\Models\RrMaterialParents;
 use Filament\Actions\Action;
@@ -243,7 +242,7 @@ class ListCatalogs extends Page
     protected function getQuery(): \Illuminate\Database\Eloquent\Builder
     {
         $user = Auth::user();
-        $userLevel = UserRole::from($user->role)->getAccessLevel();
+        $userLevel = $user->role->getAccessLevel();
 
         return RrMaterialParents::query()
             // Only the columns needed for the card list — keeps the result set lean

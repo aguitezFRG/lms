@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\RrMaterialParents;
 
-use App\Enums\UserRole;
 use App\Filament\Resources\RrMaterialParents\Pages\CreateRrMaterialParents;
 use App\Filament\Resources\RrMaterialParents\Pages\EditRrMaterialParents;
 use App\Filament\Resources\RrMaterialParents\Pages\ListRrMaterialParents;
@@ -100,7 +99,7 @@ class RrMaterialParentsResource extends Resource
             return $query->where('access_level', '<=', 1);
         }
 
-        $userLevel = UserRole::from($user->role)->getAccessLevel();
+        $userLevel = $user->role->getAccessLevel();
 
         // Apply the global scope: User level must be greater than or
         // equal to the material's required access level.

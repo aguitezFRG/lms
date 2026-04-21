@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\User\Catalogs;
 
-use App\Enums\UserRole;
 use App\Filament\Resources\RrMaterialParents\Schemas\RrMaterialParentsInfolist;
 use App\Filament\Resources\User\Catalogs\Pages\ListCatalogs;
 use App\Filament\Resources\User\Catalogs\Pages\ViewCatalog;
@@ -68,7 +67,7 @@ class CatalogResource extends Resource
             return $query->whereRaw('1 = 0');
         }
 
-        $userLevel = UserRole::from($user->role)->getAccessLevel();
+        $userLevel = $user->role->getAccessLevel();
 
         return $query->where('access_level', '<=', $userLevel);
     }

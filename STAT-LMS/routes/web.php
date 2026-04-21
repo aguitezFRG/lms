@@ -10,7 +10,7 @@ Route::get('/', function () {
     if (auth()->check()) {
         $role = auth()->user()->role;
 
-        return in_array($role, [UserRole::SUPER_ADMIN->value, UserRole::COMMITTEE->value, UserRole::IT->value, UserRole::RR->value])
+        return in_array($role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT, UserRole::RR])
             ? redirect('/admin')
             : redirect('/app');
     }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Enums\UserRole;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -39,21 +40,8 @@ class UserInfolist
 
                         TextEntry::make('role')
                             ->badge()
-                            ->colors([
-                                'primary' => 'student',
-                                'success' => 'faculty',
-                                'warning' => 'staff/custodian',
-                                'danger' => 'it',
-                                'info' => 'committee',
-                            ])
-                            ->formatStateUsing(fn (string $state): string => match ($state) {
-                                'student' => 'Student',
-                                'faculty' => 'Faculty',
-                                'staff/custodian' => 'Staff/Custodian',
-                                'it' => 'IT',
-                                'committee' => 'Committee',
-                                default => ucfirst($state),
-                            }),
+                            ->color(fn (UserRole|string $state) => ($state instanceof UserRole ? $state : UserRole::from($state))->getColor())
+                            ->formatStateUsing(fn (UserRole|string $state): string => ($state instanceof UserRole ? $state : UserRole::from($state))->getLabel()),
                     ])->columns(2),
 
                 Section::make('Account Details')

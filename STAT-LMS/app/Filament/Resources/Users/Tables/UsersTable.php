@@ -64,8 +64,8 @@ class UsersTable
                 IconColumn::make('is_banned')
                     ->label('Banned')
                     ->boolean()
-                    ->trueIcon('heroicon-m-no-symbol')
-                    ->falseIcon('heroicon-m-check-circle')
+                    ->trueIcon('heroicon-m-check-circle')
+                    ->falseIcon('heroicon-m-no-symbol')
                     ->trueColor('danger')
                     ->falseColor('success')
                     ->toggleable(isToggledHiddenByDefault: false),
@@ -73,16 +73,8 @@ class UsersTable
                 TextColumn::make('role')
                     ->badge()
                     ->toggleable(isToggledHiddenByDefault: false)
-                    ->color(fn (string $state) => UserRole::from($state)->getColor())
-                    // TO DO: Make this in the enums
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'student' => 'Student',
-                        'faculty' => 'Faculty',
-                        'staff/custodian' => 'Staff/Custodian',
-                        'it' => 'IT',
-                        'committee' => 'Committee',
-                        default => ucfirst($state),
-                    }),
+                    ->color(fn (UserRole|string $state) => ($state instanceof UserRole ? $state : UserRole::from($state))->getColor())
+                    ->formatStateUsing(fn (UserRole|string $state): string => ($state instanceof UserRole ? $state : UserRole::from($state))->getLabel()),
             ])
             ->filters([
                 SelectFilter::make('role')

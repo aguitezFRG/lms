@@ -3,7 +3,6 @@
 namespace App\Filament\Pages\Auth;
 
 use App\Enums\MaterialEventType;
-use App\Enums\UserRole;
 use App\Models\MaterialAccessEvents;
 use App\Services\PasswordEncryptionService;
 use Filament\Actions\Action;
@@ -163,8 +162,8 @@ class AdminProfile extends Page implements HasInfolists, HasTable
                             ->label('Role')
                             ->badge()
                             ->state($user->role)
-                            ->color(fn () => UserRole::from($user->role)->getColor())
-                            ->formatStateUsing(fn () => UserRole::from($user->role)->getLabel()),
+                            ->color(fn () => $user->role->getColor())
+                            ->formatStateUsing(fn () => $user->role->getLabel()),
 
                         TextEntry::make('email')
                             ->label('Email')
