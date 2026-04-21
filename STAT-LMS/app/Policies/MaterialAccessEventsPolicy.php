@@ -49,7 +49,7 @@ class MaterialAccessEventsPolicy
         // Users can update if they're the one who initiated the request, but only if it hasn't been approved yet (i.e. approver_id is null)
         return in_array($user_role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]) ||
                $updated_by == $user->id ||
-               ($user_role === UserRole::RR && $materialAccessEvents->material?->parent?->access_level == 1) ||
+               ($user_role === UserRole::RR && $materialAccessEvents->material?->parent?->access_level == 1 && $materialAccessEvents->material?->is_digital == false) ||
                ($materialAccessEvents->user_id == $user->id && $materialAccessEvents->approver_id == null);
     }
 
