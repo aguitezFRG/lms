@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\UserLogin;
+use App\Filament\Pages\User\UserOnboarding;
 use App\Filament\Pages\User\UserProfile;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -42,6 +43,7 @@ class UserPanelProvider extends PanelProvider
             '))
             ->brandName('INSTAT-RR-SPRIS')
             ->login(UserLogin::class)
+            ->homeUrl(fn () => UserOnboarding::getUrl())
             ->colors([
                 'primary' => Color::hex('#8D1436'), // UP Maroon (PANTONE 1955C)
                 'success' => Color::hex('#014421'), // UP Forest Green (PANTONE 7484C)

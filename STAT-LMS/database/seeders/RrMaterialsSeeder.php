@@ -28,6 +28,7 @@ class RrMaterialsSeeder extends Seeder
 
     // Physical copies
     public const STATS_BOOK_PHYSICAL_ID = '33333333-3333-3333-3333-000000000007';
+
     public const STATS_BOOK_PHYSICAL_2_ID = '33333333-3333-3333-3333-000000000008';
 
     public const PSA_JOURNAL_PHYSICAL_ID = '33333333-3333-3333-3333-000000000009';
