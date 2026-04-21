@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
         User::factory(10)->create();
 
         // 3. Create specific users with known credentials for testing
+        User::factory()->committee()->create();
         User::factory()->it()->create();
         User::factory()->staff()->create();
         User::factory()->faculty()->create();
