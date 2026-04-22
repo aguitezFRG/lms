@@ -27,9 +27,10 @@ class PhysicalDigitalChartWidget extends ChartWidget
     protected function getFilters(): ?array
     {
         return [
-            'weekly' => 'Weekly',
+            'daily'   => 'Daily',
+            'weekly'  => 'Weekly',
             'monthly' => 'Monthly',
-            'yearly' => 'Yearly',
+            'yearly'  => 'Yearly',
         ];
     }
 
@@ -70,12 +71,26 @@ class PhysicalDigitalChartWidget extends ChartWidget
     protected function getOptions(): array
     {
         return [
+            'maintainAspectRatio' => false,
+            'responsive' => true,
+            'interaction' => [
+                'mode' => 'index',
+                'intersect' => false,
+            ],
             'plugins' => ['legend' => ['display' => true]],
             'scales' => [
-                'x' => ['grid' => ['color' => 'rgba(156,163,175,0.2)']],
-                'y' => ['grid' => ['color' => 'rgba(156,163,175,0.2)'], 'beginAtZero' => true],
+                'x' => ['grid' => (object) []],
+                'y' => ['grid' => (object) [], 'beginAtZero' => true],
+            ],
+            'layout' => [
+                'padding' => ['bottom' => 0],
             ],
         ];
+    }
+
+    protected function getContainerStyle(): string
+    {
+        return 'max-height: 75vh; height: 75vh;';
     }
 
     private function buildSeries(): array

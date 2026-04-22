@@ -51,14 +51,16 @@ class VisitorBorrowerChartWidget extends ChartWidget
                     'data' => $visitors,
                     'backgroundColor' => '#1a3a8f',
                     'borderRadius' => 4,
-                    'barThickness' => 50,
+                    'barPercentage' => 0.7,
+                    'categoryPercentage' => 0.8,
                 ],
                 [
                     'label' => 'Borrower',
                     'data' => $borrowers,
                     'backgroundColor' => '#F3AA2C',
                     'borderRadius' => 4,
-                    'barThickness' => 50,
+                    'barPercentage' => 0.7,
+                    'categoryPercentage' => 0.8,
                 ],
             ],
         ];
@@ -67,12 +69,26 @@ class VisitorBorrowerChartWidget extends ChartWidget
     protected function getOptions(): array
     {
         return [
+            'maintainAspectRatio' => false,
+            'responsive' => true,
+            'interaction' => [
+                'mode' => 'index',
+                'intersect' => false,
+            ],
             'plugins' => ['legend' => ['display' => true]],
             'scales' => [
-                'x' => ['grid' => ['color' => 'rgba(156,163,175,0.2)']],
-                'y' => ['grid' => ['color' => 'rgba(156,163,175,0.2)'], 'beginAtZero' => true],
+                'x' => ['grid' => (object) []],
+                'y' => ['grid' => (object) [], 'beginAtZero' => true],
+            ],
+            'layout' => [
+                'padding' => ['bottom' => 0],
             ],
         ];
+    }
+
+    protected function getContainerStyle(): string
+    {
+        return 'max-height: 75vh; height: 75vh;';
     }
 
     private function buildSeries(): array

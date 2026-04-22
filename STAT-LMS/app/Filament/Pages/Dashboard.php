@@ -2,9 +2,7 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Widgets\Dashboard\PhysicalDigitalChartWidget;
 use App\Filament\Widgets\Dashboard\StatsOverviewWidget;
-use App\Filament\Widgets\Dashboard\VisitorBorrowerChartWidget;
 use App\Models\MaterialAccessEvents;
 use BackedEnum;
 use Filament\Pages\Dashboard as BaseDashboard;
@@ -23,6 +21,8 @@ class Dashboard extends BaseDashboard
     protected $listeners = ['request-actioned' => '$refresh'];
 
     public string $activeTab = 'general';
+
+    public string $activeChartTab = 'visitor-borrower';
 
     public function mount(): void
     {
@@ -47,14 +47,19 @@ class Dashboard extends BaseDashboard
         }
     }
 
+    public function setChartTab(string $tab): void
+    {
+        if (in_array($tab, ['visitor-borrower', 'physical-digital'])) {
+            $this->activeChartTab = $tab;
+        }
+    }
+
     // ── Widget Registration (General tab only) ────────────────────────────────
 
     public function getWidgets(): array
     {
         return [
             StatsOverviewWidget::class,
-            VisitorBorrowerChartWidget::class,
-            PhysicalDigitalChartWidget::class,
         ];
     }
 
@@ -85,6 +90,7 @@ class Dashboard extends BaseDashboard
 
         return [
             'activeTab' => $this->activeTab,
+            'activeChartTab' => $this->activeChartTab,
             'canViewGeneral' => Gate::allows('viewGeneral', static::class),
             'canViewBorrows' => $canViewBorrows,
             'canViewAccess' => $canViewAccess,
