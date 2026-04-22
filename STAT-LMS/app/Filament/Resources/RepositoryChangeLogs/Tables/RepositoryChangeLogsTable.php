@@ -42,13 +42,15 @@ class RepositoryChangeLogsTable
                     ->label('Material Title')
                     ->placeholder('N/A')
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable()
+                    ->tooltip(fn ($record) => $record->materialParent?->title),
 
                 TextColumn::make('material.parent.title')
                     ->label('Copy Title')
                     ->placeholder('N/A')
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable()
+                    ->tooltip(fn ($record) => $record->material?->parent?->title),
 
                 TextColumn::make('targetUser.name')
                     ->label('Target User')

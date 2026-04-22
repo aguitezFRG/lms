@@ -33,7 +33,8 @@ class RrMaterialsTable
                     ->label('Title')
                     ->searchable()
                     ->sortable()
-                    ->limit(30),
+                    ->limit(50)
+                    ->tooltip(fn ($record) => $record->parent?->title),
 
                 IconColumn::make('is_digital')
                     ->label('Format')

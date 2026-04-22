@@ -30,7 +30,8 @@ class UsersTable
                     ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: false)
-                    ->limit(16, end: '...'),
+                    ->limit(16, end: '...')
+                    ->tooltip(fn ($record) => $record->id),
 
                 TextColumn::make('l_name')
                     ->label('Last Name')
