@@ -34,6 +34,30 @@ class MaterialAccessEvents extends Model
         'rejection_reason' => 'array',
     ];
 
+    protected static function booted(): void
+    {
+        static::updated(function (MaterialAccessEvents $event) {
+            // Request is approved -> mark material as unavailable
+            if ($event->wasChanged('status') && $event->status === 'approved') {
+                $event->material()->update(['is_available' => false]);
+            }
+
+            // Material is returned -> mark material as available and event as completed
+            if ($event->wasChanged('returned_at') && $event->returned_at !== null) {
+                $event->material()->update(['is_available' => true]);
+                $event->update(['status' => 'returned']);
+                $event->update(['completed_at' => now()]);
+            }
+
+            // Request is rejected -> mark event as completed (material availability remains unchanged)
+            if ($event->wasChanged('status') && $event->status === 'rejected') {
+                $event->material()->update(['is_available' => true]);
+                $event->update(['completed_at' => now()]);
+                $event->update(['returned_at' => null]);
+            }
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

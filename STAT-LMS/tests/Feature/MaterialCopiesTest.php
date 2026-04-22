@@ -287,6 +287,38 @@ class MaterialCopiesTest extends TestCase
         $this->assertNotSoftDeleted('rr_materials', ['id' => $copy->id]);
     }
 
+    /** @test */
+    public function soft_deleting_a_copy_sets_is_available_to_false(): void
+    {
+        // Use raw factories to preserve booted() hooks (make* helpers flush event listeners)
+        $parent = RrMaterialParents::factory()->create();
+        $copy = RrMaterials::factory()->create([
+            'material_parent_id' => $parent->id,
+            'is_available' => true,
+        ]);
+
+        $copy->delete();
+
+        $this->assertSoftDeleted('rr_materials', ['id' => $copy->id]);
+        $this->assertDatabaseHas('rr_materials', ['id' => $copy->id, 'is_available' => false]);
+    }
+
+    /** @test */
+    public function restoring_a_deleted_copy_sets_is_available_to_true(): void
+    {
+        $parent = RrMaterialParents::factory()->create();
+        $copy = RrMaterials::factory()->create([
+            'material_parent_id' => $parent->id,
+            'is_available' => true,
+        ]);
+
+        $copy->delete();
+        $copy->restore();
+
+        $this->assertNotSoftDeleted('rr_materials', ['id' => $copy->id]);
+        $this->assertDatabaseHas('rr_materials', ['id' => $copy->id, 'is_available' => true]);
+    }
+
     // ── Document Stream Route ─────────────────────────────────────────────────
 
     /**

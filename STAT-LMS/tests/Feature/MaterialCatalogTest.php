@@ -286,6 +286,41 @@ class MaterialCatalogTest extends TestCase
     }
 
     /** @test */
+    public function soft_deleting_a_parent_sets_all_copies_is_available_to_false(): void
+    {
+        // Use raw factories to preserve booted() hooks (make* helpers flush event listeners)
+        $parent = RrMaterialParents::factory()->create();
+        $copyA = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_available' => true]);
+        $copyB = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_available' => true]);
+
+        $parent->delete();
+
+        $this->assertDatabaseHas('rr_materials', ['id' => $copyA->id, 'is_available' => false]);
+        $this->assertDatabaseHas('rr_materials', ['id' => $copyB->id, 'is_available' => false]);
+    }
+
+    /** @test */
+    public function restoring_parent_respects_individual_copy_deletion_precedence(): void
+    {
+        $parent = RrMaterialParents::factory()->create();
+        $copyA = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_available' => true]);
+        $copyB = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_available' => true]);
+
+        // Delete copyB individually before deleting the parent
+        $copyB->delete();
+        $parent->delete();
+        $parent->restore();
+
+        // copyA: not individually deleted — restored to available
+        $this->assertNotSoftDeleted('rr_materials', ['id' => $copyA->id]);
+        $this->assertDatabaseHas('rr_materials', ['id' => $copyA->id, 'is_available' => true]);
+
+        // copyB: individually deleted before parent — must stay trashed and unavailable
+        $this->assertSoftDeleted('rr_materials', ['id' => $copyB->id]);
+        $this->assertDatabaseHas('rr_materials', ['id' => $copyB->id, 'is_available' => false]);
+    }
+
+    /** @test */
     public function soft_deleted_materials_are_hidden_by_default_in_listing(): void
     {
         $active = $this->makeMaterial(1, ['title' => 'Active Material']);

@@ -45,6 +45,14 @@ class RrMaterials extends Model
                 Storage::disk('local')->delete($oldPath);
             }
         });
+
+        static::deleting(function (RrMaterials $copy) {
+            $copy->updateQuietly(['is_available' => false]);
+        });
+
+        static::restored(function (RrMaterials $copy) {
+            $copy->updateQuietly(['is_available' => true]);
+        });
     }
 
     public function parent()
