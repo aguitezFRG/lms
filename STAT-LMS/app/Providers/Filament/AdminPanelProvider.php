@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\AdminOnboarding;
 use App\Filament\Pages\Auth\AdminLogin;
 use App\Filament\Pages\Auth\AdminProfile;
 use App\Filament\Pages\Dashboard;
@@ -33,6 +34,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->homeUrl(fn () => AdminOnboarding::getUrl())
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->brandLogoHeight('2.5rem')
             ->brandLogo(new HtmlString('

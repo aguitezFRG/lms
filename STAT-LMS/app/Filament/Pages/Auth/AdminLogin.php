@@ -2,7 +2,9 @@
 
 namespace App\Filament\Pages\Auth;
 
+use App\Filament\Pages\AdminOnboarding;
 use Filament\Actions\Action;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Auth\Pages\Login;
 use Filament\Facades\Filament;
 use Illuminate\Contracts\Support\Htmlable;
@@ -40,6 +42,24 @@ class AdminLogin extends Login
         }
 
         parent::mount();
+    }
+
+    /**
+     * After successful authentication, redirect to the onboarding page
+     * unless a specific intended URL is already stored in the session.
+     */
+    protected function getAuthenticatedUrl(): string
+    {
+        return AdminOnboarding::getUrl();
+    }
+
+    public function authenticate(): ?LoginResponse
+    {
+        if (! session()->has('url.intended')) {
+            session()->put('url.intended', $this->getAuthenticatedUrl());
+        }
+
+        return parent::authenticate();
     }
 
     protected function getAuthenticateFormAction(): Action
