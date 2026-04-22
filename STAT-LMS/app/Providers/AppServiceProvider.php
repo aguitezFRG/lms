@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Enums\UserRole;
 use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\SystemUsage;
 use App\Listeners\SendDueSoonOnLogin;
 use App\Models\MaterialAccessEvents;
 use App\Models\RrMaterialParents;
@@ -12,16 +14,17 @@ use App\Observers\MaterialAccessEventsObserver;
 use App\Observers\RepositoryChangeLogsObserver;
 use App\Observers\UserObserver;
 use App\Policies\DashboardPolicy;
+use App\Policies\SystemUsagePolicy;
 use Filament\Actions\Action;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Blade;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -70,6 +73,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::policy(Dashboard::class, DashboardPolicy::class);
+        Gate::policy(SystemUsage::class, SystemUsagePolicy::class);
 
         RrMaterials::observe(RepositoryChangeLogsObserver::class);
         RrMaterialParents::observe(RepositoryChangeLogsObserver::class);

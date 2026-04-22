@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Enums\UserRole;
+use App\Filament\Widgets\SystemUsage\SystemUsageStatsWidget;
 use App\Models\MaterialAccessEvents;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -26,11 +27,11 @@ class SystemUsage extends Page
 
     protected static ?int $navigationSort = 1;
 
-    public string $activeTab = 'summary';
+    public string $activeTab = 'materials';
 
     protected ?string $pollingInterval = '120s';
 
-    // Filter state
+    // Filter state for export (used by export action)
     public ?string $filterStatus = null;
 
     public ?string $filterType = null;
@@ -53,73 +54,11 @@ class SystemUsage extends Page
 
     public function setTab(string $tab): void
     {
-        $this->activeTab = $tab;
+        $allowedTabs = ['materials', 'trend', 'users'];
+        if (in_array($tab, $allowedTabs)) {
+            $this->activeTab = $tab;
+        }
     }
-
-    // ── Summary Statistics ────────────────────────────────────────────────────
-
-    public function getSummaryStats(): array
-    {
-        $query = MaterialAccessEvents::query()
-            ->with(['material.parent', 'user'])
-            ->whereIn('event_type', ['request', 'borrow']);
-
-        $total = $query->count();
-        $pending = (clone $query)->where('status', 'pending')->count();
-        $approved = (clone $query)->where('status', 'approved')->count();
-        $rejected = (clone $query)->where('status', 'rejected')->count();
-        $revoked = (clone $query)->where('status', 'revoked')->count();
-        $overdue = (clone $query)->where('is_overdue', true)->count();
-        $overdueRate = $total > 0 ? round(($overdue / $total) * 100, 1) : 0;
-
-        // Most requested materials (top 5)
-        $topMaterials = MaterialAccessEvents::query()
-            ->selectRaw('rr_material_id, COUNT(*) as request_count')
-            ->whereIn('event_type', ['request', 'borrow'])
-            ->groupBy('rr_material_id')
-            ->orderByDesc('request_count')
-            ->limit(5)
-            ->with('material.parent')
-            ->get()
-            ->map(fn ($row) => [
-                'title' => $row->material?->parent?->title ?? 'Unknown',
-                'count' => $row->request_count,
-            ]);
-
-        // Monthly borrow/request trend (last 6 months)
-        $monthlyTrend = MaterialAccessEvents::query()
-            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as count")
-            ->whereIn('event_type', ['request', 'borrow'])
-            ->where('created_at', '>=', now()->subMonths(6))
-            ->groupByRaw("DATE_FORMAT(created_at, '%Y-%m')")
-            ->orderBy('month')
-            ->get()
-            ->map(fn ($row) => [
-                'month' => $row->month,
-                'count' => $row->count,
-            ]);
-
-        // Most active users (top 5)
-        $topUsers = MaterialAccessEvents::query()
-            ->selectRaw('user_id, COUNT(*) as request_count')
-            ->whereIn('event_type', ['request', 'borrow'])
-            ->groupBy('user_id')
-            ->orderByDesc('request_count')
-            ->limit(5)
-            ->with('user')
-            ->get()
-            ->map(fn ($row) => [
-                'name' => $row->user?->name ?? 'Unknown',
-                'count' => $row->request_count,
-            ]);
-
-        return compact(
-            'total', 'pending', 'approved', 'rejected', 'revoked',
-            'overdue', 'overdueRate', 'topMaterials', 'monthlyTrend', 'topUsers'
-        );
-    }
-
-    // ── CSV Export ────────────────────────────────────────────────────────────
 
     protected function getHeaderActions(): array
     {
@@ -131,11 +70,11 @@ class SystemUsage extends Page
                 ->tooltip('Refresh the data')
                 ->action(fn () => $this->dispatch('$refresh')),
 
-            Action::make('downloadCsv')
-                ->label('Download CSV')
+            Action::make('export_preview')
+                ->label('Export Data')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success')
-                ->action(fn () => $this->exportCsv()),
+                ->url(fn () => SystemUsageExportPreview::getUrl()),
         ];
     }
 
@@ -203,11 +142,17 @@ class SystemUsage extends Page
         ]);
     }
 
+    protected function getWidgets(): array
+    {
+        return [
+            SystemUsageStatsWidget::class,
+        ];
+    }
+
     protected function getViewData(): array
     {
         return [
             'activeTab' => $this->activeTab,
-            'stats' => $this->activeTab === 'summary' ? $this->getSummaryStats() : [],
         ];
     }
 }
