@@ -34,9 +34,17 @@ class MaterialAccessEventsObserver
      */
     public function updated(MaterialAccessEvents $materialAccessEvents): void
     {
+        if (! $materialAccessEvents->wasChanged('status')) {
+            return;
+        }
+
+        if ($materialAccessEvents->status === 'approved') {
+            $materialAccessEvents->material?->update(['is_available' => false]);
+            $materialAccessEvents->updateQuietly(['approved_at' => now()]);
+        }
+
         // Notify the user when their request is approved or rejected
         if (
-            $materialAccessEvents->wasChanged('status') &&
             in_array($materialAccessEvents->status, ['approved', 'rejected']) &&
             $materialAccessEvents->user
         ) {

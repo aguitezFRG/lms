@@ -199,6 +199,44 @@ class MaterialAccessEventsTest extends TestCase
             ->assertHasErrors(['data.due_at']);
     }
 
+    /** @test */
+    public function approving_a_request_sets_copy_is_available_to_false(): void
+    {
+        $event = $this->makeEvent(['status' => 'pending']);
+        $copyId = $event->rr_material_id;
+
+        $this->assertDatabaseHas('rr_materials', ['id' => $copyId, 'is_available' => true]);
+
+        $event->update(['status' => 'approved']);
+
+        $this->assertDatabaseHas('rr_materials', ['id' => $copyId, 'is_available' => false]);
+    }
+
+    /** @test */
+    public function approving_a_request_populates_approved_at(): void
+    {
+        $event = $this->makeEvent(['status' => 'pending']);
+
+        $this->assertNull($event->fresh()->approved_at);
+
+        $event->update(['status' => 'approved']);
+
+        $this->assertNotNull($event->fresh()->approved_at);
+    }
+
+    /** @test */
+    public function rejecting_a_request_does_not_change_copy_availability(): void
+    {
+        $event = $this->makeEvent(['status' => 'pending']);
+        $copyId = $event->rr_material_id;
+
+        $this->assertDatabaseHas('rr_materials', ['id' => $copyId, 'is_available' => true]);
+
+        $event->update(['status' => 'rejected']);
+
+        $this->assertDatabaseHas('rr_materials', ['id' => $copyId, 'is_available' => true]);
+    }
+
     // ── Rejection ─────────────────────────────────────────────────────────────
 
     /**

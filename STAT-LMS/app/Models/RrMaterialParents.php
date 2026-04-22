@@ -54,6 +54,16 @@ class RrMaterialParents extends Model
                 $user->notify(new AccessLevelChanged($material, $oldLevel, $newLevel));
             });
         });
+
+        // If a parent material is deleted, mark all its copies as unavailable
+        static::deleted(function (RrMaterialParents $parent) {
+            $parent->materials()->withTrashed()->update(['is_available' => false]);
+        });
+
+        // If a parent material is restored, mark all its copies as available (only if they are not soft-deleted themselves)
+        static::restored(function (RrMaterialParents $parent) {
+            $parent->materials()->withTrashed()->whereNull('deleted_at')->update(['is_available' => true]);
+        });
     }
 
     public function authorUser()
