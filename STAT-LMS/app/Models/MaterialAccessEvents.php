@@ -27,6 +27,7 @@ class MaterialAccessEvents extends Model
     protected $casts = [
         'due_at' => 'datetime',
         'returned_at' => 'datetime',
+        'created_at' => 'datetime',
         'is_overdue' => 'boolean',
         'approved_at' => 'datetime',
         'completed_at' => 'datetime',

@@ -4,8 +4,8 @@ namespace App\Listeners;
 
 use App\Enums\UserRole;
 use App\Models\MaterialAccessEvents;
-use App\Notifications\BorrowDueSoon;
 use App\Models\User;
+use App\Notifications\BorrowDueSoon;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\DB;
 
