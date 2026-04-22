@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\MaterialAccessEvents\Tables;
 
 use App\Enums\MaterialEventType;
+use App\Models\MaterialAccessEvents;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -10,9 +11,8 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,13 +26,13 @@ class MaterialAccessEventsTable
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('user.name')
-                    ->label('User')
+                    ->label('Requester')
                     ->searchable()
                     ->sortable()
                     ->limit(20),
 
                 TextColumn::make('material.parent.title')
-                    ->label('Title')
+                    ->label('Material')
                     ->searchable()
                     ->sortable()
                     ->limit(30)
@@ -47,42 +47,69 @@ class MaterialAccessEventsTable
 
                 TextColumn::make('status')
                     ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending' => 'warning',
+                        'approved' => 'success',
+                        'returned' => 'gray',
+                        'rejected', 'revoked' => 'danger',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state) => ucfirst($state))
                     ->searchable()
                     ->sortable(),
 
+                TextColumn::make('created_at')
+                    ->label('Requested')
+                    ->dateTime('M d, Y')
+                    ->sortable(),
+
+                TextColumn::make('due_at')
+                    ->label('Due Date')
+                    ->dateTime('M d, Y')
+                    ->placeholder('—')
+                    ->color(fn (MaterialAccessEvents $record) => $record->is_overdue ? 'danger' : null)
+                    ->description(fn (MaterialAccessEvents $record) => $record->is_overdue ? 'Overdue!' : null),
+
                 TextColumn::make('approver.name')
-                    ->label('Updated By')
+                    ->label('Processed By')
                     ->searchable()
                     ->sortable()
-                    ->default('-----------')
-                    ->toggleable(isToggledHiddenByDefault: false),
+                    ->default('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('returned_at')
+                    ->label('Returned On')
+                    ->dateTime('M d, Y')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 TrashedFilter::make(),
-                Filter::make('Status')
-                    ->schema([
-                        Select::make('status')
-                            ->options([
-                                'pending' => 'Pending',
-                                'approved' => 'Approved',
-                                'rejected' => 'Rejected',
-                                'revoked' => 'Revoked',
-                            ]),
+                SelectFilter::make('circulation_status')
+                    ->label('Circulation Status')
+                    ->placeholder('All')
+                    ->options([
+                        'distributed' => 'Distributed',
+                        'overdue' => 'Overdue',
+                        'returned' => 'Returned',
+                        'revoked' => 'Revoked',
                     ])
                     ->query(function (Builder $query, array $data): Builder {
-                        return $query->when(
-                            filled($data['status']),
-                            fn (Builder $query) => $query->where('status', $data['status'])
-                        );
+                        return match ($data['value'] ?? null) {
+                            'distributed' => $query->where('status', 'approved')->where('is_overdue', false),
+                            'overdue' => $query->where('is_overdue', true),
+                            'returned' => $query->where('status', 'returned'),
+                            'revoked' => $query->where('status', 'revoked'),
+                            default => $query,
+                        };
                     }),
-
             ])
             ->actions([
                 ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make()
-                        ->visible(fn ($record) => in_array($record->status, ['pending', 'rejected', 'approved'])
-                        )
+                        ->visible(fn ($record) => in_array($record->status, ['pending', 'rejected', 'approved']))
                         ->mutateFormDataUsing(fn (array $data) => array_merge($data, [
                             'approver_id' => auth()->id(),
                         ]))

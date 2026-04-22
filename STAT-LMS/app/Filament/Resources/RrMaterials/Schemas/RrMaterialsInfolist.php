@@ -79,7 +79,7 @@ class RrMaterialsInfolist
                         ->label('Circulation Status')
                         ->badge()
                         ->color(fn ($state) => $state ? 'success' : 'danger')
-                        ->formatStateUsing(fn ($state) => $state ? 'Available' : 'Restricted'),
+                        ->formatStateUsing(fn ($state) => $state ? 'Available' : 'Unavailable'),
                 ]),
 
             Section::make('System Metadata')

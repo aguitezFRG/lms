@@ -37,13 +37,14 @@ class RrMaterialsForm
                         ->label('Number of Physical Copies')
                         ->numeric()
                         ->integer()
-                        ->default(1)
-                        ->minValue(1)
+                        ->default(fn (Get $get, string $operation) => $operation === 'create' && ! $get('is_digital') ? 1 : null)
+                        ->minValue(0)
                         ->maxValue(50)
                         ->hint('How many physical copies to add')
                         ->hintColor('gray')
                         ->visible(fn (Get $get) => ! $get('is_digital'))
-                        ->required(fn (Get $get) => ! $get('is_digital')),
+                        ->visible(fn (Get $get, string $operation): bool => $operation === 'create' && ! $get('is_digital'))
+                        ->required(fn (Get $get, string $operation): bool => $operation === 'create' && ! $get('is_digital')),
 
                     Toggle::make('is_available')
                         ->label('Available for Circulation')
