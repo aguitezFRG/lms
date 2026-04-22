@@ -36,42 +36,50 @@ class UserSeeder extends Seeder
         // ── Create specific seed users with predetermined UUIDs ─────────────────
         User::factory()->create([
             'id' => self::STUDENT_1_ID,
-            'name' => 'Carlos',
+            'f_name' => 'Carlos',
+            'l_name' => 'Santos',
             'role' => 'student',
         ]);
         User::factory()->create([
             'id' => self::STUDENT_2_ID,
-            'name' => 'Angelica',
+            'f_name' => 'Angelica',
+            'l_name' => 'Reyes',
             'role' => 'student',
         ]);
         User::factory()->create([
             'id' => self::STUDENT_3_ID,
-            'name' => 'Rafael',
+            'f_name' => 'Rafael',
+            'l_name' => 'Cruz',
             'role' => 'student',
         ]);
         User::factory()->create([
             'id' => self::FACULTY_1_ID,
-            'name' => 'Ricardo',
+            'f_name' => 'Ricardo',
+            'l_name' => 'Mendoza',
             'role' => 'faculty',
         ]);
         User::factory()->create([
             'id' => self::FACULTY_2_ID,
-            'name' => 'Esperanza',
+            'f_name' => 'Esperanza',
+            'l_name' => 'Garcia',
             'role' => 'faculty',
         ]);
         User::factory()->create([
             'id' => self::STAFF_ID,
-            'name' => 'Staff User',
+            'f_name' => 'Staff',
+            'l_name' => 'Custodian',
             'role' => 'staff/custodian',
         ]);
         User::factory()->create([
             'id' => self::COMMITTEE_ID,
-            'name' => 'Committee Member',
+            'f_name' => 'Committee',
+            'l_name' => 'Member',
             'role' => 'committee',
         ]);
         User::factory()->create([
             'id' => self::IT_ID,
-            'name' => 'IT Admin',
+            'f_name' => 'IT',
+            'l_name' => 'Support',
             'role' => 'it',
         ]);
 
