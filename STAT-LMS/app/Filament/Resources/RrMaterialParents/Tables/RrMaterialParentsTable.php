@@ -35,7 +35,8 @@ class RrMaterialParentsTable
                 TextColumn::make('title')
                     ->searchable()
                     ->limit(50)
-                    ->sortable(),
+                    ->sortable()
+                    ->tooltip(fn ($record) => $record->title),
 
                 TextColumn::make('author')
                     ->label('Author')

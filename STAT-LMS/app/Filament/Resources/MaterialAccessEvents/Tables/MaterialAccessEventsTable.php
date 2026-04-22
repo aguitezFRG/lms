@@ -35,7 +35,8 @@ class MaterialAccessEventsTable
                     ->label('Title')
                     ->searchable()
                     ->sortable()
-                    ->limit(30),
+                    ->limit(30)
+                    ->tooltip(fn ($record) => $record->material?->parent?->title),
 
                 TextColumn::make('event_type')
                     ->label('Type')
