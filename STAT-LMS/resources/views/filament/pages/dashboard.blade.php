@@ -50,6 +50,28 @@
             :widgets="$this->getWidgets()"
             :columns="$this->getColumns()"
         />
+
+        <x-filament::tabs class="mt-6 mb-4">
+            <x-filament::tabs.item
+                :active="$activeChartTab === 'visitor-borrower'"
+                wire:click="setChartTab('visitor-borrower')"
+            >
+                Visitor &amp; Borrower
+            </x-filament::tabs.item>
+            <x-filament::tabs.item
+                :active="$activeChartTab === 'physical-digital'"
+                wire:click="setChartTab('physical-digital')"
+            >
+                Physical vs Digital
+            </x-filament::tabs.item>
+        </x-filament::tabs>
+
+        <div @class(['hidden' => $activeChartTab !== 'visitor-borrower'])>
+            @livewire(\App\Filament\Widgets\Dashboard\VisitorBorrowerChartWidget::class, key('chart-visitor'))
+        </div>
+        <div @class(['hidden' => $activeChartTab !== 'physical-digital'])>
+            @livewire(\App\Filament\Widgets\Dashboard\PhysicalDigitalChartWidget::class, key('chart-physical'))
+        </div>
     @endif
 
     @if ($activeTab === 'borrows' && $canViewBorrows)

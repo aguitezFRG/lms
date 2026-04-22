@@ -55,6 +55,10 @@ class MaterialAccessEventsInfolist
                             ->placeholder('N/A')
                             ->datetime('F d, Y h:i A'),
 
+                        TextEntry::make('created_at')
+                            ->label('Requested At')
+                            ->datetime('F d, Y h:i A'),
+
                         TextEntry::make('due_at')
                             ->label('Due At')
                             ->placeholder('N/A')

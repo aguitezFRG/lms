@@ -2,11 +2,12 @@
 
 namespace App\Filament\Widgets\SystemUsage;
 
-use App\Filament\Pages\SystemUsage;
 use App\Models\MaterialAccessEvents;
+use App\Policies\SystemUsagePolicy;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\HtmlString;
 
 class SystemUsageStatsWidget extends BaseWidget
 {
@@ -18,7 +19,7 @@ class SystemUsageStatsWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return Gate::allows('viewAny', SystemUsage::class);
+        return Gate::allows('viewAny', SystemUsagePolicy::class);
     }
 
     protected function getStats(): array
@@ -89,14 +90,9 @@ class SystemUsageStatsWidget extends BaseWidget
         string $icon,
         string $color
     ): Stat {
-        $currentCount = $query->count();
+        $currentCount = (clone $query)->count();
 
-        $previousCountQuery = clone $query;
-        $previousCount = $previousCountQuery
-            ->whereDate('created_at', '<=', $previousPeriod)
-            ->count();
-
-        $todayCount = $query
+        $todayCount = (clone $query)
             ->whereDate('created_at', $currentPeriod)
             ->count();
 
@@ -106,12 +102,21 @@ class SystemUsageStatsWidget extends BaseWidget
 
         $change = $this->calculateChange($todayCount, $yesterdayCount);
 
+        $changeColor = match ($change['color']) {
+            'success' => 'rgb(22, 163, 74)',
+            'danger' => 'rgb(220, 38, 38)',
+            'warning' => 'rgb(202, 138, 4)',
+            'gray' => 'rgb(75, 85, 99)',
+            default => 'rgb(37, 99, 235)',
+        };
+
         return Stat::make($label, $currentCount)
             ->icon($icon)
             ->color($color)
-            ->description($change['text'])
-            ->descriptionIcon($change['icon'])
-            ->descriptionColor($change['color']);
+            ->description(new HtmlString(
+                "<span style=\"color: rgb(156, 163, 175);\">{$todayCount} today, {$yesterdayCount} yesterday</span><br>".
+                "<span style=\"color: {$changeColor};\">{$change['text']}</span>"
+            ));
     }
 
     private function calculateChange(int $today, int $yesterday): array
@@ -119,40 +124,40 @@ class SystemUsageStatsWidget extends BaseWidget
         if ($yesterday === 0) {
             if ($today === 0) {
                 return [
-                    'text' => 'No change from yesterday',
+                    'text' => 'No change',
                     'icon' => 'heroicon-o-minus',
                     'color' => 'gray',
                 ];
             }
 
             return [
-                'text' => "+{$today} from yesterday",
+                'text' => "+{$today} today",
                 'icon' => 'heroicon-o-arrow-trending-up',
                 'color' => 'success',
             ];
         }
 
-        $percentage = round((($today - $yesterday) / $yesterday) * 100);
-        $absoluteChange = abs($today - $yesterday);
+        $pct = round((($today - $yesterday) / $yesterday) * 100);
+        $sign = $pct > 0 ? '+' : '';
 
-        if ($percentage === 0) {
+        if ($pct === 0) {
             return [
-                'text' => 'No change from yesterday',
+                'text' => 'No change',
                 'icon' => 'heroicon-o-minus',
                 'color' => 'gray',
             ];
         }
 
-        if ($today > $yesterday) {
+        if ($pct > 0) {
             return [
-                'text' => "+{$absoluteChange} (+{$percentage}%) from yesterday",
+                'text' => "{$sign}{$pct}% from yesterday",
                 'icon' => 'heroicon-o-arrow-trending-up',
                 'color' => 'success',
             ];
         }
 
         return [
-            'text' => "-{$absoluteChange} ({$percentage}%) from yesterday",
+            'text' => "{$sign}{$pct}% from yesterday",
             'icon' => 'heroicon-o-arrow-trending-down',
             'color' => 'danger',
         ];
