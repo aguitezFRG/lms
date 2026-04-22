@@ -61,7 +61,7 @@ All models use UUIDs + soft deletes. `access_level` on RrMaterialParents: 1=Stud
 
 ## User Panel Features
 
-### Catalog Browser (`/app/catalogs`)
+### Catalog Browser (`/app/user/catalogs`)
 
 - Card-grid view of available materials filtered by user's access level
 - Search by title, author, keywords
@@ -74,7 +74,7 @@ All models use UUIDs + soft deletes. `access_level` on RrMaterialParents: 1=Stud
 - Borrow Physical Copy — submits borrow request (disabled if already active borrow or user is banned)
 - View Document — direct access once approved (Committee/IT bypass approval)
 
-### My Requests (`/app/requests`)
+### My Requests (`/app/user/requests`)
 
 - Lists all personal borrow/access requests with status, type, due date
 - Cancel pending requests

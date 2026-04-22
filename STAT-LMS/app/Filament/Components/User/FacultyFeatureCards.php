@@ -13,7 +13,7 @@ class FacultyFeatureCards
     {
         return '
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <a href="/app/catalogs" class="block">
+                <a href="/app/user/catalogs" class="block">
                     <div class="flex gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:bg-gray-50 cursor-pointer transition">
                         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">
@@ -27,7 +27,7 @@ class FacultyFeatureCards
                     </div>
                 </a>
 
-                <a href="/app/catalogs" class="block">
+                <a href="/app/user/catalogs" class="block">
                     <div class="flex gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:bg-gray-50 cursor-pointer transition">
                         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">
@@ -41,7 +41,7 @@ class FacultyFeatureCards
                     </div>
                 </a>
 
-                <a href="/app/catalogs" class="block">
+                <a href="/app/user/catalogs" class="block">
                     <div class="flex gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:bg-gray-50 cursor-pointer transition">
                         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">
@@ -55,7 +55,7 @@ class FacultyFeatureCards
                     </div>
                 </a>
 
-                <a href="/app/requests" class="block">
+                <a href="/app/user/requests" class="block">
                     <div class="flex gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:bg-gray-50 cursor-pointer transition">
                         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">
@@ -69,7 +69,7 @@ class FacultyFeatureCards
                     </div>
                 </a>
 
-                <a href="/app/requests" class="block">
+                <a href="/app/user/requests" class="block">
                     <div class="flex gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:bg-gray-50 cursor-pointer transition">
                         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">
@@ -83,7 +83,7 @@ class FacultyFeatureCards
                     </div>
                 </a>
 
-                <a href="/app" class="block">
+                <a href="/app/user-profile" class="block">
                     <div class="flex gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:bg-gray-50 cursor-pointer transition">
                         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">

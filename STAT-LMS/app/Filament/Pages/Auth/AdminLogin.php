@@ -29,7 +29,7 @@ class AdminLogin extends Login
 
         // Discard any intended URL that belongs to a different panel.
         // When Laravel's AuthenticateSession invalidates a session it stores
-        // the interrupted URL (e.g. /app/requests) in url.intended, which then
+        // the interrupted URL (e.g. /app/user/requests) in url.intended, which then
         // poisons redirect()->intended() on the next login — sending the new
         // user to a panel they cannot access → 403.
         if (request()->hasSession()) {
