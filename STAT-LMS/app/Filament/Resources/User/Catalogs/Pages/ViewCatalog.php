@@ -85,6 +85,16 @@ class ViewCatalog extends ViewRecord
 
     protected function hasAvailableCopy(bool $digital): bool
     {
+        $hasApprovedAccess = MaterialAccessEvents::where('user_id', auth()->id())
+            ->whereIn('event_type', ['request', 'borrow'])
+            ->where('status', 'approved')
+            ->whereHas('material', fn ($q) => $q->where('material_parent_id', $this->record->id)->where('is_digital', $digital))
+            ->exists();
+
+        if ($hasApprovedAccess) {
+            return false;
+        }
+
         return RrMaterials::where('material_parent_id', $this->record->id)
             ->where('is_digital', $digital)
             ->where('is_available', true)
