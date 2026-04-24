@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Enums\UserRole;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\SystemUsage;
 use App\Listeners\SendDueSoonOnLogin;
@@ -56,6 +55,10 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(3)->by($email.$request->ip()),
                 Limit::perMinute(10, 5)->by($request->ip()),
             ];
+        });
+
+        RateLimiter::for('google-sso', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip());
         });
 
         MaterialAccessEvents::observe(MaterialAccessEventsObserver::class);

@@ -44,6 +44,7 @@ class UserFactory extends Factory
             },
             'std_number' => fake()->numberBetween(1908, 2025).'-'.fake()->numerify('#####'),
             'revoked_at' => null,
+            'is_profile_complete' => true,
         ];
     }
 
@@ -54,6 +55,25 @@ class UserFactory extends Factory
     {
         return $this->state(fn () => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    public function sso(): static
+    {
+        return $this->state(fn () => [
+            'google_id' => fake()->unique()->numerify('############'),
+            'is_profile_complete' => true,
+        ]);
+    }
+
+    public function incompleteProfile(): static
+    {
+        return $this->state(fn () => [
+            'is_profile_complete' => false,
+            'f_name' => null,
+            'l_name' => null,
+            'm_name' => null,
+            'std_number' => null,
         ]);
     }
 }
