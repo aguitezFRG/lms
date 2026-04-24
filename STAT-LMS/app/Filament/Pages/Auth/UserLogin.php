@@ -2,11 +2,15 @@
 
 namespace App\Filament\Pages\Auth;
 
+use App\Models\User;
 use Filament\Actions\Action;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Auth\Pages\Login;
 use Filament\Facades\Filament;
+use Filament\Notifications\Notification;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\HtmlString;
+use Illuminate\Validation\ValidationException;
 
 class UserLogin extends Login
 {
@@ -40,6 +44,33 @@ class UserLogin extends Login
         }
 
         parent::mount();
+
+        if ($error = session('error')) {
+            Notification::make()
+                ->title($error)
+                ->danger()
+                ->send();
+        }
+    }
+
+    public function authenticate(): ?LoginResponse
+    {
+        $email = $this->data['email'] ?? null;
+
+        if ($email && User::withTrashed()->where('email', $email)->whereNotNull('deleted_at')->exists()) {
+            throw ValidationException::withMessages([
+                'data.email' => 'This account has been deactivated. Please contact the administrator.',
+            ]);
+        }
+
+        $candidate = $email ? User::where('email', $email)->whereNull('deleted_at')->first() : null;
+        if ($candidate?->is_banned) {
+            throw ValidationException::withMessages([
+                'data.email' => 'Your account is banned from accessing the system. Please contact the administrator.',
+            ]);
+        }
+
+        return parent::authenticate();
     }
 
     protected function getAuthenticateFormAction(): Action

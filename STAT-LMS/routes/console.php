@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\ExpireDigitalAccess;
 use App\Console\Commands\SendDueSoonNotifications;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -10,3 +11,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command(SendDueSoonNotifications::class)->dailyAt('08:00');
+Schedule::command(ExpireDigitalAccess::class)->everyMinute();

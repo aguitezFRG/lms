@@ -15,7 +15,9 @@
         default => 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
     };
 
-    $isAvailable = $material['has_digital'] || $material['has_physical'];
+    $isAvailable = $material['has_digital'] || $material['has_physical']
+        || ($material['user_has_digital_access'] ?? false)
+        || ($material['user_has_physical_access'] ?? false);
     $borderColour = $isAvailable
         ? 'border-l-green-500 dark:border-l-green-400'
         : 'border-l-amber-400 dark:border-l-amber-500';
@@ -79,6 +81,25 @@
                                 dark:bg-indigo-900/40 dark:text-indigo-300">
                     <x-heroicon-o-book-open class="h-3 w-3" />
                     Physical
+                </span>
+            @endif
+
+            @if ($material['user_has_digital_access'] ?? false)
+                <span class="inline-flex items-center gap-1 rounded-full
+                                bg-blue-100 px-2.5 py-0.5
+                                text-xs font-medium text-blue-700
+                                dark:bg-blue-900/40 dark:text-blue-300">
+                    <x-heroicon-o-key class="h-3 w-3" />
+                    Digital Access Granted
+                </span>
+            @endif
+            @if ($material['user_has_physical_access'] ?? false)
+                <span class="inline-flex items-center gap-1 rounded-full
+                                bg-violet-100 px-2.5 py-0.5
+                                text-xs font-medium text-violet-700
+                                dark:bg-violet-900/40 dark:text-violet-300">
+                    <x-heroicon-o-key class="h-3 w-3" />
+                    Physical Access Granted
                 </span>
             @endif
 

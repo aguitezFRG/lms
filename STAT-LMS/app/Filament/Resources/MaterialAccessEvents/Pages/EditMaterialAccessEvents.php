@@ -47,6 +47,10 @@ class EditMaterialAccessEvents extends EditRecord
     {
         $data['approver_id'] = auth()->id();
 
+        if ($data['status'] !== 'approved') {
+            $data['due_at'] = null;
+        }
+
         if (! empty($data['due_at'])) {
             $data['due_at'] = \Carbon\Carbon::parse($data['due_at'])->endOfDay()->toDateTimeString();
         }

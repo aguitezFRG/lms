@@ -3,16 +3,32 @@
 namespace App\Filament\Resources\RrMaterials\Schemas;
 
 use App\Models\RrMaterialParents;
+use App\Models\RrMaterials;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Support\Str;
 
 class RrMaterialsForm
 {
+    /**
+     * Returns IDs of parents that already have an active digital copy,
+     * optionally exempting the current record's own parent (for edit mode).
+     */
+    private static function blockedParentIds(?string $exemptParentId = null): array
+    {
+        return RrMaterials::query()
+            ->where('is_digital', true)
+            ->whereNull('deleted_at')
+            ->when($exemptParentId, fn ($q) => $q->where('material_parent_id', '!=', $exemptParentId))
+            ->pluck('material_parent_id')
+            ->toArray();
+    }
+
     public static function configure($schema)
     {
         return $schema->schema([
@@ -20,9 +36,40 @@ class RrMaterialsForm
                 ->schema([
                     Select::make('material_parent_id')
                         ->label('Parent Material')
-                        ->relationship('parent', 'title')
+                        ->options(function (?RrMaterials $record) {
+                            $blocked = self::blockedParentIds($record?->material_parent_id);
+
+                            return RrMaterialParents::query()
+                                ->whereNotIn('id', $blocked)
+                                ->orderBy('title')
+                                ->pluck('title', 'id');
+                        })
                         ->searchable()
-                        ->preload()
+                        ->getSearchResultsUsing(function (string $search, ?RrMaterials $record) {
+                            $blocked = self::blockedParentIds($record?->material_parent_id);
+
+                            $results = RrMaterialParents::query()
+                                ->whereNotIn('id', $blocked)
+                                ->where('title', 'like', "%{$search}%")
+                                ->limit(50)
+                                ->pluck('title', 'id');
+
+                            // Notify if the typed string exactly matches a blocked parent's title
+                            $blockedMatch = RrMaterialParents::query()
+                                ->whereIn('id', $blocked)
+                                ->where('title', $search)
+                                ->first();
+
+                            if ($blockedMatch) {
+                                Notification::make()
+                                    ->title('Digital Copy Already Exists')
+                                    ->body("\"{$blockedMatch->title}\" already has an active digital copy and cannot receive another.")
+                                    ->warning()
+                                    ->send();
+                            }
+
+                            return $results;
+                        })
                         ->required()
                         ->live()
                         ->columnSpanFull(),

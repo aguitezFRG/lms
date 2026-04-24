@@ -66,6 +66,24 @@ class AuthenticationTest extends TestCase
             ->assertSee('/admin/login', escape: false);
     }
 
+    // ── Google SSO Button ─────────────────────────────────────────────────────
+
+    /** @test */
+    public function user_login_page_contains_google_sso_button(): void
+    {
+        $this->get('/app/login')
+            ->assertOk()
+            ->assertSee('Sign in with Google');
+    }
+
+    /** @test */
+    public function admin_login_page_contains_google_sso_button(): void
+    {
+        $this->get('/admin/login')
+            ->assertOk()
+            ->assertSee('Sign in with Google');
+    }
+
     // ── Committee Role ────────────────────────────────────────────────────────
 
     /** @test */

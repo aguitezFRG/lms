@@ -274,16 +274,34 @@ class ListCatalogs extends Page
             )
 
             // ── Format ───────────────────────────────────────────────────────
-            ->when($this->formatFilter === 'digital', fn ($q) => $q->whereHas('materials', fn ($m) => $m->where('is_digital', true)
-                ->where('is_available', true)
-                ->whereNull('deleted_at')
-            )
-            )
-            ->when($this->formatFilter === 'physical', fn ($q) => $q->whereHas('materials', fn ($m) => $m->where('is_digital', false)
-                ->where('is_available', true)
-                ->whereNull('deleted_at')
-            )
-            )
+            ->when($this->formatFilter === 'digital', function ($q) {
+                $q->where(function ($sub) {
+                    $sub->whereHas('materials', fn ($m) => $m->where('is_digital', true)
+                        ->where('is_available', true)
+                        ->whereNull('deleted_at')
+                    )
+                        ->orWhereHas('materials.accessEvents', function ($ae) {
+                            $ae->where('user_id', auth()->id())
+                                ->whereIn('status', ['approved', 'pending'])
+                                ->whereIn('event_type', ['request', 'borrow'])
+                                ->whereHas('material', fn ($m) => $m->where('is_digital', true));
+                        });
+                });
+            })
+            ->when($this->formatFilter === 'physical', function ($q) {
+                $q->where(function ($sub) {
+                    $sub->whereHas('materials', fn ($m) => $m->where('is_digital', false)
+                        ->where('is_available', true)
+                        ->whereNull('deleted_at')
+                    )
+                        ->orWhereHas('materials.accessEvents', function ($ae) {
+                            $ae->where('user_id', auth()->id())
+                                ->whereIn('status', ['approved', 'pending'])
+                                ->whereIn('event_type', ['request', 'borrow'])
+                                ->whereHas('material', fn ($m) => $m->where('is_digital', false));
+                        });
+                });
+            })
 
             // ── Publication date range ────────────────────────────────────────
             ->when($this->pubDateFrom !== '', fn ($q) => $q->whereDate('publication_date', '>=', $this->pubDateFrom)
@@ -309,9 +327,16 @@ class ListCatalogs extends Page
             })
 
             // ── Availability guard ────────────────────────────────────────────
-            ->when($this->availableOnly, fn ($q) => $q->whereHas('materials', fn ($m) => $m->where('is_available', true)->whereNull('deleted_at')
-            )
-            )
+            ->when($this->availableOnly, function ($q) {
+                $q->where(function ($sub) {
+                    $sub->whereHas('materials', fn ($m) => $m->where('is_available', true)->whereNull('deleted_at'))
+                        ->orWhereHas('materials.accessEvents', function ($ae) {
+                            $ae->where('user_id', auth()->id())
+                                ->whereIn('status', ['approved', 'pending'])
+                                ->whereIn('event_type', ['request', 'borrow']);
+                        });
+                });
+            })
 
             // ── Sort ──────────────────────────────────────────────────────────
             ->orderBy($this->sortBy, $this->sortDir);
@@ -330,6 +355,8 @@ class ListCatalogs extends Page
                 'materials' => fn ($q) => $q
                     ->select(['id', 'material_parent_id', 'is_digital', 'is_available', 'deleted_at'])
                     ->whereNull('deleted_at'),
+                'materials.accessEvents' => fn ($q) => $q
+                    ->select(['id', 'rr_material_id', 'user_id', 'status', 'event_type']),
             ])
             ->paginate($clampedPerPage, ['*'], 'page', $this->page);
 
@@ -348,6 +375,16 @@ class ListCatalogs extends Page
             ),
             'has_physical' => $m->materials->contains(
                 fn ($c) => ! $c->is_digital && $c->is_available
+            ),
+            'user_has_digital_access' => $m->materials->contains(
+                fn ($c) => $c->is_digital && $c->accessEvents->contains(
+                    fn ($e) => $e->user_id === auth()->id() && $e->status === 'approved'
+                )
+            ),
+            'user_has_physical_access' => $m->materials->contains(
+                fn ($c) => ! $c->is_digital && $c->accessEvents->contains(
+                    fn ($e) => $e->user_id === auth()->id() && $e->status === 'approved'
+                )
             ),
             'view_url' => CatalogResource::getUrl('view', ['record' => $m->id]),
         ])->toArray();

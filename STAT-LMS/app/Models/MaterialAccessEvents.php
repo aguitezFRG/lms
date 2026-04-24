@@ -39,7 +39,7 @@ class MaterialAccessEvents extends Model
         static::updated(function (MaterialAccessEvents $event) {
             // Request is approved -> mark material as unavailable
             if ($event->wasChanged('status') && $event->status === 'approved') {
-                $event->material()->update(['is_available' => false]);
+                $event->material?->updateQuietly(['is_available' => false]);
             }
 
             // Material is returned -> mark material as available and event as completed
@@ -52,8 +52,11 @@ class MaterialAccessEvents extends Model
             // Request is rejected -> mark event as completed (material availability remains unchanged)
             if ($event->wasChanged('status') && $event->status === 'rejected') {
                 $event->material()->update(['is_available' => true]);
-                $event->update(['completed_at' => now()]);
-                $event->update(['returned_at' => null]);
+                $event->completed_at = now();
+                $event->returned_at = null;
+                $event->approved_at = null;
+                $event->due_at = null;
+                $event->saveQuietly();
             }
         });
     }
