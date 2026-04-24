@@ -21,6 +21,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Decrypt RSA-encrypted password fields from Livewire update payloads
         $middleware->web(append: [\App\Http\Middleware\DecryptLivewirePasswords::class]);
+
+        $middleware->redirectGuestsTo('/app/login');
+
+        $middleware->alias([
+            'profile.complete' => \App\Http\Middleware\EnsureProfileComplete::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

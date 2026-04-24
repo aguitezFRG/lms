@@ -30,7 +30,10 @@ class User extends Authenticatable implements FilamentUser
         'role',
         'is_banned',
         'email',
+        'email_verified_at',
         'password',
+        'google_id',
+        'is_profile_complete',
     ];
 
     /**
@@ -54,6 +57,7 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_banned' => 'boolean',
+            'is_profile_complete' => 'boolean',
             'role' => UserRole::class,
         ];
     }
@@ -66,6 +70,8 @@ class User extends Authenticatable implements FilamentUser
     public array $excludedFromChangeLogs = [
         'password',
         'remember_token',
+        'google_id',
+        'is_profile_complete',
     ];
 
     public function canAccessPanel(Panel $panel): bool
