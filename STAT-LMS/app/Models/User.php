@@ -81,11 +81,6 @@ class User extends Authenticatable implements FilamentUser
             return false; // Deny access if user is soft-deleted
         }
 
-        // TODO: Consult with the team if we want to implement this
-        // if ($this->is_banned) {
-        //     return false; // Deny access if user is banned
-        // }
-
         return match ($panel->getId()) {
             'admin' => in_array($this->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT, UserRole::RR]),
             'user' => in_array($this->role, [UserRole::FACULTY, UserRole::STUDENT]),

@@ -6,6 +6,7 @@ use App\Filament\Pages\AdminOnboarding;
 use App\Filament\Pages\Auth\AdminLogin;
 use App\Filament\Pages\Auth\AdminProfile;
 use App\Filament\Pages\Dashboard;
+use App\Http\Middleware\RedirectIfBanned;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -90,6 +91,7 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
+                RedirectIfBanned::class,
                 Authenticate::class,
             ])
             ->renderHook(

@@ -6,6 +6,7 @@ use App\Filament\Pages\Auth\UserLogin;
 use App\Filament\Pages\Onboarding\CompleteProfile;
 use App\Filament\Pages\User\UserOnboarding;
 use App\Filament\Pages\User\UserProfile;
+use App\Http\Middleware\RedirectIfBanned;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -99,6 +100,7 @@ class UserPanelProvider extends PanelProvider
             )
             ->strictAuthorization()
             ->authMiddleware([
+                RedirectIfBanned::class,
                 Authenticate::class,
                 \App\Http\Middleware\EnsureProfileComplete::class,
             ]);

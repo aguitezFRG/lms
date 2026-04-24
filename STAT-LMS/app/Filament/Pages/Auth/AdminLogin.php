@@ -73,6 +73,13 @@ class AdminLogin extends Login
             ]);
         }
 
+        $candidate = $email ? User::where('email', $email)->whereNull('deleted_at')->first() : null;
+        if ($candidate?->is_banned) {
+            throw ValidationException::withMessages([
+                'data.email' => 'Your account is banned from accessing the system. Please contact the administrator.',
+            ]);
+        }
+
         if (! session()->has('url.intended')) {
             session()->put('url.intended', $this->getAuthenticatedUrl());
         }
