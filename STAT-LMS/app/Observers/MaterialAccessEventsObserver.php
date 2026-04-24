@@ -39,7 +39,6 @@ class MaterialAccessEventsObserver
         }
 
         if ($materialAccessEvents->status === 'approved') {
-            $materialAccessEvents->material?->update(['is_available' => false]);
             $materialAccessEvents->updateQuietly(['approved_at' => now()]);
         }
 
