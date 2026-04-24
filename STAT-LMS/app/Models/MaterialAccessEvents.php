@@ -52,8 +52,11 @@ class MaterialAccessEvents extends Model
             // Request is rejected -> mark event as completed (material availability remains unchanged)
             if ($event->wasChanged('status') && $event->status === 'rejected') {
                 $event->material()->update(['is_available' => true]);
-                $event->update(['completed_at' => now()]);
-                $event->update(['returned_at' => null]);
+                $event->completed_at = now();
+                $event->returned_at = null;
+                $event->approved_at = null;
+                $event->due_at = null;
+                $event->saveQuietly();
             }
         });
     }

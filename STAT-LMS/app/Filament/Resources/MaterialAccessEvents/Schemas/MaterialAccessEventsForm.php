@@ -67,6 +67,7 @@ class MaterialAccessEventsForm
                             ->minDate(now()->addDays(1)->startOfDay())
                             ->rules(['nullable', 'date', 'after_or_equal:'.now()->addDays(1)->toDateString()])
                             ->formatStateUsing(fn ($state) => $state ?? now()->addDays(14)->toDateString())
+                            ->dehydrated(fn ($state, callable $get) => $get('status') === 'approved')
                             ->live()
                             ->afterStateUpdated(fn ($state, callable $set) => $set('due_at', $state ? $state.' 23:59:59' : null)
                             ),
