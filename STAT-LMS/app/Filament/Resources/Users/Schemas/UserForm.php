@@ -84,29 +84,22 @@ class UserForm
                             ->email()
                             ->unique(table: User::class, column: 'email')
                             ->required()
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->hiddenOn('edit'),
                         TextInput::make('password')
                             ->password()
                             ->revealable()
-                            ->required(fn (string $context): bool => $context === 'create')
+                            ->required()
                             ->dehydrated(fn ($state) => filled($state))
                             ->maxLength(255)
                             ->rules([
-                                fn (string $context) => $context === 'create'
-                                ? Password::min(8)
+                                Password::min(8)
                                     ->mixedCase()
                                     ->numbers()
-                                    ->symbols()
-                                    // ->uncompromised() // uncomment if the hosted environment supports it
-
-                                : Password::min(8)
-                                    ->mixedCase()
-                                    ->numbers()
-                                    ->symbols()
-                                    // ->uncompromised() // uncomment if the hosted environment supports it
-                                    ->sometimes(),
+                                    ->symbols(),
                             ])
-                            ->helperText('Minimum 8 characters with at least one uppercase letter, one lowercase letter, one number, and one symbol.'),
+                            ->helperText('Minimum 8 characters with at least one uppercase letter, one lowercase letter, one number, and one symbol.')
+                            ->hiddenOn('edit'),
                     ])->columns(2),
 
                 Section::make('Account Status')

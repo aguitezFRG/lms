@@ -27,10 +27,10 @@ class PhysicalDigitalChartWidget extends ChartWidget
     protected function getFilters(): ?array
     {
         return [
-            'daily'   => 'Daily',
-            'weekly'  => 'Weekly',
+            'daily' => 'Daily',
+            'weekly' => 'Weekly',
             'monthly' => 'Monthly',
-            'yearly'  => 'Yearly',
+            'yearly' => 'Yearly',
         ];
     }
 
