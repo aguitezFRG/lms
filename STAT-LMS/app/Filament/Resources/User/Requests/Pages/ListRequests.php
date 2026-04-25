@@ -9,13 +9,18 @@ use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
+use Filament\Resources\Concerns\HasTabs;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class ListRequests extends ListRecords
 {
+    use HasTabs;
+
     protected static string $resource = RequestsResource::class;
 
     protected ?string $pollingInterval = '60s';
@@ -34,6 +39,45 @@ class ListRequests extends ListRecords
                 ->color('gray')
                 ->tooltip('Refresh the data')
                 ->action(fn () => $this->dispatch('$refresh')),
+        ];
+    }
+
+    public function getTabs(): array
+    {
+        $userId = Auth::id();
+
+        return [
+            'all' => Tab::make('All')
+                ->badge(fn () => MaterialAccessEvents::where('user_id', $userId)
+                    ->whereIn('event_type', ['request', 'borrow'])->count())
+                ->badgeColor('gray'),
+
+            'pending' => Tab::make('Pending')
+                ->badge(fn () => MaterialAccessEvents::where('user_id', $userId)
+                    ->where('status', 'pending')->count())
+                ->badgeColor('warning')
+                ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->where('status', 'pending')),
+
+            'approved' => Tab::make('Approved')
+                ->badge(fn () => MaterialAccessEvents::where('user_id', $userId)
+                    ->where('status', 'approved')->count())
+                ->badgeColor('success')
+                ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->where('status', 'approved')),
+
+            'closed' => Tab::make('Closed')
+                ->badge(fn () => MaterialAccessEvents::where('user_id', $userId)
+                    ->whereIn('status', ['rejected', 'cancelled', 'completed'])->count())
+                ->badgeColor('gray')
+                ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->whereIn('status', [
+                    'rejected', 'cancelled', 'completed',
+                ])),
+        ];
+    }
+
+    public function getHeaderWidgets(): array
+    {
+        return [
+            \App\Filament\Resources\User\Requests\Widgets\RequestsStatsWidget::class,
         ];
     }
 
@@ -82,16 +126,6 @@ class ListRequests extends ListRecords
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                SelectFilter::make('status')
-                    ->label('Status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'approved' => 'Approved',
-                        'rejected' => 'Rejected',
-                        'completed' => 'Completed',
-                        'cancelled' => 'Cancelled',
-                    ]),
-
                 SelectFilter::make('event_type')
                     ->label('Type')
                     ->options([

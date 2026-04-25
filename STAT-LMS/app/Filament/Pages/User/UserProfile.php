@@ -2,12 +2,8 @@
 
 namespace App\Filament\Pages\User;
 
-use App\Enums\MaterialEventType;
-use App\Models\MaterialAccessEvents;
 use App\Services\PasswordEncryptionService;
 use Filament\Actions\Action;
-use Filament\Actions\ActionGroup;
-use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
 use Filament\Infolists\Contracts\HasInfolists;
@@ -16,25 +12,97 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Table;
 use Illuminate\Support\Facades\Hash;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 
-class UserProfile extends Page implements HasInfolists, HasTable
+class UserProfile extends Page implements HasInfolists
 {
     use InteractsWithInfolists;
-    use InteractsWithTable;
 
     protected string $view = 'filament.pages.user.user-profile';
 
-    protected ?string $pollingInterval = '60s';
-
     protected static bool $shouldRegisterNavigation = false;
 
-    public string $activeTab = 'pending';
+    // ── Tab & Filter State ────────────────────────────────────────────────────
+
+    #[Url]
+    public string $activeProfileTab = 'details';
+
+    public string $notifReadFilter = 'all';
+
+    public string $notifTypeFilter = 'all';
+
+    public function setProfileTab(string $tab): void
+    {
+        if (in_array($tab, ['details', 'notifications'])) {
+            $this->activeProfileTab = $tab;
+        }
+    }
+
+    public function setNotifReadFilter(string $filter): void
+    {
+        if (in_array($filter, ['all', 'unread', 'read'])) {
+            $this->notifReadFilter = $filter;
+        }
+    }
+
+    public function setNotifTypeFilter(string $type): void
+    {
+        $allowed = ['all', 'request_status_changed', 'access_level_changed', 'account_details_changed', 'borrow_due_soon'];
+        if (in_array($type, $allowed)) {
+            $this->notifTypeFilter = $type;
+        }
+    }
+
+    // ── All Notifications (profile table) ────────────────────────────────────
+
+    #[Computed]
+    public function allNotifications(): array
+    {
+        $query = auth()->user()->notifications()->latest();
+
+        if ($this->notifReadFilter === 'unread') {
+            $query->whereNull('read_at');
+        } elseif ($this->notifReadFilter === 'read') {
+            $query->whereNotNull('read_at');
+        }
+
+        return $query->get()
+            ->filter(fn ($n) => $this->notifTypeFilter === 'all'
+                || ($n->data['type'] ?? '') === $this->notifTypeFilter)
+            ->map(fn ($n) => [
+                'id' => $n->id,
+                'title' => $n->data['title'] ?? 'Notification',
+                'message' => $n->data['message'] ?? '',
+                'type' => $n->data['type'] ?? 'general',
+                'since' => $n->created_at->diffForHumans(),
+                'date' => $n->created_at->format('M d, Y g:i A'),
+                'is_unread' => is_null($n->read_at),
+            ])
+            ->values()
+            ->toArray();
+    }
+
+    #[Computed]
+    public function allUnreadCount(): int
+    {
+        return auth()->user()->unreadNotifications()->count();
+    }
+
+    public function markProfileNotifRead(string $id): void
+    {
+        auth()->user()->notifications()->where('id', $id)->first()?->markAsRead();
+        unset($this->allNotifications);
+        unset($this->allUnreadCount);
+    }
+
+    public function markAllProfileNotifRead(): void
+    {
+        auth()->user()->unreadNotifications->markAsRead();
+        unset($this->allNotifications);
+        unset($this->allUnreadCount);
+    }
 
     // ── Dynamic title ─────────────────────────────────────────────────────────
 
@@ -76,15 +144,6 @@ class UserProfile extends Page implements HasInfolists, HasTable
                 ->modalContent(view('filament.components.password-change-modal'))
                 ->modalFooterActions([])
                 ->action(fn () => null),
-
-            Action::make('markAllRead')
-                ->label('Mark All as Read')
-                ->icon('heroicon-o-check-circle')
-                ->color('gray')
-                ->visible(fn () => $this->activeTab === 'notifications' &&
-                    auth()->user()->unreadNotifications()->count() > 0
-                )
-                ->action(fn () => auth()->user()->unreadNotifications->markAsRead()),
         ];
     }
 
@@ -117,23 +176,6 @@ class UserProfile extends Page implements HasInfolists, HasTable
     private function stripEncPrefix(string $value): string
     {
         return str_starts_with($value, 'ENC:') ? substr($value, 4) : $value;
-    }
-
-    // ── Tab Switching ─────────────────────────────────────────────────────────
-
-    public function setTab(string $tab): void
-    {
-        $this->activeTab = $tab;
-        $this->resetTable();
-    }
-
-    public function markRead(string $id): void
-    {
-        auth()->user()
-            ->notifications()
-            ->where('id', $id)
-            ->first()
-            ?->markAsRead();
     }
 
     // ── Profile Infolist ──────────────────────────────────────────────────────
@@ -183,190 +225,13 @@ class UserProfile extends Page implements HasInfolists, HasTable
         ]);
     }
 
-    // ── Notifications Infolist ────────────────────────────────────────────────
-
-    public function notificationsInfolist(Schema $schema): Schema
-    {
-        $notifications = auth()->user()->notifications()->latest()->get();
-
-        $items = $notifications->map(fn ($n) => [
-            'id' => $n->id,
-            'title' => $n->data['title'] ?? 'Notification',
-            'message' => $n->data['message'] ?? '',
-            'since' => $n->created_at->diffForHumans(),
-            'is_unread' => is_null($n->read_at),
-        ])->values()->toArray();
-
-        return $schema->components([
-            Section::make()
-                ->schema([
-                    RepeatableEntry::make('items')
-                        ->label('')
-                        ->state($items)
-                        ->schema([
-                            TextEntry::make('title')
-                                ->label('')
-                                ->weight('semibold')
-                                ->size('sm'),
-
-                            TextEntry::make('message')
-                                ->label('')
-                                ->color('gray')
-                                ->size('sm'),
-
-                            TextEntry::make('since')
-                                ->label('')
-                                ->color('gray')
-                                ->size('xs'),
-                        ])
-                        ->columns(1),
-                ])
-                ->visible(fn () => count($items) > 0),
-
-            Section::make()
-                ->schema([
-                    TextEntry::make('empty')
-                        ->label('')
-                        ->state('No notifications yet.')
-                        ->color('gray'),
-                ])
-                ->visible(fn () => count($items) === 0),
-        ]);
-    }
-
-    // ── Request Table ─────────────────────────────────────────────────────────
-    //
-    // Query switches on $activeTab — one table instance covers all three tabs.
-
-    public function table(Table $table): Table
-    {
-        $query = MaterialAccessEvents::query()
-            ->with(['material.parent'])
-            ->where('user_id', auth()->id())
-            ->whereIn('event_type', ['request', 'borrow']);
-
-        $query = match ($this->activeTab) {
-            'pending' => $query->where('status', 'pending'),
-            'approved' => $query->where('status', 'approved'),
-            'closed' => $query->whereIn('status', ['rejected', 'cancelled', 'completed']),
-            default => $query->where('status', 'pending'),
-        };
-
-        return $table
-            ->query($query)
-            ->deferLoading()
-            ->defaultSort('created_at', 'desc')
-            ->columns([
-                TextColumn::make('material.parent.title')
-                    ->label('Material')
-                    ->limit(40)
-                    ->searchable()
-                    ->wrap(),
-
-                TextColumn::make('event_type')
-                    ->label('Type')
-                    ->badge()
-                    ->color(fn (string $state) => MaterialEventType::from($state)->getColor())
-                    ->formatStateUsing(fn (string $state) => MaterialEventType::from($state)->getLabel()),
-
-                TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'warning',
-                        'approved' => 'success',
-                        'rejected' => 'danger',
-                        'completed' => 'gray',
-                        'cancelled' => 'gray',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state) => ucfirst($state)),
-
-                TextColumn::make('due_at')
-                    ->label('Due Date')
-                    ->dateTime('M d, Y')
-                    ->placeholder('—')
-                    ->color(fn (MaterialAccessEvents $record) => $record->is_overdue ? 'danger' : null)
-                    ->description(fn (MaterialAccessEvents $record) => $record->is_overdue ? 'Overdue!' : null)
-                    ->visible(fn () => in_array($this->activeTab, ['approved', 'closed'])),
-
-                TextColumn::make('created_at')
-                    ->label('Requested')
-                    ->dateTime('M d, Y')
-                    ->sortable(),
-            ])
-            ->defaultSort('created_at', 'desc')
-            ->filters([
-                SelectFilter::make('event_type')
-                    ->label('Type')
-                    ->options([
-                        'request' => 'Digital Request',
-                        'borrow' => 'Physical Borrow',
-                    ]),
-            ])
-            ->actions([
-                ActionGroup::make([
-                    Action::make('cancel')
-                        ->label('Cancel Request')
-                        ->icon('heroicon-o-x-circle')
-                        ->color('danger')
-                        ->visible(fn (MaterialAccessEvents $record) => $record->status === 'pending')
-                        ->requiresConfirmation()
-                        ->modalHeading('Cancel Request')
-                        ->modalDescription('Are you sure you want to cancel this request? This cannot be undone.')
-                        ->modalSubmitActionLabel('Yes, cancel it')
-                        ->action(function (MaterialAccessEvents $record) {
-                            $record->update(['status' => 'cancelled']);
-
-                            Notification::make()
-                                ->title('Request cancelled')
-                                ->success()
-                                ->send();
-                        }),
-                ])->color('gray'),
-            ])
-            ->emptyStateHeading(match ($this->activeTab) {
-                'pending' => 'No pending requests',
-                'approved' => 'No approved requests',
-                'closed' => 'No closed requests',
-                default => 'No requests found',
-            })
-            ->emptyStateDescription(match ($this->activeTab) {
-                'pending' => 'Browse the catalog to submit a request.',
-                'approved' => 'Approved requests will appear here.',
-                'closed' => 'Rejected or cancelled requests will appear here.',
-                default => '',
-            })
-            ->emptyStateIcon('heroicon-o-clipboard-document-list');
-    }
-
     // ── View Data ─────────────────────────────────────────────────────────────
 
     protected function getViewData(): array
     {
-        $user = auth()->user();
-        $userId = $user->id;
-
         return [
-            'initials' => strtoupper(substr($user->f_name ?? $user->name, 0, 1))
-                             .strtoupper(substr($user->l_name ?? '', 0, 1)),
-            'pendingCount' => MaterialAccessEvents::where('user_id', $userId)
-                ->where('status', 'pending')->count(),
-            'approvedCount' => MaterialAccessEvents::where('user_id', $userId)
-                ->where('status', 'approved')->count(),
-            'totalCount' => MaterialAccessEvents::where('user_id', $userId)
-                ->whereIn('event_type', ['request', 'borrow'])->count(),
-            'unreadCount' => $user->unreadNotifications()->count(),
-            'activeTab' => $this->activeTab,
-
-            'notifications' => $user->notifications()->latest()->get()->map(fn ($n) => [
-                'id' => $n->id,
-                'title' => $n->data['title'] ?? 'Notification',
-                'message' => $n->data['message'] ?? '',
-                'type' => $n->data['type'] ?? 'general',
-                'since' => $n->created_at->diffForHumans(),
-                'is_unread' => is_null($n->read_at),
-            ])->values()->toArray(),
+            'initials' => strtoupper(substr(auth()->user()->f_name ?? auth()->user()->name, 0, 1))
+                             .strtoupper(substr(auth()->user()->l_name ?? '', 0, 1)),
         ];
     }
 }
