@@ -74,6 +74,7 @@ class MaterialCopiesTest extends TestCase
                 'material_parent_id' => $parent->id,
                 'is_digital' => false,
                 'is_available' => true,
+                'number_of_copies' => 1,
             ])
             ->call('create')
             ->assertHasNoFormErrors();
@@ -201,8 +202,8 @@ class MaterialCopiesTest extends TestCase
     public function availability_filter_returns_only_available_copies(): void
     {
         $parent = $this->makeParent();
-        $available = $this->makeCopy($parent, available: true);
-        $unavailable = $this->makeCopy($parent, available: false);
+        $available = $this->makeCopy($parent, digital: true, available: true);
+        $unavailable = $this->makeCopy($parent, digital: false, available: false);
 
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);

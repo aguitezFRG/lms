@@ -290,8 +290,8 @@ class MaterialCatalogTest extends TestCase
     {
         // Use raw factories to preserve booted() hooks (make* helpers flush event listeners)
         $parent = RrMaterialParents::factory()->create();
-        $copyA = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_available' => true]);
-        $copyB = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_available' => true]);
+        $copyA = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
+        $copyB = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
 
         $parent->delete();
 
@@ -303,8 +303,8 @@ class MaterialCatalogTest extends TestCase
     public function restoring_parent_respects_individual_copy_deletion_precedence(): void
     {
         $parent = RrMaterialParents::factory()->create();
-        $copyA = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_available' => true]);
-        $copyB = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_available' => true]);
+        $copyA = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
+        $copyB = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
 
         // Delete copyB individually before deleting the parent
         $copyB->delete();
@@ -383,5 +383,47 @@ class MaterialCatalogTest extends TestCase
             ->searchTable('Bayesian')
             ->assertSee('Unique Bayesian Study')
             ->assertDontSee('Unrelated Paper');
+    }
+
+    // ── Publication Date Range Guards ─────────────────────────────────────────
+
+    /** @test */
+    public function draft_pub_date_to_auto_clears_when_earlier_than_from(): void
+    {
+        $this->makeMaterial(1, ['title' => 'Dated Material']);
+        $student = $this->makeUser('student');
+        $this->actingAs($student);
+
+        $component = Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ListCatalogs::class)
+            ->set('availableOnly', false)
+            ->set('draftPubDateFrom', '2024-06-01')
+            ->set('draftPubDateTo', '2024-01-01');
+
+        $component->assertSet('draftPubDateTo', '');
+    }
+
+    /** @test */
+    public function apply_filters_rejects_invalid_date_range_and_shows_error(): void
+    {
+        $this->makeMaterial(1, ['title' => 'Dated Material']);
+        $student = $this->makeUser('student');
+        $this->actingAs($student);
+
+        $component = Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ListCatalogs::class)
+            ->set('availableOnly', false)
+            ->set('filterPanelOpen', true)
+            ->set('draftPubDateFrom', '2024-06-01')
+            ->set('draftPubDateTo', '2024-01-01');
+
+        // The auto-clear hook should have already cleared the invalid To date
+        $component->assertSet('draftPubDateTo', '');
+
+        // Call applyFilters with the now-valid range (From only)
+        $component->call('applyFilters');
+
+        $component
+            ->assertSet('pubDateFrom', '2024-06-01')
+            ->assertSet('pubDateTo', '')
+            ->assertSet('filterPanelOpen', false);
     }
 }
