@@ -388,42 +388,66 @@ class MaterialCatalogTest extends TestCase
     // ── Publication Date Range Guards ─────────────────────────────────────────
 
     /** @test */
-    public function draft_pub_date_to_auto_clears_when_earlier_than_from(): void
+    public function draft_pub_date_from_auto_clears_when_to_is_set_earlier(): void
     {
         $this->makeMaterial(1, ['title' => 'Dated Material']);
         $student = $this->makeUser('student');
         $this->actingAs($student);
 
+        // Setting "To" earlier than the existing "From" should clear "From" (not "To"),
+        // so the user's new "To" value is preserved.
         $component = Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ListCatalogs::class)
             ->set('availableOnly', false)
             ->set('draftPubDateFrom', '2024-06-01')
             ->set('draftPubDateTo', '2024-01-01');
 
-        $component->assertSet('draftPubDateTo', '');
+        $component
+            ->assertSet('draftPubDateFrom', '')
+            ->assertSet('draftPubDateTo', '2024-01-01');
     }
 
     /** @test */
-    public function apply_filters_rejects_invalid_date_range_and_shows_error(): void
+    public function draft_pub_date_to_auto_clears_when_from_is_set_later(): void
     {
         $this->makeMaterial(1, ['title' => 'Dated Material']);
         $student = $this->makeUser('student');
         $this->actingAs($student);
 
+        // Setting "From" later than the existing "To" should clear "To" (not "From"),
+        // so the user's new "From" value is preserved.
+        $component = Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ListCatalogs::class)
+            ->set('availableOnly', false)
+            ->set('draftPubDateTo', '2024-01-01')
+            ->set('draftPubDateFrom', '2024-06-01');
+
+        $component
+            ->assertSet('draftPubDateFrom', '2024-06-01')
+            ->assertSet('draftPubDateTo', '');
+    }
+
+    /** @test */
+    public function apply_filters_applies_single_date_bound_after_guard_clears_conflict(): void
+    {
+        $this->makeMaterial(1, ['title' => 'Dated Material']);
+        $student = $this->makeUser('student');
+        $this->actingAs($student);
+
+        // Guard clears "From" when "To" is set earlier, leaving only "To" active.
         $component = Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ListCatalogs::class)
             ->set('availableOnly', false)
             ->set('filterPanelOpen', true)
             ->set('draftPubDateFrom', '2024-06-01')
             ->set('draftPubDateTo', '2024-01-01');
 
-        // The auto-clear hook should have already cleared the invalid To date
-        $component->assertSet('draftPubDateTo', '');
+        $component
+            ->assertSet('draftPubDateFrom', '')
+            ->assertSet('draftPubDateTo', '2024-01-01');
 
-        // Call applyFilters with the now-valid range (From only)
         $component->call('applyFilters');
 
         $component
-            ->assertSet('pubDateFrom', '2024-06-01')
-            ->assertSet('pubDateTo', '')
+            ->assertSet('pubDateFrom', '')
+            ->assertSet('pubDateTo', '2024-01-01')
             ->assertSet('filterPanelOpen', false);
     }
 }

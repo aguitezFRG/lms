@@ -110,7 +110,7 @@
                                 <x-filament::input
                                     wire:model="draftPubDateFrom"
                                     type="date"
-                                    max="{{ date('Y-m-d') }}"
+                                    max="{{ $draftPubDateTo ?: date('Y-m-d') }}"
                                 />
                             </x-filament::input.wrapper>
                         </div>
@@ -121,6 +121,7 @@
                                 <x-filament::input
                                     wire:model="draftPubDateTo"
                                     type="date"
+                                    min="{{ $draftPubDateFrom }}"
                                     max="{{ date('Y-m-d') }}"
                                 />
                             </x-filament::input.wrapper>
