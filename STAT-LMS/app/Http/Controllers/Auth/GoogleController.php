@@ -70,6 +70,7 @@ class GoogleController extends Controller
         }
 
         Auth::login($user, remember: true);
+        session()->regenerate();
 
         // 5. Route based on state
         if (! $user->is_profile_complete) {

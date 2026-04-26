@@ -31,13 +31,17 @@ class MonthlyTrendTableWidget extends BaseWidget
 
     public function table(Table $table): Table
     {
+        $dateFormat = config('database.default') === 'sqlite'
+            ? "strftime('%Y-%m', created_at)"
+            : "DATE_FORMAT(created_at, '%Y-%m')";
+
         return $table
             ->query(
                 MaterialAccessEvents::query()
-                    ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as count, MIN(id) as sort_id")
+                    ->selectRaw("{$dateFormat} as month, COUNT(*) as count, MIN(id) as sort_id")
                     ->whereIn('event_type', ['request', 'borrow'])
                     ->where('created_at', '>=', now()->subMonths(6))
-                    ->groupByRaw("DATE_FORMAT(created_at, '%Y-%m')")
+                    ->groupByRaw($dateFormat)
                     ->orderBy('month')
             )
             ->columns([

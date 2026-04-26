@@ -27,7 +27,10 @@ class UserOnboarding extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->check();
+        return auth()->check() && in_array(auth()->user()->role, [
+            \App\Enums\UserRole::FACULTY,
+            \App\Enums\UserRole::STUDENT,
+        ]);
     }
 
     public static function getUrl(

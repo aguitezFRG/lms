@@ -25,7 +25,12 @@ class AdminOnboarding extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->check();
+        return auth()->check() && in_array(auth()->user()->role, [
+            \App\Enums\UserRole::SUPER_ADMIN,
+            \App\Enums\UserRole::COMMITTEE,
+            \App\Enums\UserRole::IT,
+            \App\Enums\UserRole::RR,
+        ]);
     }
 
     public static function getUrl(

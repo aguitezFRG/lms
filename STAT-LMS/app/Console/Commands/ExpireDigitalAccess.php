@@ -19,10 +19,22 @@ class ExpireDigitalAccess extends Command
             ->where('status', 'approved')
             ->whereNull('completed_at')
             ->where('due_at', '<=', now())
+            ->whereHas('material', fn ($q) => $q->where('is_digital', true))
             ->get();
 
         foreach ($expired as $event) {
             $event->updateQuietly(['status' => 'revoked', 'completed_at' => now()]);
+
+            $hasOtherActive = \App\Models\MaterialAccessEvents::where('rr_material_id', $event->rr_material_id)
+                ->where('id', '!=', $event->id)
+                ->whereIn('status', ['approved'])
+                ->whereNull('completed_at')
+                ->exists();
+
+            if (! $hasOtherActive) {
+                $event->material?->updateQuietly(['is_available' => true]);
+            }
+
             $event->user?->notify(new RequestStatusChanged($event));
         }
 

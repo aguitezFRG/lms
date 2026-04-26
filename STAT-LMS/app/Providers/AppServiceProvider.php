@@ -61,6 +61,15 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->ip());
         });
 
+        RateLimiter::for('material-stream', function (Request $request) {
+            $userId = optional($request->user())->id ?? $request->ip();
+
+            return [
+                Limit::perMinute(30)->by($userId),
+                Limit::perMinute(60)->by($request->ip()),
+            ];
+        });
+
         MaterialAccessEvents::observe(MaterialAccessEventsObserver::class);
         User::observe(UserObserver::class);
 

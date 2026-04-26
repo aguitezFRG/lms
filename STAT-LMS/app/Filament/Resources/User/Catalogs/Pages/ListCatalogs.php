@@ -373,7 +373,7 @@ class ListCatalogs extends Page
                                 [json_encode($sdg)]
                             );
                         } else {
-                            $inner->orWhere('sdgs', 'like', '%"'.addslashes($sdg).'"%');
+                            $inner->orWhereRaw('sdgs LIKE ?', ['%"'.$sdg.'"%']);
                         }
                     }
                 });

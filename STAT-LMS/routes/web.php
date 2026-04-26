@@ -29,7 +29,7 @@ Route::middleware(['throttle:google-sso'])->group(function () {
     Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('auth.google.callback');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'throttle:material-stream'])->group(function () {
     Route::get('/materials/{record}/viewer', [MaterialStreamController::class, 'viewer'])
         ->name('materials.viewer');
 
