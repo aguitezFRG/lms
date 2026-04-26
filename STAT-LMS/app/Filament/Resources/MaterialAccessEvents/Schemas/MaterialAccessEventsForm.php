@@ -69,7 +69,8 @@ class MaterialAccessEventsForm
                             ->formatStateUsing(fn ($state) => $state ?? now()->addDays(14)->toDateString())
                             ->live()
                             ->afterStateUpdated(fn ($state, callable $set) => $set('due_at', $state ? $state.' 23:59:59' : null)
-                            ),
+                            )
+                            ->dehydrated(fn (callable $get) => $get('status') === 'approved'),
 
                         DatePicker::make('returned_at')
                             ->label('Returned At')
@@ -77,7 +78,8 @@ class MaterialAccessEventsForm
                             ->rules(['nullable', 'date', 'before_or_equal:today'])
                             ->live()
                             ->afterStateUpdated(fn ($state, callable $set) => $set('returned_at', $state ? $state.' 23:59:59' : null)
-                            ),
+                            )
+                            ->dehydrated(fn (callable $get) => $get('status') === 'approved'),
                     ])
                     ->columns(1)
                     ->visible(fn (callable $get) => $get('status') === 'approved'),

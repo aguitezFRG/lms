@@ -257,7 +257,18 @@ class MaterialAccessEventsTest extends TestCase
     {
         NotificationFacade::fake();
 
-        $event = $this->makeEvent(['status' => 'pending']);
+        // Staff can only edit events on non-digital, student-level (access_level=1) materials.
+        // makeEvent() defaults to digital=true, which the policy rejects for staff — use an
+        // explicit non-digital fixture instead.
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+        $event = MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'borrow',
+            'status' => 'pending',
+        ]);
+
         $staff = $this->makeUser('staff/custodian');
         $this->actingAs($staff);
 

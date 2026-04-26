@@ -2,6 +2,7 @@
 
 @source '../../../../app/Filament/**/*.php';
 @source '../../../../resources/views/filament/**/*.php';
+@source '../../../../resources/views/livewire/**/*.blade.php';
 
 /* UP Visual Identity Guide — Typeface: Montserrat (Avenir/Helvetica substitute for unofficial materials) */
 :root {

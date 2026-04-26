@@ -26,18 +26,20 @@ class RepositoryChangeLogsPolicy
 
     /**
      * Determine whether the user can create models.
+     * Audit logs are created only by the observer — never by user action.
      */
     public function create(User $user): bool
     {
-        return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
+        return false;
     }
 
     /**
      * Determine whether the user can update the model.
+     * Audit logs are immutable — no role may edit them.
      */
     public function update(User $user, RepositoryChangeLogs $repositoryChangeLogs): bool
     {
-        return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
+        return false;
     }
 
     public function deleteAny(User $user): bool
