@@ -35,6 +35,11 @@
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
         x-cloak
+        x-bind:style="window.innerWidth < 640
+            ? { position: 'fixed', left: '8px', right: '8px',
+                top: (document.querySelector('header')?.getBoundingClientRect().bottom ?? 56) + 4 + 'px',
+                width: 'auto' }
+            : {}"
         class="absolute right-0 top-full mt-2 z-50
                w-[min(28rem,calc(100vw-1rem))] max-h-[32rem]
                flex flex-col overflow-hidden
