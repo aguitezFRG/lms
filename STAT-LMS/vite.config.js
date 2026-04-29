@@ -10,6 +10,7 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/css/filament/admin/theme.css',
                 'resources/css/filament/user/theme.css',
+                'resources/js/pdf-viewer.js',
             ],
             refresh: true,
         }),

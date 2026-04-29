@@ -111,9 +111,6 @@
         <div id="loading">Loading document…</div>
     </div>
 
-    {{-- ── PDF.js from CDN (pinned version) ─────────────────────── --}}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.3.136/pdf.min.mjs" type="module"></script>
-
     <script type="module">
         import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.3.136/pdf.min.mjs';
 

@@ -13,5 +13,8 @@
         "tailwindcss": "^4.1.18",
         "vite": "^7.0.7",
         "vite-plugin-compression": "^0.5.1"
+    },
+    "dependencies": {
+        "pdfjs-dist": "^4.10.38"
     }
 }
