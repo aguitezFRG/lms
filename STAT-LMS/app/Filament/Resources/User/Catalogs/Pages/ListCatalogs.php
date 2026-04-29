@@ -11,6 +11,15 @@ use Illuminate\Support\Facades\Auth;
 
 class ListCatalogs extends Page
 {
+    private const SORTABLE_COLUMNS = [
+        'title',
+        'author',
+        'material_type',
+        'access_level',
+        'publication_date',
+        'created_at',
+    ];
+
     protected static string $resource = CatalogResource::class;
 
     protected string $view = 'filament.resources.user.list-catalog';
@@ -94,6 +103,7 @@ class ListCatalogs extends Page
 
     public function mount(): void
     {
+        $this->normalizeSort();
         $this->draftTypeFilter = $this->typeFilter;
         $this->draftFormatFilter = $this->formatFilter;
         $this->draftPubDateFrom = $this->pubDateFrom;
@@ -116,11 +126,13 @@ class ListCatalogs extends Page
 
     public function updatedSortBy(): void
     {
+        $this->normalizeSort();
         $this->page = 1;
     }
 
     public function updatedSortDir(): void
     {
+        $this->normalizeSort();
         $this->page = 1;
     }
 
@@ -393,6 +405,17 @@ class ListCatalogs extends Page
 
             // ── Sort ──────────────────────────────────────────────────────────
             ->orderBy($this->sortBy, $this->sortDir);
+    }
+
+    protected function normalizeSort(): void
+    {
+        if (! in_array($this->sortBy, self::SORTABLE_COLUMNS, true)) {
+            $this->sortBy = 'publication_date';
+        }
+
+        if (! in_array($this->sortDir, ['asc', 'desc'], true)) {
+            $this->sortDir = 'desc';
+        }
     }
 
     // ── View data ─────────────────────────────────────────────────────────────

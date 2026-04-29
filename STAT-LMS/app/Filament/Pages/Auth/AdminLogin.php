@@ -11,6 +11,7 @@ use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AdminLogin extends Login
@@ -66,17 +67,30 @@ class AdminLogin extends Login
     public function authenticate(): ?LoginResponse
     {
         $email = $this->data['email'] ?? null;
+        $genericMessage = 'Invalid credentials.';
 
         if ($email && User::withTrashed()->where('email', $email)->whereNotNull('deleted_at')->exists()) {
+            Log::notice('Login denied due to account state.', [
+                'panel' => 'admin',
+                'reason' => 'soft_deleted',
+                'email_hash' => hash('sha256', strtolower(trim((string) $email))),
+                'ip' => request()->ip(),
+            ]);
             throw ValidationException::withMessages([
-                'data.email' => 'This account has been deactivated. Please contact the administrator.',
+                'data.email' => $genericMessage,
             ]);
         }
 
         $candidate = $email ? User::where('email', $email)->whereNull('deleted_at')->first() : null;
         if ($candidate?->is_banned) {
+            Log::notice('Login denied due to account state.', [
+                'panel' => 'admin',
+                'reason' => 'banned',
+                'user_id' => $candidate->id,
+                'ip' => request()->ip(),
+            ]);
             throw ValidationException::withMessages([
-                'data.email' => 'Your account is banned from accessing the system. Please contact the administrator.',
+                'data.email' => $genericMessage,
             ]);
         }
 

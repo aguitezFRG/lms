@@ -21,6 +21,7 @@ Route::get('/', function () {
 
 // Public key for client-side password encryption — no auth required, no sensitive data
 Route::get('/password-encryption-key', PasswordEncryptionKeyController::class)
+    ->middleware('throttle:60,1')
     ->name('password.encryption-key');
 
 // Google OAuth routes — no auth middleware required for initial redirect/callback

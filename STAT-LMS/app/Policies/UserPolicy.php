@@ -36,7 +36,7 @@ class UserPolicy
      */
     public function update(User $user, User $model): bool
     {
-        return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]) && $user->id !== $model->id;
+        return $this->canMutateUser($user, $model);
     }
 
     public function deleteAny(User $user): bool
@@ -65,7 +65,7 @@ class UserPolicy
      */
     public function restore(User $user, User $model): bool
     {
-        return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
+        return $this->canMutateUser($user, $model);
     }
 
     /**
@@ -73,6 +73,19 @@ class UserPolicy
      */
     public function forceDelete(User $user, User $model): bool
     {
-        return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]) && $user->id !== $model->id;
+        return $this->canMutateUser($user, $model);
+    }
+
+    protected function canMutateUser(User $user, User $model): bool
+    {
+        if (! in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT])) {
+            return false;
+        }
+
+        if ($user->id === $model->id) {
+            return false;
+        }
+
+        return $user->role->getPrivilegeLevel() > $model->role->getPrivilegeLevel();
     }
 }

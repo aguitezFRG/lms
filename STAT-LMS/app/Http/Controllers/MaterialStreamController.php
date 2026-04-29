@@ -6,6 +6,7 @@ use App\Enums\MaterialEventType;
 use App\Enums\UserRole;
 use App\Models\MaterialAccessEvents;
 use App\Models\RrMaterials;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 
 class MaterialStreamController extends Controller
@@ -18,7 +19,11 @@ class MaterialStreamController extends Controller
     {
         $this->authorizeAccess($record);
 
-        $path = storage_path('app/private/'.$record->file_name);
+        $path = $this->resolveMaterialPath($record);
+
+        if ($path === null) {
+            abort(404);
+        }
 
         if (! file_exists($path)) {
             abort(404);
@@ -40,10 +45,19 @@ class MaterialStreamController extends Controller
     {
         $this->authorizeAccess($record);
 
-        $path = storage_path('app/private/'.$record->file_name);
+        $path = $this->resolveMaterialPath($record);
+
+        if ($path === null) {
+            Log::warning('Stream blocked: invalid material file path', [
+                'material_id' => $record->id,
+            ]);
+            abort(404);
+        }
 
         if (! file_exists($path)) {
-            Log::error("Stream failed: File not found at {$path}");
+            Log::error('Stream failed: file not found', [
+                'material_id' => $record->id,
+            ]);
             abort(404);
         }
 
@@ -51,7 +65,10 @@ class MaterialStreamController extends Controller
         $detectedMime = $finfo->file($path);
 
         if ($detectedMime !== 'application/pdf') {
-            Log::error("Stream blocked: non-PDF file detected at {$path} (detected: {$detectedMime})");
+            Log::error('Stream blocked: non-PDF file detected', [
+                'material_id' => $record->id,
+                'detected_mime' => $detectedMime,
+            ]);
             abort(415, 'The stored file is not a valid PDF.');
         }
 
@@ -105,5 +122,29 @@ class MaterialStreamController extends Controller
         if (! $hasApproved) {
             abort(403, 'You do not have an approved request for this material.');
         }
+    }
+
+    protected function resolveMaterialPath(RrMaterials $record): ?string
+    {
+        $baseDirectory = storage_path('app/private');
+        $baseRealPath = realpath($baseDirectory);
+
+        if ($baseRealPath === false) {
+            return null;
+        }
+
+        $relativePath = ltrim((string) $record->file_name, '/\\');
+        $candidatePath = $baseDirectory.DIRECTORY_SEPARATOR.$relativePath;
+        $parentRealPath = realpath(dirname($candidatePath));
+
+        if ($parentRealPath === false) {
+            return null;
+        }
+
+        if (! Str::startsWith($parentRealPath, $baseRealPath)) {
+            return null;
+        }
+
+        return $parentRealPath.DIRECTORY_SEPARATOR.basename($candidatePath);
     }
 }

@@ -42,8 +42,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Blade::componentNamespace('App\\Filament\\Components', 'onboarding');
 
-        // Only force HTTPS if X-Forwarded-Proto header is present (ngrok or reverse proxy)
-        if (request()->hasHeader('X-Forwarded-Proto')) {
+        if ((bool) config('app.force_https', false)) {
             URL::forceScheme('https');
         }
 
