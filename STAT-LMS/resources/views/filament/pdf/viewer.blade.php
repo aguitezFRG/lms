@@ -62,7 +62,7 @@
             overflow-x: auto;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: flex-start;
             padding: 24px 16px;
             gap: 16px;
         }
@@ -70,6 +70,7 @@
         .page-wrapper {
             position: relative;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+            margin: 0 auto;
         }
 
         /* The rendered PDF page */
@@ -109,9 +110,6 @@
     <div id="viewer-container">
         <div id="loading">Loading document…</div>
     </div>
-
-    {{-- ── PDF.js from CDN (pinned version) ─────────────────────── --}}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.3.136/pdf.min.mjs" type="module"></script>
 
     <script type="module">
         import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.3.136/pdf.min.mjs';
@@ -183,18 +181,25 @@
 
         // ── Render a single page ──────────────────────────────────
         async function renderPage(page, pdfCanvas, wmCanvas) {
-            const viewport = page.getViewport({ scale });
-            const ctx      = pdfCanvas.getContext('2d');
+            const dpr      = window.devicePixelRatio || 1;
+            const viewport = page.getViewport({ scale: scale * dpr });
 
+            // Physical canvas size (device pixel resolution)
             pdfCanvas.width  = viewport.width;
             pdfCanvas.height = viewport.height;
             wmCanvas.width   = viewport.width;
             wmCanvas.height  = viewport.height;
 
-            // Render PDF content
-            await page.render({ canvasContext: ctx, viewport }).promise;
+            // CSS display size (layout pixels)
+            const cssW = viewport.width / dpr;
+            const cssH = viewport.height / dpr;
+            pdfCanvas.style.width  = `${cssW}px`;
+            pdfCanvas.style.height = `${cssH}px`;
+            wmCanvas.style.width   = `${cssW}px`;
+            wmCanvas.style.height  = `${cssH}px`;
 
-            // Draw watermark on top
+            const ctx = pdfCanvas.getContext('2d');
+            await page.render({ canvasContext: ctx, viewport }).promise;
             drawWatermark(wmCanvas, viewport);
         }
 

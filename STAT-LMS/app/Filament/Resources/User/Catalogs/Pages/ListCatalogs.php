@@ -5,11 +5,21 @@ namespace App\Filament\Resources\User\Catalogs\Pages;
 use App\Filament\Resources\User\Catalogs\CatalogResource;
 use App\Models\RrMaterialParents;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 
 class ListCatalogs extends Page
 {
+    private const SORTABLE_COLUMNS = [
+        'title',
+        'author',
+        'material_type',
+        'access_level',
+        'publication_date',
+        'created_at',
+    ];
+
     protected static string $resource = CatalogResource::class;
 
     protected string $view = 'filament.resources.user.list-catalog';
@@ -93,6 +103,7 @@ class ListCatalogs extends Page
 
     public function mount(): void
     {
+        $this->normalizeSort();
         $this->draftTypeFilter = $this->typeFilter;
         $this->draftFormatFilter = $this->formatFilter;
         $this->draftPubDateFrom = $this->pubDateFrom;
@@ -115,12 +126,48 @@ class ListCatalogs extends Page
 
     public function updatedSortBy(): void
     {
+        $this->normalizeSort();
         $this->page = 1;
     }
 
     public function updatedSortDir(): void
     {
+        $this->normalizeSort();
         $this->page = 1;
+    }
+
+    // ── Draft date-range guards ──────────────────────────────────────────────
+
+    public function updatedDraftPubDateFrom($value): void
+    {
+        if (
+            $this->draftPubDateFrom !== ''
+            && $this->draftPubDateTo !== ''
+            && $this->draftPubDateFrom > $this->draftPubDateTo
+        ) {
+            $this->draftPubDateTo = '';
+            Notification::make()
+                ->title('Date range adjusted')
+                ->body('"From" date is after the previous "To" date. The "To" date has been cleared.')
+                ->warning()
+                ->send();
+        }
+    }
+
+    public function updatedDraftPubDateTo($value): void
+    {
+        if (
+            $this->draftPubDateTo !== ''
+            && $this->draftPubDateFrom !== ''
+            && $this->draftPubDateTo < $this->draftPubDateFrom
+        ) {
+            $this->draftPubDateFrom = '';
+            Notification::make()
+                ->title('Date range adjusted')
+                ->body('"To" date is before the previous "From" date. The "From" date has been cleared.')
+                ->warning()
+                ->send();
+        }
     }
 
     // ── Pagination ───────────────────────────────────────────────────────────
@@ -146,6 +193,24 @@ class ListCatalogs extends Page
 
     public function applyFilters(): void
     {
+        if (
+            $this->draftPubDateFrom !== ''
+            && $this->draftPubDateTo !== ''
+            && $this->draftPubDateTo < $this->draftPubDateFrom
+        ) {
+            $this->addError('draftPubDateTo', 'The "To" date must be on or after the "From" date.');
+            Notification::make()
+                ->title('Invalid date range')
+                ->body('The "To" date must be on or after the "From" date.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $this->resetValidation();
+        $this->resetErrorBag();
+
         $this->typeFilter = $this->draftTypeFilter;
         $this->formatFilter = $this->draftFormatFilter;
         $this->pubDateFrom = $this->draftPubDateFrom;
@@ -320,7 +385,7 @@ class ListCatalogs extends Page
                                 [json_encode($sdg)]
                             );
                         } else {
-                            $inner->orWhere('sdgs', 'like', '%"'.addslashes($sdg).'"%');
+                            $inner->orWhereRaw('sdgs LIKE ?', ['%"'.$sdg.'"%']);
                         }
                     }
                 });
@@ -340,6 +405,17 @@ class ListCatalogs extends Page
 
             // ── Sort ──────────────────────────────────────────────────────────
             ->orderBy($this->sortBy, $this->sortDir);
+    }
+
+    protected function normalizeSort(): void
+    {
+        if (! in_array($this->sortBy, self::SORTABLE_COLUMNS, true)) {
+            $this->sortBy = 'publication_date';
+        }
+
+        if (! in_array($this->sortDir, ['asc', 'desc'], true)) {
+            $this->sortDir = 'desc';
+        }
     }
 
     // ── View data ─────────────────────────────────────────────────────────────

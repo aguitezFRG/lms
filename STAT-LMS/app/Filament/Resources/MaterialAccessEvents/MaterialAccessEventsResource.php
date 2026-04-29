@@ -63,6 +63,24 @@ class MaterialAccessEventsResource extends Resource
         ];
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        $user = auth()->user();
+        $query = parent::getEloquentQuery();
+
+        if (! $user) {
+            return $query->whereNull('id');
+        }
+
+        if ($user->role === \App\Enums\UserRole::RR) {
+            return $query
+                ->whereHas('material.parent', fn (Builder $q) => $q->where('access_level', 1))
+                ->whereHas('material', fn (Builder $m) => $m->where('is_digital', false));
+        }
+
+        return $query;
+    }
+
     public static function getRecordRouteBindingEloquentQuery(): Builder
     {
         return parent::getRecordRouteBindingEloquentQuery()

@@ -1,9 +1,4 @@
 <div>
-    <div class="relative flex items-center py-2">
-        <div class="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
-        <span class="mx-3 flex-shrink text-sm text-gray-500 dark:text-gray-400">or continue with</span>
-        <div class="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
-    </div>
     <a href="{{ route('auth.google.redirect') }}"
        class="fi-btn fi-btn-size-md inline-grid w-full grid-flow-col items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm outline-none transition duration-75 hover:bg-gray-50 focus-visible:ring-2 dark:border-white/20 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" aria-hidden="true">

@@ -226,21 +226,22 @@ class UserManagementTest extends TestCase
     }
 
     /** @test */
-    public function email_uniqueness_is_enforced_ignoring_own_record_on_edit(): void
+    public function email_field_is_not_editable_on_edit_form(): void
     {
+        // The email field uses hiddenOn('edit'), so it is excluded from the edit
+        // form entirely. Saving the edit form without touching email must not
+        // produce any email-related validation errors — the field is immutable
+        // after account creation.
         $target = $this->makeUser('student', ['std_number' => null]);
-        $other = $this->makeUser('faculty');
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        // Trying to use another user's email — should fail validation
         Livewire::test(
             \App\Filament\Resources\Users\Pages\EditUser::class,
             ['record' => $target->id]
         )
-            ->fillForm(['email' => $other->email])
             ->call('save')
-            ->assertHasFormErrors(['email']);
+            ->assertHasNoFormErrors();
     }
 
     // ── Delete & Restore ──────────────────────────────────────────────────────

@@ -20,6 +20,7 @@ class MaterialAccessEvents extends Model
         'returned_at',
         'is_overdue',
         'approved_at',
+        'approver_id',
         'completed_at',
         'rejection_reason',
     ];

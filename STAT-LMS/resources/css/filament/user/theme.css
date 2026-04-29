@@ -3,10 +3,15 @@
 @source '../../../../app/Filament/**/*.php';
 @source '../../../../resources/views/filament/**/*.blade.php';
 @source '../../../../resources/views/components/**/*.blade.php';
+@source '../../../../resources/views/livewire/**/*.blade.php';
 
 /* UP Visual Identity Guide — Typeface: Montserrat (Avenir/Helvetica substitute for unofficial materials) */
 :root {
     --font-sans: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+    --rr-topbar-height: 4rem;
+    --up-maroon: #8D1436;
+    --up-forest-green: #014421;
+    --up-gold: #f55536;
 }
 
 .fi-header-heading {
@@ -23,11 +28,83 @@
     min-height: 250px;
 }
 
-/* Prevents the primary color from overriding explicit success/danger buttons */
+/* Keep branding in topbar only */
+.fi-sidebar-header-ctn,
+.fi-sidebar-header-logo-ctn {
+    display: none;
+}
+
+/* Ensure built-in topbar branding is visible across breakpoints */
+.fi-topbar-start {
+    display: flex;
+    margin-inline-end: 1rem;
+}
+
+/* Keep desktop collapse-arrow controls hidden on mobile. */
+.fi-topbar-collapse-sidebar-btn-ctn {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .fi-topbar-collapse-sidebar-btn-ctn {
+        display: block;
+    }
+}
+
+.fi-topbar-start .fi-logo {
+    margin-inline-start: 0.5rem;
+}
+
+.fi-topbar-ctn {
+    z-index: 40;
+}
+
+.fi-topbar-start .fi-logo img {
+    height: 2rem;
+    width: auto;
+}
+
+.fi-topbar-start .fi-logo {
+    font-family: 'Montserrat', ui-sans-serif, sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+/* Sidebar should slide from below topbar */
+.fi-sidebar {
+    top: var(--rr-topbar-height);
+    height: calc(100dvh - var(--rr-topbar-height));
+}
+
+/* Keep mobile sidebar compact at top. */
+.fi-sidebar-nav {
+    padding-top: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+    .fi-body-has-topbar .fi-main-sidebar {
+        background-color: rgb(255 255 255);
+    }
+
+    .dark .fi-body-has-topbar .fi-main-sidebar {
+        background-color: rgb(17 24 39);
+    }
+}
+
+/* UP color semantics: maroon=primary, forest green=success, gold=accent only */
+.fi-ac-btn-action.fi-color-primary {
+    --c-500: var(--up-maroon) !important;
+}
+
 .fi-ac-btn-action.fi-color-success {
-    --c-500: #014421 !important; /* UP Forest Green */
+    --c-500: var(--up-forest-green) !important;
 }
 
 .fi-ac-btn-action.fi-color-danger {
-    --c-500: #8D1436 !important; /* UP Maroon */
+    --c-500: var(--up-maroon) !important;
+}
+
+.fi-ac-btn-action.fi-color-warning {
+    --c-500: var(--up-gold) !important;
 }

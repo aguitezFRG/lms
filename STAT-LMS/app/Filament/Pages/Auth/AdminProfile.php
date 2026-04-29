@@ -2,11 +2,8 @@
 
 namespace App\Filament\Pages\Auth;
 
-use App\Enums\MaterialEventType;
-use App\Models\MaterialAccessEvents;
 use App\Services\PasswordEncryptionService;
 use Filament\Actions\Action;
-use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
 use Filament\Infolists\Contracts\HasInfolists;
@@ -15,25 +12,15 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Table;
 use Illuminate\Support\Facades\Hash;
 
-class AdminProfile extends Page implements HasInfolists, HasTable
+class AdminProfile extends Page implements HasInfolists
 {
     use InteractsWithInfolists;
-    use InteractsWithTable;
 
     protected string $view = 'filament.pages.auth.admin-profile';
 
     protected static bool $shouldRegisterNavigation = false;
-
-    protected ?string $pollingInterval = '120s';
-
-    public string $activeTab = 'history';
 
     // ── Dynamic title ─────────────────────────────────────────────────────────
 
@@ -75,15 +62,6 @@ class AdminProfile extends Page implements HasInfolists, HasTable
                 ->modalContent(view('filament.components.password-change-modal'))
                 ->modalFooterActions([])
                 ->action(fn () => null),
-
-            Action::make('markAllRead')
-                ->label('Mark All as Read')
-                ->icon('heroicon-o-check-circle')
-                ->color('gray')
-                ->visible(fn () => $this->activeTab === 'notifications' &&
-                    auth()->user()->unreadNotifications()->count() > 0
-                )
-                ->action(fn () => auth()->user()->unreadNotifications->markAsRead()),
         ];
     }
 
@@ -118,23 +96,6 @@ class AdminProfile extends Page implements HasInfolists, HasTable
     private function stripEncPrefix(string $value): string
     {
         return str_starts_with($value, 'ENC:') ? substr($value, 4) : $value;
-    }
-
-    // ── Tab Switching ─────────────────────────────────────────────────────────
-
-    public function setTab(string $tab): void
-    {
-        $this->activeTab = $tab;
-        $this->resetTable();
-    }
-
-    public function markRead(string $id): void
-    {
-        auth()->user()
-            ->notifications()
-            ->where('id', $id)
-            ->first()
-            ?->markAsRead();
     }
 
     // ── Profile Infolist ──────────────────────────────────────────────────────
@@ -181,130 +142,6 @@ class AdminProfile extends Page implements HasInfolists, HasTable
         ]);
     }
 
-    // ── Notifications Infolist ────────────────────────────────────────────────
-
-    public function notificationsInfolist(Schema $schema): Schema
-    {
-        $notifications = auth()->user()->notifications()->latest()->get();
-
-        $items = $notifications->map(fn ($n) => [
-            'id' => $n->id,
-            'title' => $n->data['title'] ?? 'Notification',
-            'message' => $n->data['message'] ?? '',
-            'since' => $n->created_at->diffForHumans(),
-            'is_unread' => is_null($n->read_at),
-        ])->values()->toArray();
-
-        return $schema->components([
-            Section::make()
-                ->schema([
-                    RepeatableEntry::make('items')
-                        ->label('')
-                        ->state($items)
-                        ->schema([
-                            TextEntry::make('title')
-                                ->label('')
-                                ->weight('semibold')
-                                ->size('sm'),
-
-                            TextEntry::make('message')
-                                ->label('')
-                                ->color('gray')
-                                ->size('sm'),
-
-                            TextEntry::make('since')
-                                ->label('')
-                                ->color('gray')
-                                ->size('xs'),
-                        ])
-                        ->columns(1),
-                ])
-                ->visible(fn () => count($items) > 0),
-
-            Section::make()
-                ->schema([
-                    TextEntry::make('empty')
-                        ->label('')
-                        ->state('No notifications yet.')
-                        ->color('gray'),
-                ])
-                ->visible(fn () => count($items) === 0),
-        ]);
-    }
-
-    // ── History Table ─────────────────────────────────────────────────────────
-
-    public function table(Table $table): Table
-    {
-        return $table
-            ->deferLoading()
-            ->defaultSort('created_at', 'desc')
-            ->query(
-                MaterialAccessEvents::query()
-                    ->with(['material.parent'])
-                    ->where('user_id', auth()->id())
-                    ->whereIn('event_type', ['borrow', 'request'])
-            )
-            ->columns([
-                TextColumn::make('material.parent.title')
-                    ->label('Material')
-                    ->limit(40)
-                    ->searchable()
-                    ->wrap(),
-
-                TextColumn::make('event_type')
-                    ->label('Type')
-                    ->badge()
-                    ->color(fn (string $state) => MaterialEventType::from($state)->getColor())
-                    ->formatStateUsing(fn (string $state) => MaterialEventType::from($state)->getLabel()),
-
-                TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'warning',
-                        'approved' => 'success',
-                        'rejected' => 'danger',
-                        'completed' => 'gray',
-                        'cancelled' => 'gray',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state) => ucfirst($state)),
-
-                TextColumn::make('due_at')
-                    ->label('Due Date')
-                    ->dateTime('M d, Y')
-                    ->placeholder('—')
-                    ->color(fn (MaterialAccessEvents $record) => $record->is_overdue ? 'danger' : null)
-                    ->description(fn (MaterialAccessEvents $record) => $record->is_overdue ? 'Overdue!' : null),
-
-                TextColumn::make('created_at')
-                    ->label('Requested')
-                    ->dateTime('M d, Y')
-                    ->sortable(),
-            ])
-            ->defaultSort('created_at', 'desc')
-            ->filters([
-                SelectFilter::make('status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'approved' => 'Approved',
-                        'rejected' => 'Rejected',
-                        'completed' => 'Completed',
-                        'cancelled' => 'Cancelled',
-                    ]),
-
-                SelectFilter::make('event_type')
-                    ->label('Type')
-                    ->options([
-                        'request' => 'Digital Request',
-                        'borrow' => 'Physical Borrow',
-                    ]),
-            ])
-            ->emptyStateHeading('No access history yet.')
-            ->emptyStateIcon('heroicon-o-clock');
-    }
-
     // ── View Data ─────────────────────────────────────────────────────────────
 
     protected function getViewData(): array
@@ -312,17 +149,6 @@ class AdminProfile extends Page implements HasInfolists, HasTable
         return [
             'initials' => strtoupper(substr(auth()->user()->f_name ?? auth()->user()->name, 0, 1))
                            .strtoupper(substr(auth()->user()->l_name ?? '', 0, 1)),
-            'unreadCount' => auth()->user()->unreadNotifications()->count(),
-            'activeTab' => $this->activeTab,
-
-            'notifications' => auth()->user()->notifications()->latest()->get()->map(fn ($n) => [
-                'id' => $n->id,
-                'title' => $n->data['title'] ?? 'Notification',
-                'message' => $n->data['message'] ?? '',
-                'type' => $n->data['type'] ?? 'general',
-                'since' => $n->created_at->diffForHumans(),
-                'is_unread' => is_null($n->read_at),
-            ])->values()->toArray(),
         ];
     }
 }

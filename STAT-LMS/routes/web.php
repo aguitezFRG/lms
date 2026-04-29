@@ -21,6 +21,7 @@ Route::get('/', function () {
 
 // Public key for client-side password encryption — no auth required, no sensitive data
 Route::get('/password-encryption-key', PasswordEncryptionKeyController::class)
+    ->middleware('throttle:60,1')
     ->name('password.encryption-key');
 
 // Google OAuth routes — no auth middleware required for initial redirect/callback
@@ -29,7 +30,7 @@ Route::middleware(['throttle:google-sso'])->group(function () {
     Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('auth.google.callback');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'throttle:material-stream'])->group(function () {
     Route::get('/materials/{record}/viewer', [MaterialStreamController::class, 'viewer'])
         ->name('materials.viewer');
 

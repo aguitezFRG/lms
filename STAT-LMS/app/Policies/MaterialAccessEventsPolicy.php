@@ -13,8 +13,14 @@ class MaterialAccessEventsPolicy
      */
     public function viewAny(User $user): bool
     {
-        // All users can view the list of their own requests, but only committee, IT, and RR staff can view all requests
-        return true;
+        return in_array($user->role, [
+            \App\Enums\UserRole::SUPER_ADMIN,
+            \App\Enums\UserRole::COMMITTEE,
+            \App\Enums\UserRole::IT,
+            \App\Enums\UserRole::RR,
+            \App\Enums\UserRole::FACULTY,
+            \App\Enums\UserRole::STUDENT,
+        ]);
     }
 
     /**

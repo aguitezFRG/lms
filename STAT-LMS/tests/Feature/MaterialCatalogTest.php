@@ -290,8 +290,8 @@ class MaterialCatalogTest extends TestCase
     {
         // Use raw factories to preserve booted() hooks (make* helpers flush event listeners)
         $parent = RrMaterialParents::factory()->create();
-        $copyA = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_available' => true]);
-        $copyB = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_available' => true]);
+        $copyA = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
+        $copyB = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
 
         $parent->delete();
 
@@ -303,8 +303,8 @@ class MaterialCatalogTest extends TestCase
     public function restoring_parent_respects_individual_copy_deletion_precedence(): void
     {
         $parent = RrMaterialParents::factory()->create();
-        $copyA = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_available' => true]);
-        $copyB = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_available' => true]);
+        $copyA = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
+        $copyB = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
 
         // Delete copyB individually before deleting the parent
         $copyB->delete();
@@ -383,5 +383,71 @@ class MaterialCatalogTest extends TestCase
             ->searchTable('Bayesian')
             ->assertSee('Unique Bayesian Study')
             ->assertDontSee('Unrelated Paper');
+    }
+
+    // ── Publication Date Range Guards ─────────────────────────────────────────
+
+    /** @test */
+    public function draft_pub_date_from_auto_clears_when_to_is_set_earlier(): void
+    {
+        $this->makeMaterial(1, ['title' => 'Dated Material']);
+        $student = $this->makeUser('student');
+        $this->actingAs($student);
+
+        // Setting "To" earlier than the existing "From" should clear "From" (not "To"),
+        // so the user's new "To" value is preserved.
+        $component = Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ListCatalogs::class)
+            ->set('availableOnly', false)
+            ->set('draftPubDateFrom', '2024-06-01')
+            ->set('draftPubDateTo', '2024-01-01');
+
+        $component
+            ->assertSet('draftPubDateFrom', '')
+            ->assertSet('draftPubDateTo', '2024-01-01');
+    }
+
+    /** @test */
+    public function draft_pub_date_to_auto_clears_when_from_is_set_later(): void
+    {
+        $this->makeMaterial(1, ['title' => 'Dated Material']);
+        $student = $this->makeUser('student');
+        $this->actingAs($student);
+
+        // Setting "From" later than the existing "To" should clear "To" (not "From"),
+        // so the user's new "From" value is preserved.
+        $component = Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ListCatalogs::class)
+            ->set('availableOnly', false)
+            ->set('draftPubDateTo', '2024-01-01')
+            ->set('draftPubDateFrom', '2024-06-01');
+
+        $component
+            ->assertSet('draftPubDateFrom', '2024-06-01')
+            ->assertSet('draftPubDateTo', '');
+    }
+
+    /** @test */
+    public function apply_filters_applies_single_date_bound_after_guard_clears_conflict(): void
+    {
+        $this->makeMaterial(1, ['title' => 'Dated Material']);
+        $student = $this->makeUser('student');
+        $this->actingAs($student);
+
+        // Guard clears "From" when "To" is set earlier, leaving only "To" active.
+        $component = Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ListCatalogs::class)
+            ->set('availableOnly', false)
+            ->set('filterPanelOpen', true)
+            ->set('draftPubDateFrom', '2024-06-01')
+            ->set('draftPubDateTo', '2024-01-01');
+
+        $component
+            ->assertSet('draftPubDateFrom', '')
+            ->assertSet('draftPubDateTo', '2024-01-01');
+
+        $component->call('applyFilters');
+
+        $component
+            ->assertSet('pubDateFrom', '')
+            ->assertSet('pubDateTo', '2024-01-01')
+            ->assertSet('filterPanelOpen', false);
     }
 }

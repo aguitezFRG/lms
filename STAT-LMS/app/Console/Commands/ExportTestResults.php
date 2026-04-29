@@ -31,9 +31,43 @@ class ExportTestResults extends Command
     public function handle()
     {
         $xmlPath = storage_path('app/junit.xml');
-        $outputPath = $this->option('path');
+        $rawOutputPath = $this->option('path');
         $failuresOnly = $this->option('failures-only');
         $basePath = base_path();
+
+        // Normalise dot-dot segments without touching the filesystem.
+        $normalisePath = static function (string $path): string {
+            $sep = DIRECTORY_SEPARATOR;
+            $parts = [];
+            foreach (explode($sep, str_replace(['/', '\\'], $sep, $path)) as $part) {
+                if ($part === '' || $part === '.') {
+                    continue;
+                }
+                if ($part === '..') {
+                    array_pop($parts);
+                } else {
+                    $parts[] = $part;
+                }
+            }
+
+            return $sep.implode($sep, $parts);
+        };
+
+        $publicBase = $normalisePath(public_path());
+        $tentativeDir = $normalisePath(dirname(public_path($rawOutputPath)));
+        $fullOutputPath = $tentativeDir.DIRECTORY_SEPARATOR.basename($rawOutputPath);
+
+        if (! str_starts_with(
+            rtrim($tentativeDir, '/\\').DIRECTORY_SEPARATOR,
+            rtrim($publicBase, '/\\').DIRECTORY_SEPARATOR
+        )) {
+            $this->error('Invalid output path: path must resolve inside the public/ directory.');
+
+            return self::FAILURE;
+        }
+
+        \Illuminate\Support\Facades\File::ensureDirectoryExists($tentativeDir);
+        $outputPath = $rawOutputPath;
 
         // Clean up any stale XML from a previous run
         File::delete($xmlPath);
@@ -161,8 +195,6 @@ class ExportTestResults extends Command
         $pdf = Pdf::loadView('reports.test-results', $data)
             ->setPaper('a4', 'portrait');
 
-        $fullOutputPath = public_path($outputPath);
-        File::ensureDirectoryExists(dirname($fullOutputPath));
         $pdf->save($fullOutputPath);
 
         // 8. Clean up the temporary XML

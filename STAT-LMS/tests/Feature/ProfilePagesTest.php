@@ -15,16 +15,13 @@ use Tests\TestCase;
  * Covers:
  * - AdminProfile accessible only to admin-panel roles (committee, IT, staff)
  * - UserProfile accessible only to user-panel roles (faculty, student)
- * - UserProfile displays correct pending / approved / total counts
- * - Tab switching updates the displayed request table
- * - Pending tab shows only pending requests
- * - Approved tab shows only approved requests
- * - Closed tab shows rejected and cancelled requests
- * - Notifications tab shows database notifications
- * - "Mark All as Read" action clears unread count
+ * - ListRequests page displays tabs with pending / approved / closed filters
+ * - Pending tab filters to pending requests only
+ * - Approved tab filters to approved requests only
+ * - Closed tab filters to rejected/cancelled requests only
+ * - NotificationBell component shows stored notifications
+ * - NotificationBell "Mark All as Read" clears unread count
  * - Initials derived from f_name and l_name
- * - AdminProfile history table scoped to authenticated admin user
- * - Notifications tab badge count reflects unread count
  */
 class ProfilePagesTest extends TestCase
 {
@@ -118,51 +115,10 @@ class ProfilePagesTest extends TestCase
             ->assertSee('Maria'); // f_name appears in the page title "Welcome, Maria!"
     }
 
-    // ── Request Counts ────────────────────────────────────────────────────────
+    // ── Request Counts via ListRequests widget ────────────────────────────────
 
     /** @test */
-    public function user_profile_displays_correct_pending_count(): void
-    {
-        [$parent, $copy] = $this->makeParentAndCopy();
-        $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
-
-        $this->makeEvent($student, $copy, 'pending');
-        $this->makeEvent($student, $copy, 'pending');
-        $this->makeEvent($student, $copy, 'approved');
-
-        $this->actingAs($student);
-
-        $pendingCount = MaterialAccessEvents::where('user_id', $student->id)
-            ->where('status', 'pending')
-            ->count();
-
-        Livewire::test(\App\Filament\Pages\User\UserProfile::class)
-            ->assertSeeHtml((string) $pendingCount);
-    }
-
-    /** @test */
-    public function user_profile_displays_correct_approved_count(): void
-    {
-        [$parent, $copy] = $this->makeParentAndCopy();
-        $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
-
-        $this->makeEvent($student, $copy, 'approved');
-        $this->makeEvent($student, $copy, 'pending');
-
-        $this->actingAs($student);
-
-        $approvedCount = MaterialAccessEvents::where('user_id', $student->id)
-            ->where('status', 'approved')
-            ->count();
-
-        Livewire::test(\App\Filament\Pages\User\UserProfile::class)
-            ->assertSee((string) $approvedCount);
-    }
-
-    // ── Tab Switching ─────────────────────────────────────────────────────────
-
-    /** @test */
-    public function pending_tab_shows_only_pending_requests(): void
+    public function list_requests_page_pending_tab_shows_only_pending_requests(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
         $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
@@ -172,15 +128,14 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Pages\User\UserProfile::class)
-            ->call('setTab', 'pending')
-            ->call('loadTable')
+        Livewire::test(\App\Filament\Resources\User\Requests\Pages\ListRequests::class)
+            ->set('activeTab', 'pending')
             ->assertSee($pending->id)
             ->assertDontSee($approved->id);
     }
 
     /** @test */
-    public function approved_tab_shows_only_approved_requests(): void
+    public function list_requests_page_approved_tab_shows_only_approved_requests(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
         $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
@@ -190,15 +145,14 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Pages\User\UserProfile::class)
-            ->call('setTab', 'approved')
-            ->call('loadTable')
+        Livewire::test(\App\Filament\Resources\User\Requests\Pages\ListRequests::class)
+            ->set('activeTab', 'approved')
             ->assertSee($approved->id)
             ->assertDontSee($pending->id);
     }
 
     /** @test */
-    public function closed_tab_shows_rejected_and_cancelled_requests(): void
+    public function list_requests_page_closed_tab_shows_rejected_and_cancelled_requests(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
         $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
@@ -209,18 +163,17 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Pages\User\UserProfile::class)
-            ->call('setTab', 'closed')
-            ->call('loadTable')
+        Livewire::test(\App\Filament\Resources\User\Requests\Pages\ListRequests::class)
+            ->set('activeTab', 'closed')
             ->assertSee($rejected->id)
             ->assertSee($cancelled->id)
             ->assertDontSee($pending->id);
     }
 
-    // ── Notifications Tab ─────────────────────────────────────────────────────
+    // ── NotificationBell Component ────────────────────────────────────────────
 
     /** @test */
-    public function notifications_tab_shows_stored_notifications(): void
+    public function notification_bell_shows_stored_notifications(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
         $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
@@ -230,13 +183,12 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Pages\User\UserProfile::class)
-            ->call('setTab', 'notifications')
+        Livewire::test(\App\Livewire\NotificationBell::class)
             ->assertSee('approved', false); // notification message contains "approved"
     }
 
     /** @test */
-    public function mark_all_as_read_action_clears_unread_count(): void
+    public function notification_bell_mark_all_as_read_clears_unread_count(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
         $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
@@ -248,36 +200,14 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Pages\User\UserProfile::class)
-            ->call('setTab', 'notifications')
-            ->callAction('markAllRead');
+        Livewire::test(\App\Livewire\NotificationBell::class)
+            ->call('markAllAsRead');
 
         $this->assertEquals(0, $student->fresh()->unreadNotifications()->count());
     }
 
-    // ── AdminProfile History Table ────────────────────────────────────────────
-
     /** @test */
-    public function admin_profile_history_scoped_to_current_admin_user(): void
-    {
-        [$parent, $copy] = $this->makeParentAndCopy();
-        $committee = $this->makeUser('committee', ['f_name' => 'Test', 'l_name' => 'User']);
-        $otherAdmin = $this->makeUser('it', ['f_name' => 'Test', 'l_name' => 'User']);
-
-        // Create events for both admins
-        $myEvent = $this->makeEvent($committee, $copy, 'approved');
-        $otherEvent = $this->makeEvent($otherAdmin, $copy, 'pending');
-
-        $this->actingAs($committee);
-
-        Livewire::test(\App\Filament\Pages\Auth\AdminProfile::class)
-            ->call('loadTable')
-            ->assertSee($myEvent->id)
-            ->assertDontSee($otherEvent->id);
-    }
-
-    /** @test */
-    public function admin_profile_notifications_tab_shows_unread_badge(): void
+    public function notification_bell_unread_badge_count_reflects_unread_notifications(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
         $committee = $this->makeUser('committee', ['f_name' => 'Test', 'l_name' => 'User']);
@@ -292,7 +222,7 @@ class ProfilePagesTest extends TestCase
         $this->assertGreaterThanOrEqual(1, $unreadCount);
 
         // Verify the badge count appears in the rendered component
-        Livewire::test(\App\Filament\Pages\Auth\AdminProfile::class)
+        Livewire::test(\App\Livewire\NotificationBell::class)
             ->assertSee((string) $unreadCount);
     }
 }

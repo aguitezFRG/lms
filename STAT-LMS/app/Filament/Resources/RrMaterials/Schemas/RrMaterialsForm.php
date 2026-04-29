@@ -137,7 +137,7 @@ class RrMaterialsForm
 
                             $rawName = "{$title}-{$year}-{$uuid}-{$version}";
 
-                            return $typePrefix.'_'.$rawName.'.'.$file->getClientOriginalExtension();
+                            return $typePrefix.'_'.$rawName.'.pdf';
                         }),
 
                     /* // PHYSICAL COPY METADATA (Commented out for future use)

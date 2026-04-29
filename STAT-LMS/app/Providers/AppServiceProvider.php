@@ -42,8 +42,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Blade::componentNamespace('App\\Filament\\Components', 'onboarding');
 
-        // Only force HTTPS if X-Forwarded-Proto header is present (ngrok or reverse proxy)
-        if (request()->hasHeader('X-Forwarded-Proto')) {
+        if ((bool) config('app.force_https', false)) {
             URL::forceScheme('https');
         }
 
@@ -59,6 +58,15 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('google-sso', function (Request $request) {
             return Limit::perMinute(5)->by($request->ip());
+        });
+
+        RateLimiter::for('material-stream', function (Request $request) {
+            $userId = optional($request->user())->id ?? $request->ip();
+
+            return [
+                Limit::perMinute(30)->by($userId),
+                Limit::perMinute(60)->by($request->ip()),
+            ];
         });
 
         MaterialAccessEvents::observe(MaterialAccessEventsObserver::class);

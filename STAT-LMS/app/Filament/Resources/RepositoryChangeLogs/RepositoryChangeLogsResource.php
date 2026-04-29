@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\RepositoryChangeLogs;
 
-use App\Filament\Resources\RepositoryChangeLogs\Pages\CreateRepositoryChangeLogs;
-use App\Filament\Resources\RepositoryChangeLogs\Pages\EditRepositoryChangeLogs;
 use App\Filament\Resources\RepositoryChangeLogs\Pages\ListRepositoryChangeLogs;
 use App\Filament\Resources\RepositoryChangeLogs\Pages\ViewRepositoryChangeLogs;
 use App\Filament\Resources\RepositoryChangeLogs\Schemas\RepositoryChangeLogsForm;
@@ -55,9 +53,7 @@ class RepositoryChangeLogsResource extends Resource
     {
         return [
             'index' => ListRepositoryChangeLogs::route('/'),
-            'create' => CreateRepositoryChangeLogs::route('/create'),
             'view' => ViewRepositoryChangeLogs::route('/{record}'),
-            'edit' => EditRepositoryChangeLogs::route('/{record}/edit'),
         ];
     }
 }

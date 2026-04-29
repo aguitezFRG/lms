@@ -69,7 +69,7 @@ class UserPanelProvider extends PanelProvider
             ])
             ->userMenuItems([
                 MenuItem::make()
-                    ->label('My Profile & Requests')
+                    ->label('My Profile')
                     ->url(fn () => UserProfile::getUrl())
                     ->icon(Heroicon::OutlinedUser),
             ])
@@ -97,6 +97,10 @@ class UserPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
                 fn () => view('filament.components.google-sso-button'),
+            )
+            ->renderHook(
+                PanelsRenderHook::USER_MENU_BEFORE,
+                fn () => auth()->check() ? view('filament.components.notification-bell-hook') : '',
             )
             ->strictAuthorization()
             ->authMiddleware([

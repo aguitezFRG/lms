@@ -11,8 +11,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $trustedProxies = array_values(array_filter(array_map(
+            static fn (string $proxy): string => trim($proxy),
+            explode(',', (string) env('TRUSTED_PROXIES', '127.0.0.1,::1'))
+        )));
+
         $middleware->trustProxies(
-            at: '*',
+            at: $trustedProxies === ['*'] ? '*' : $trustedProxies,
             headers: \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR |
                  \Illuminate\Http\Request::HEADER_X_FORWARDED_HOST |
                  \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT |
@@ -20,7 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
         // Decrypt RSA-encrypted password fields from Livewire update payloads
-        $middleware->web(append: [\App\Http\Middleware\DecryptLivewirePasswords::class]);
+        $middleware->append(\App\Http\Middleware\SetSecurityHeaders::class);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\DecryptLivewirePasswords::class,
+        ]);
 
         $middleware->redirectGuestsTo('/app/login');
 

@@ -32,7 +32,7 @@ class RrMaterialParentsPolicy
      */
     public function create(User $user): bool
     {
-        return $user->role !== UserRole::STUDENT;
+        return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
     /**

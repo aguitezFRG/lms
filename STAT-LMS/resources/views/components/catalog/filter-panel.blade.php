@@ -110,7 +110,7 @@
                                 <x-filament::input
                                     wire:model="draftPubDateFrom"
                                     type="date"
-                                    max="{{ date('Y-m-d') }}"
+                                    max="{{ $draftPubDateTo ?: date('Y-m-d') }}"
                                 />
                             </x-filament::input.wrapper>
                         </div>
@@ -121,6 +121,7 @@
                                 <x-filament::input
                                     wire:model="draftPubDateTo"
                                     type="date"
+                                    min="{{ $draftPubDateFrom }}"
                                     max="{{ date('Y-m-d') }}"
                                 />
                             </x-filament::input.wrapper>
@@ -133,6 +134,9 @@
                             >Clear</x-filament::button>
                         @endif
                     </div>
+                    @error('draftPubDateTo')
+                        <p class="mt-1 text-sm text-danger-600 dark:text-danger-400">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 {{-- SDG Filter --}}
