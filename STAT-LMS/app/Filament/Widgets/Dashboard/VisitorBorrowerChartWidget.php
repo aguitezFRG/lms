@@ -5,6 +5,7 @@ namespace App\Filament\Widgets\Dashboard;
 use App\Models\MaterialAccessEvents;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Facades\Cache;
 
 class VisitorBorrowerChartWidget extends ChartWidget
 {
@@ -14,7 +15,7 @@ class VisitorBorrowerChartWidget extends ChartWidget
 
     protected ?string $pollingInterval = null;
 
-    protected static bool $isLazy = false;
+    protected static bool $isLazy = true;
 
     protected ?int $numDays = 4;
 
@@ -41,7 +42,14 @@ class VisitorBorrowerChartWidget extends ChartWidget
 
     protected function getData(): array
     {
-        [$labels, $visitors, $borrowers] = $this->buildSeries();
+        $filter = $this->filter ?? 'daily';
+        $cacheDate = now()->toDateString();
+
+        [$labels, $visitors, $borrowers] = Cache::remember(
+            "dashboard.visitor-borrower.{$filter}.{$cacheDate}",
+            now()->addMinutes(5),
+            fn (): array => $this->buildSeries()
+        );
 
         return [
             'labels' => $labels,

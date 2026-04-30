@@ -21,7 +21,7 @@ class PendingBorrowsWidget extends BaseWidget
 
     protected static ?string $pollingInterval = '60s';
 
-    protected static bool $isLazy = false;
+    protected static bool $isLazy = true;
 
     protected $listeners = ['request-actioned' => '$refresh'];
 

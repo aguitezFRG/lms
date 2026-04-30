@@ -17,7 +17,7 @@ class TopMaterialsTableWidget extends BaseWidget
 
     protected static ?string $pollingInterval = '120s';
 
-    protected static bool $isLazy = false;
+    protected static bool $isLazy = true;
 
     public static function canView(): bool
     {

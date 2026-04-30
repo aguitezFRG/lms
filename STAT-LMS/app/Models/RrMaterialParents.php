@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Notification;
 
 class RrMaterialParents extends Model
 {
@@ -41,18 +42,37 @@ class RrMaterialParents extends Model
             $oldLevel = (int) $material->getOriginal('access_level');
             $newLevel = (int) $material->access_level;
 
-            // Notify all users who have any access event (borrow or request)
-            // linked to a copy of this material
-            $affectedUserIds = MaterialAccessEvents::whereHas('material', fn ($q) => $q->where('material_parent_id', $material->id)
-            )
+            $activeEvents = MaterialAccessEvents::whereHas('material', fn ($q) => $q->where('material_parent_id', $material->id))
                 ->whereIn('event_type', ['borrow', 'request'])
                 ->whereIn('status', ['pending', 'approved'])
-                ->pluck('user_id')
-                ->unique();
+                ->with('user')
+                ->get();
 
-            User::whereIn('id', $affectedUserIds)->each(function (User $user) use ($material, $oldLevel, $newLevel) {
-                $user->notify(new AccessLevelChanged($material, $oldLevel, $newLevel));
-            });
+            if ($activeEvents->isEmpty()) {
+                return;
+            }
+
+            // Notify all affected users
+            $affectedUsers = User::whereIn('id', $activeEvents->pluck('user_id')->unique()->values())->get();
+            Notification::send($affectedUsers, new AccessLevelChanged($material, $oldLevel, $newLevel));
+
+            // Revoke events for users who no longer qualify for the new access level
+            $disqualifiedRoles = match (true) {
+                $newLevel >= 3 => ['student', 'faculty', 'staff/custodian'],
+                $newLevel >= 2 => ['student'],
+                default => [],
+            };
+
+            if (empty($disqualifiedRoles)) {
+                return;
+            }
+
+            $activeEvents
+                ->filter(fn ($event) => $event->user && in_array($event->user->role->value, $disqualifiedRoles))
+                ->each(fn ($event) => $event->update([
+                    'status' => 'rejected',
+                    'rejection_reason' => ['Material access level was changed'],
+                ]));
         });
 
         // If a parent material is deleted, mark all its copies as unavailable

@@ -22,16 +22,25 @@ class ExpireDigitalAccess extends Command
             ->whereHas('material', fn ($q) => $q->where('is_digital', true))
             ->get();
 
+        $now = now();
+        $materialIds = $expired->pluck('rr_material_id')->unique()->values();
+
+        $activeCountsByMaterial = MaterialAccessEvents::whereIn('rr_material_id', $materialIds)
+            ->where('status', 'approved')
+            ->whereNull('completed_at')
+            ->selectRaw('rr_material_id, COUNT(*) as aggregate')
+            ->groupBy('rr_material_id')
+            ->pluck('aggregate', 'rr_material_id')
+            ->map(fn ($count) => (int) $count);
+
         foreach ($expired as $event) {
-            $event->updateQuietly(['status' => 'revoked', 'completed_at' => now()]);
+            $event->updateQuietly(['status' => 'revoked', 'completed_at' => $now]);
 
-            $hasOtherActive = \App\Models\MaterialAccessEvents::where('rr_material_id', $event->rr_material_id)
-                ->where('id', '!=', $event->id)
-                ->whereIn('status', ['approved'])
-                ->whereNull('completed_at')
-                ->exists();
+            $materialId = $event->rr_material_id;
+            $remainingActive = max(0, (int) ($activeCountsByMaterial[$materialId] ?? 0) - 1);
+            $activeCountsByMaterial[$materialId] = $remainingActive;
 
-            if (! $hasOtherActive) {
+            if ($remainingActive === 0) {
                 $event->material?->updateQuietly(['is_available' => true]);
             }
 

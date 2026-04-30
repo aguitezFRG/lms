@@ -92,6 +92,7 @@ class RrMaterialParentsResource extends Resource
     {
         $user = Auth::user();
         $query = parent::getEloquentQuery();
+        $query->with('authorUser');
 
         // If there is no user, or for some reason the role is missing,
         // we default to the most restrictive view (Level 1).

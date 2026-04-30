@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Decrypt RSA-encrypted password fields from Livewire update payloads
         $middleware->append(\App\Http\Middleware\SetSecurityHeaders::class);
+        $middleware->append(\App\Http\Middleware\TrackRequestTiming::class);
 
         $middleware->web(append: [
             \App\Http\Middleware\DecryptLivewirePasswords::class,

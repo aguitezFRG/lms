@@ -13,7 +13,7 @@ class EnsureProfileComplete
         $user = $request->user();
         if ($user && ! $user->is_profile_complete) {
             if (! $request->routeIs('filament.user.pages.onboarding', 'auth.google.*')) {
-                return redirect()->route('filament.user.pages.onboarding');
+                return redirect('/app/onboarding');
             }
         }
 
