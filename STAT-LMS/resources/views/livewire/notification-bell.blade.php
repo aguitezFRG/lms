@@ -3,29 +3,6 @@
     x-data="{ open: @entangle('open') }"
     x-on:click.outside="open = false"
 >
-    @script
-        <script>
-            $wire.on('request-status-toast', ({ title, message, status }) => {
-                if (! window.FilamentNotification) {
-                    return;
-                }
-
-                const toast = new window.FilamentNotification()
-                    .title(title)
-                    .body(message)
-                    .seconds(6);
-
-                if (status === 'danger') {
-                    toast.danger().send();
-
-                    return;
-                }
-
-                toast.success().send();
-            });
-        </script>
-    @endscript
-
     {{-- Bell button --}}
     <button
         type="button"
@@ -108,6 +85,4 @@
         @endif
     </div>
 
-    {{-- Wire poll for live updates (5s) --}}
-    <span wire:poll.5s="pollForNewNotifications" class="hidden"></span>
 </div>

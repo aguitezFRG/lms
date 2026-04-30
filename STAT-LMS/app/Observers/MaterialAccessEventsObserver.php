@@ -42,9 +42,9 @@ class MaterialAccessEventsObserver
             $materialAccessEvents->updateQuietly(['approved_at' => now()]);
         }
 
-        // Notify the user when their request is approved or rejected
+        // Notify the user when their request status changes.
         if (
-            in_array($materialAccessEvents->status, ['approved', 'rejected']) &&
+            in_array($materialAccessEvents->status, ['approved', 'rejected', 'revoked'], true) &&
             $materialAccessEvents->user
         ) {
             $materialAccessEvents->user->notify(

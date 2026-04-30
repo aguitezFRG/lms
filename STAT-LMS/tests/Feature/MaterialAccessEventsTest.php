@@ -109,6 +109,32 @@ class MaterialAccessEventsTest extends TestCase
     }
 
     #[Test]
+    public function stale_user_view_cannot_create_request_after_access_level_is_elevated_and_forces_refresh(): void
+    {
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: true);
+        $student = $this->makeUser('student');
+        $this->actingAs($student);
+
+        $component = Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ViewCatalog::class, [
+            'record' => $parent->id,
+        ]);
+
+        // Simulate stale UI: page was opened while accessible, then access gets elevated.
+        $parent->update(['access_level' => 2]);
+
+        $component
+            ->callAction('requestDigital')
+            ->assertRedirect(\App\Filament\Resources\User\Catalogs\CatalogResource::getUrl().'?requestBlocked=1');
+
+        $this->assertDatabaseMissing('material_access_events', [
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'pending',
+        ]);
+    }
+
+    #[Test]
     public function duplicate_request_for_same_copy_is_blocked(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy(1, digital: true);

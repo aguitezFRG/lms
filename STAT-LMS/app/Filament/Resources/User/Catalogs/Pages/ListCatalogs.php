@@ -110,6 +110,14 @@ class ListCatalogs extends Page
         $this->draftPubDateTo = $this->pubDateTo;
         $this->draftSdgFilter = $this->sdgFilter;
         $this->draftAvailableOnly = $this->availableOnly;
+
+        if (request()->boolean('requestBlocked')) {
+            Notification::make()
+                ->title('Request blocked')
+                ->body('This material now requires a higher access level. The catalog was refreshed to show the latest access rules.')
+                ->danger()
+                ->send();
+        }
     }
 
     // ── Lifecycle hooks — only search/sort apply live ────────────────────────

@@ -15,6 +15,8 @@ class ListMaterialAccessEvents extends ListRecords
 
     protected static string $resource = MaterialAccessEventsResource::class;
 
+    protected ?array $tabBadgeCounts = null;
+
     protected ?string $pollingInterval = '60s';
 
     protected $listeners = ['request-actioned' => '$refresh'];
@@ -23,24 +25,47 @@ class ListMaterialAccessEvents extends ListRecords
     {
         return [
             'all' => Tab::make('All')
-                ->badge(fn () => MaterialAccessEventsResource::getEloquentQuery()->count())
+                ->badge(fn () => $this->getTabBadgeCounts()['all'])
                 ->badgeColor('gray')
                 ->modifyQueryUsing(fn (Builder $query) => $query->reorder()->orderByDesc('created_at')),
 
             'pending' => Tab::make('Pending')
-                ->badge(fn () => MaterialAccessEventsResource::getEloquentQuery()->where('status', 'pending')->count())
+                ->badge(fn () => $this->getTabBadgeCounts()['pending'])
                 ->badgeColor('warning')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'pending')->reorder()->orderBy('created_at')),
 
             'approved' => Tab::make('Approved')
-                ->badge(fn () => MaterialAccessEventsResource::getEloquentQuery()->whereIn('status', ['approved', 'returned', 'revoked'])->count())
+                ->badge(fn () => $this->getTabBadgeCounts()['approved'])
                 ->badgeColor('success')
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereIn('status', ['approved', 'returned', 'revoked'])->reorder()->orderByDesc('created_at')),
 
             'rejected' => Tab::make('Rejected')
-                ->badge(fn () => MaterialAccessEventsResource::getEloquentQuery()->where('status', 'rejected')->count())
+                ->badge(fn () => $this->getTabBadgeCounts()['rejected'])
                 ->badgeColor('danger')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'rejected')->reorder()->orderByDesc('created_at')),
+        ];
+    }
+
+    protected function getTabBadgeCounts(): array
+    {
+        if ($this->tabBadgeCounts !== null) {
+            return $this->tabBadgeCounts;
+        }
+
+        $countsByStatus = MaterialAccessEventsResource::getEloquentQuery()
+            ->selectRaw('status, COUNT(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $approvedLike = (int) ($countsByStatus['approved'] ?? 0)
+            + (int) ($countsByStatus['returned'] ?? 0)
+            + (int) ($countsByStatus['revoked'] ?? 0);
+
+        return $this->tabBadgeCounts = [
+            'all' => (int) $countsByStatus->sum(),
+            'pending' => (int) ($countsByStatus['pending'] ?? 0),
+            'approved' => $approvedLike,
+            'rejected' => (int) ($countsByStatus['rejected'] ?? 0),
         ];
     }
 

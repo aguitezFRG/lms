@@ -89,6 +89,26 @@ class NotificationsTest extends TestCase
     }
 
     #[Test]
+    public function notification_is_sent_when_request_is_revoked(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy();
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'approved',
+        ]);
+
+        $event->update(['status' => 'revoked']);
+
+        Notification::assertSentTo($student, RequestStatusChanged::class);
+    }
+
+    #[Test]
     public function notification_is_not_sent_when_request_is_cancelled(): void
     {
         Notification::fake();
@@ -121,7 +141,18 @@ class NotificationsTest extends TestCase
             'status' => 'pending',
         ]);
 
+        $beforeCount = $student->notifications()->count();
+
         $event->update(['status' => 'approved']);
+
+        $student->refresh();
+
+        $this->assertSame($beforeCount + 1, $student->notifications()->count());
+        $notification = $student->notifications()->latest()->first();
+
+        $this->assertNotNull($notification);
+        $this->assertSame('request_status_changed', $notification->data['type'] ?? null);
+        $this->assertSame($event->id, $notification->data['event_id'] ?? null);
 
         $this->assertDatabaseHas('notifications', [
             'notifiable_type' => User::class,
@@ -351,6 +382,113 @@ class NotificationsTest extends TestCase
         $parent->update(['access_level' => 3]);
 
         Notification::assertSentTo($student, AccessLevelChanged::class);
+    }
+
+    #[Test]
+    public function approved_events_for_disqualified_users_are_revoked_when_access_level_increases(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1);
+        $student = $this->makeUser('student');
+        $faculty = $this->makeUser('faculty');
+
+        $studentEvent = MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'approved',
+        ]);
+
+        $facultyEvent = MaterialAccessEvents::create([
+            'user_id' => $faculty->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'approved',
+        ]);
+
+        RrMaterialParents::clearBootedModels();
+        $parent = RrMaterialParents::find($parent->id);
+
+        // Increase access level to committee-only (3) — both student and faculty lose access
+        $parent->update(['access_level' => 3]);
+
+        $this->assertEquals('rejected', $studentEvent->fresh()->status);
+        $this->assertEquals(['Material access level was changed'], $studentEvent->fresh()->rejection_reason);
+
+        $this->assertEquals('rejected', $facultyEvent->fresh()->status);
+    }
+
+    #[Test]
+    public function pending_events_for_disqualified_users_are_revoked_when_access_level_increases(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1);
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'pending',
+        ]);
+
+        RrMaterialParents::clearBootedModels();
+        $parent = RrMaterialParents::find($parent->id);
+
+        // Increase access level to faculty+ (2) — student loses access
+        $parent->update(['access_level' => 2]);
+
+        $this->assertEquals('rejected', $event->fresh()->status);
+    }
+
+    #[Test]
+    public function events_are_not_revoked_when_access_level_decreases(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(3);
+        $committee = $this->makeUser('committee');
+
+        $event = MaterialAccessEvents::create([
+            'user_id' => $committee->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'approved',
+        ]);
+
+        RrMaterialParents::clearBootedModels();
+        $parent = RrMaterialParents::find($parent->id);
+
+        // Decrease access level — no one loses access
+        $parent->update(['access_level' => 1]);
+
+        $this->assertEquals('approved', $event->fresh()->status);
+    }
+
+    #[Test]
+    public function qualified_users_events_are_not_revoked_when_access_level_increases(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1);
+        $committee = $this->makeUser('committee');
+
+        $event = MaterialAccessEvents::create([
+            'user_id' => $committee->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'approved',
+        ]);
+
+        RrMaterialParents::clearBootedModels();
+        $parent = RrMaterialParents::find($parent->id);
+
+        // Increase to committee-only (3) — committee user still qualifies
+        $parent->update(['access_level' => 3]);
+
+        $this->assertEquals('approved', $event->fresh()->status);
     }
 
     #[Test]

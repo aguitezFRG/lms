@@ -89,4 +89,11 @@ class User extends Authenticatable implements FilamentUser
 
         // return true;
     }
+
+    public function getKey()
+    {
+        $key = parent::getKey();
+
+        return is_object($key) ? (string) $key : $key;
+    }
 }

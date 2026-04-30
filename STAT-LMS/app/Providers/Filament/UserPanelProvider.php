@@ -91,6 +91,10 @@ class UserPanelProvider extends PanelProvider
                 fn () => view('filament.components.password-encryption-script'),
             )
             ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn () => auth()->check() ? view('filament.components.request-status-toast-poller-hook') : '',
+            )
+            ->renderHook(
                 PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,
                 fn () => view('filament.components.session-flash'),
             )

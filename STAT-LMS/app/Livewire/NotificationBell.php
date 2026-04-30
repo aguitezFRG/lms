@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class NotificationBell extends Component
@@ -25,6 +26,9 @@ class NotificationBell extends Component
     {
         $this->open = false;
     }
+
+    #[On('request-status-notifications-updated')]
+    public function refreshNotifications(): void {}
 
     public function markRead(string $id): void
     {
@@ -105,9 +109,9 @@ class NotificationBell extends Component
         return auth()->user()
             ->notifications()
             ->where('created_at', '>=', now()->subDays(2))
+            ->where('data->type', 'request_status_changed')
             ->latest('created_at')
             ->get()
-            ->filter(fn (DatabaseNotification $notification): bool => ($notification->data['type'] ?? null) === 'request_status_changed')
             ->sortBy('created_at')
             ->values();
     }
@@ -121,6 +125,7 @@ class NotificationBell extends Component
         return match (true) {
             str_contains($content, 'approved') => 'success',
             str_contains($content, 'rejected') => 'danger',
+            str_contains($content, 'revoked') => 'danger',
             default => null,
         };
     }
