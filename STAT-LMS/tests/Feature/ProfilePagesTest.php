@@ -7,6 +7,7 @@ use App\Models\RrMaterials;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -61,7 +62,7 @@ class ProfilePagesTest extends TestCase
 
     // ── Route Access ──────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function committee_member_can_access_admin_profile_page(): void
     {
         $committee = $this->makeUser('committee', ['f_name' => 'Test', 'l_name' => 'User']);
@@ -71,7 +72,7 @@ class ProfilePagesTest extends TestCase
             ->assertSuccessful();
     }
 
-    /** @test */
+    #[Test]
     public function student_cannot_access_admin_profile_page(): void
     {
         $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
@@ -81,7 +82,7 @@ class ProfilePagesTest extends TestCase
             ->assertStatus(404);
     }
 
-    /** @test */
+    #[Test]
     public function student_can_access_user_profile_page(): void
     {
         $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
@@ -91,7 +92,7 @@ class ProfilePagesTest extends TestCase
             ->assertSuccessful();
     }
 
-    /** @test */
+    #[Test]
     public function committee_cannot_access_user_profile_page(): void
     {
         $committee = $this->makeUser('committee', ['f_name' => 'Test', 'l_name' => 'User']);
@@ -103,7 +104,7 @@ class ProfilePagesTest extends TestCase
 
     // ── Initials ──────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function user_profile_displays_avatar_icon_instead_of_initials(): void
     {
         $student = $this->makeUser('student', ['f_name' => 'Maria', 'l_name' => 'Santos']);
@@ -117,7 +118,7 @@ class ProfilePagesTest extends TestCase
 
     // ── Request Counts via ListRequests widget ────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function list_requests_page_pending_tab_shows_only_pending_requests(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
@@ -134,7 +135,7 @@ class ProfilePagesTest extends TestCase
             ->assertDontSee($approved->id);
     }
 
-    /** @test */
+    #[Test]
     public function list_requests_page_approved_tab_shows_only_approved_requests(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
@@ -151,7 +152,7 @@ class ProfilePagesTest extends TestCase
             ->assertDontSee($pending->id);
     }
 
-    /** @test */
+    #[Test]
     public function list_requests_page_closed_tab_shows_rejected_and_cancelled_requests(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
@@ -172,7 +173,7 @@ class ProfilePagesTest extends TestCase
 
     // ── NotificationBell Component ────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function notification_bell_shows_stored_notifications(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
@@ -187,7 +188,75 @@ class ProfilePagesTest extends TestCase
             ->assertSee('approved', false); // notification message contains "approved"
     }
 
-    /** @test */
+    #[Test]
+    public function notification_bell_does_not_replay_existing_request_status_notifications_on_first_poll(): void
+    {
+        [$parent, $copy] = $this->makeParentAndCopy();
+        $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
+
+        $event = $this->makeEvent($student, $copy, 'pending');
+        $event->update(['status' => 'approved']);
+
+        $this->actingAs($student);
+
+        Livewire::test(\App\Livewire\NotificationBell::class)
+            ->call('pollForNewNotifications')
+            ->assertNotDispatched('request-status-toast');
+
+        $this->assertEquals(1, $student->fresh()->unreadNotifications()->count());
+    }
+
+    #[Test]
+    public function notification_bell_dispatches_success_toast_for_newly_approved_requests(): void
+    {
+        [$parent, $copy] = $this->makeParentAndCopy();
+        $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
+
+        $event = $this->makeEvent($student, $copy, 'pending');
+
+        $this->actingAs($student);
+
+        $component = Livewire::test(\App\Livewire\NotificationBell::class);
+
+        $event->update(['status' => 'approved']);
+
+        $component
+            ->call('pollForNewNotifications')
+            ->assertDispatched('request-status-toast', function (string $name, array $params): bool {
+                return $params['status'] === 'success'
+                    && str_contains(strtolower($params['title']), 'approved')
+                    && str_contains(strtolower($params['message']), 'approved');
+            });
+
+        $this->assertEquals(1, $student->fresh()->unreadNotifications()->count());
+    }
+
+    #[Test]
+    public function notification_bell_dispatches_danger_toast_for_newly_rejected_requests(): void
+    {
+        [$parent, $copy] = $this->makeParentAndCopy();
+        $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
+
+        $event = $this->makeEvent($student, $copy, 'pending');
+
+        $this->actingAs($student);
+
+        $component = Livewire::test(\App\Livewire\NotificationBell::class);
+
+        $event->update(['status' => 'rejected']);
+
+        $component
+            ->call('pollForNewNotifications')
+            ->assertDispatched('request-status-toast', function (string $name, array $params): bool {
+                return $params['status'] === 'danger'
+                    && str_contains(strtolower($params['title']), 'rejected')
+                    && str_contains(strtolower($params['message']), 'rejected');
+            });
+
+        $this->assertEquals(1, $student->fresh()->unreadNotifications()->count());
+    }
+
+    #[Test]
     public function notification_bell_mark_all_as_read_clears_unread_count(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
@@ -206,7 +275,7 @@ class ProfilePagesTest extends TestCase
         $this->assertEquals(0, $student->fresh()->unreadNotifications()->count());
     }
 
-    /** @test */
+    #[Test]
     public function notification_bell_unread_badge_count_reflects_unread_notifications(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
