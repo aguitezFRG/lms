@@ -187,3 +187,25 @@ document.getElementById('btn-zoom-out')?.addEventListener('click', async () => {
     scale = Math.max(scale - 0.2, 0.6);
     await renderAll();
 });
+
+document.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+});
+
+document.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && ['s', 'p', 'u'].includes(event.key.toLowerCase())) {
+        event.preventDefault();
+    }
+
+    if (event.metaKey && event.shiftKey && event.key.toLowerCase() === 's') {
+        event.preventDefault();
+    }
+
+    if (event.key === 'PrintScreen') {
+        event.preventDefault();
+    }
+
+    if (event.key === 'F12') {
+        event.preventDefault();
+    }
+});

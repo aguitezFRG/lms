@@ -45,7 +45,7 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74,#34d399\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" \"bash -lc 'sleep 3; for u in /app/login /admin/login /app/user-onboarding; do curl -fsS -o /dev/null http://127.0.0.1:8000$u || true; done'\" --names=server,queue,logs,vite,warmup --kill-others-on-fail"
         ],
         "test": [
             "@php artisan config:clear --ansi",

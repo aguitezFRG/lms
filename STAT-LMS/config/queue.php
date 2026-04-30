@@ -6,6 +6,8 @@ return [
     |--------------------------------------------------------------------------
     | Default Queue Connection Name
     |--------------------------------------------------------------------------
+    | Local/dev default uses "database" so workers run without Redis.
+    | Production should prefer "redis" for throughput and lower lock churn.
     |
     | Laravel's queue supports a variety of backends via a single, unified
     | API, giving you convenient access to each backend using identical

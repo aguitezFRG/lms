@@ -46,6 +46,17 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
+        // When behind a reverse proxy (e.g. cloudflared tunnel), the APP_URL
+        // forces all generated URLs to use localhost. Clear it so the URL
+        // generator uses the real host/scheme from the forwarded headers instead.
+        if (! app()->runningInConsole() && app()->bound('request')) {
+            $req = app('request');
+            if ($req->hasHeader('X-Forwarded-Proto')) {
+                URL::forceRootUrl(null);
+                URL::forceScheme($req->header('X-Forwarded-Proto', 'https'));
+            }
+        }
+
         RateLimiter::for('login', function (Request $request) {
             $email = (string) $request->email;
 

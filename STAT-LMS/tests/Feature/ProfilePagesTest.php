@@ -257,6 +257,31 @@ class ProfilePagesTest extends TestCase
     }
 
     #[Test]
+    public function notification_bell_dispatches_danger_toast_for_newly_revoked_requests(): void
+    {
+        [$parent, $copy] = $this->makeParentAndCopy();
+        $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
+
+        $event = $this->makeEvent($student, $copy, 'approved');
+
+        $this->actingAs($student);
+
+        $component = Livewire::test(\App\Livewire\NotificationBell::class);
+
+        $event->update(['status' => 'revoked']);
+
+        $component
+            ->call('pollForNewNotifications')
+            ->assertDispatched('request-status-toast', function (string $name, array $params): bool {
+                return $params['status'] === 'danger'
+                    && str_contains(strtolower($params['title']), 'revoked')
+                    && str_contains(strtolower($params['message']), 'revoked');
+            });
+
+        $this->assertEquals(1, $student->fresh()->unreadNotifications()->count());
+    }
+
+    #[Test]
     public function notification_bell_mark_all_as_read_clears_unread_count(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();

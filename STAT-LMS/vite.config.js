@@ -11,6 +11,7 @@ export default defineConfig({
                 'resources/css/filament/admin/theme.css',
                 'resources/css/filament/user/theme.css',
                 'resources/js/pdf-viewer.js',
+                'resources/js/password-encryption.js',
             ],
             refresh: true,
         }),
