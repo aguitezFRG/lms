@@ -24,22 +24,23 @@ class ListMaterialAccessEvents extends ListRecords
         return [
             'all' => Tab::make('All')
                 ->badge(fn () => MaterialAccessEventsResource::getEloquentQuery()->count())
-                ->badgeColor('gray'),
+                ->badgeColor('gray')
+                ->modifyQueryUsing(fn (Builder $query) => $query->reorder()->orderByDesc('created_at')),
 
             'pending' => Tab::make('Pending')
                 ->badge(fn () => MaterialAccessEventsResource::getEloquentQuery()->where('status', 'pending')->count())
                 ->badgeColor('warning')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'pending')),
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'pending')->reorder()->orderBy('created_at')),
 
             'approved' => Tab::make('Approved')
                 ->badge(fn () => MaterialAccessEventsResource::getEloquentQuery()->whereIn('status', ['approved', 'returned', 'revoked'])->count())
                 ->badgeColor('success')
-                ->modifyQueryUsing(fn (Builder $query) => $query->whereIn('status', ['approved', 'returned', 'revoked'])),
+                ->modifyQueryUsing(fn (Builder $query) => $query->whereIn('status', ['approved', 'returned', 'revoked'])->reorder()->orderByDesc('created_at')),
 
             'rejected' => Tab::make('Rejected')
                 ->badge(fn () => MaterialAccessEventsResource::getEloquentQuery()->where('status', 'rejected')->count())
                 ->badgeColor('danger')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'rejected')),
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'rejected')->reorder()->orderByDesc('created_at')),
         ];
     }
 
