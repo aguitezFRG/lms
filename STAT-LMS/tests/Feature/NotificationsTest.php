@@ -12,6 +12,7 @@ use App\Notifications\RequestStatusChanged;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -47,7 +48,7 @@ class NotificationsTest extends TestCase
 
     // ── RequestStatusChanged ──────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function notification_is_sent_when_request_is_approved(): void
     {
         Notification::fake();
@@ -67,7 +68,7 @@ class NotificationsTest extends TestCase
         Notification::assertSentTo($student, RequestStatusChanged::class);
     }
 
-    /** @test */
+    #[Test]
     public function notification_is_sent_when_request_is_rejected(): void
     {
         Notification::fake();
@@ -87,7 +88,27 @@ class NotificationsTest extends TestCase
         Notification::assertSentTo($student, RequestStatusChanged::class);
     }
 
-    /** @test */
+    #[Test]
+    public function notification_is_sent_when_request_is_revoked(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy();
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'approved',
+        ]);
+
+        $event->update(['status' => 'revoked']);
+
+        Notification::assertSentTo($student, RequestStatusChanged::class);
+    }
+
+    #[Test]
     public function notification_is_not_sent_when_request_is_cancelled(): void
     {
         Notification::fake();
@@ -107,7 +128,7 @@ class NotificationsTest extends TestCase
         Notification::assertNotSentTo($student, RequestStatusChanged::class);
     }
 
-    /** @test */
+    #[Test]
     public function request_status_changed_notification_is_stored_in_database(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
@@ -120,7 +141,18 @@ class NotificationsTest extends TestCase
             'status' => 'pending',
         ]);
 
+        $beforeCount = $student->notifications()->count();
+
         $event->update(['status' => 'approved']);
+
+        $student->refresh();
+
+        $this->assertSame($beforeCount + 1, $student->notifications()->count());
+        $notification = $student->notifications()->latest()->first();
+
+        $this->assertNotNull($notification);
+        $this->assertSame('request_status_changed', $notification->data['type'] ?? null);
+        $this->assertSame($event->id, $notification->data['event_id'] ?? null);
 
         $this->assertDatabaseHas('notifications', [
             'notifiable_type' => User::class,
@@ -130,7 +162,7 @@ class NotificationsTest extends TestCase
 
     // ── AccountDetailsChanged ─────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function notification_sent_when_admin_changes_another_users_fields(): void
     {
         Notification::fake();
@@ -144,7 +176,7 @@ class NotificationsTest extends TestCase
         Notification::assertSentTo($target, AccountDetailsChanged::class);
     }
 
-    /** @test */
+    #[Test]
     public function notification_not_sent_when_user_updates_own_account(): void
     {
         Notification::fake();
@@ -157,7 +189,7 @@ class NotificationsTest extends TestCase
         Notification::assertNotSentTo($user, AccountDetailsChanged::class);
     }
 
-    /** @test */
+    #[Test]
     public function account_details_changed_notification_lists_changed_fields(): void
     {
         $committee = $this->makeUser('committee');
@@ -173,7 +205,7 @@ class NotificationsTest extends TestCase
 
     // ── BorrowDueSoon (Login Listener) ────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function borrow_due_tomorrow_notification_sent_on_login(): void
     {
         Notification::fake();
@@ -197,7 +229,7 @@ class NotificationsTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function borrow_due_in_3_days_notification_sent_on_login(): void
     {
         Notification::fake();
@@ -221,7 +253,7 @@ class NotificationsTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function already_returned_borrow_does_not_trigger_due_soon(): void
     {
         Notification::fake();
@@ -243,7 +275,7 @@ class NotificationsTest extends TestCase
         Notification::assertNotSentTo($student, BorrowDueSoon::class);
     }
 
-    /** @test */
+    #[Test]
     public function borrow_due_soon_not_triggered_for_digital_requests(): void
     {
         Notification::fake();
@@ -264,7 +296,7 @@ class NotificationsTest extends TestCase
         Notification::assertNotSentTo($student, BorrowDueSoon::class);
     }
 
-    /** @test */
+    #[Test]
     public function duplicate_due_soon_notification_suppressed_on_same_day_login(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
@@ -287,7 +319,7 @@ class NotificationsTest extends TestCase
         $this->assertEquals($countAfterFirstLogin, $countAfterSecondLogin);
     }
 
-    /** @test */
+    #[Test]
     public function borrow_due_soon_not_sent_for_committee_on_login(): void
     {
         Notification::fake();
@@ -311,7 +343,6 @@ class NotificationsTest extends TestCase
     // ── AccessLevelChanged ────────────────────────────────────────────────────
 
     /**
-     * @test
      *
      * FIX: Notification::fake() must be called BEFORE the model update that
      * triggers the notification. In the original test, fake() was called after
@@ -328,6 +359,7 @@ class NotificationsTest extends TestCase
      * helper creates the parent, ensuring the updated() hook is active when we
      * call $parent->update().
      */
+    #[Test]
     public function notification_sent_to_affected_users_when_access_level_changes(): void
     {
         Notification::fake();
@@ -352,7 +384,114 @@ class NotificationsTest extends TestCase
         Notification::assertSentTo($student, AccessLevelChanged::class);
     }
 
-    /** @test */
+    #[Test]
+    public function approved_events_for_disqualified_users_are_revoked_when_access_level_increases(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1);
+        $student = $this->makeUser('student');
+        $faculty = $this->makeUser('faculty');
+
+        $studentEvent = MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'approved',
+        ]);
+
+        $facultyEvent = MaterialAccessEvents::create([
+            'user_id' => $faculty->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'approved',
+        ]);
+
+        RrMaterialParents::clearBootedModels();
+        $parent = RrMaterialParents::find($parent->id);
+
+        // Increase access level to committee-only (3) — both student and faculty lose access
+        $parent->update(['access_level' => 3]);
+
+        $this->assertEquals('rejected', $studentEvent->fresh()->status);
+        $this->assertEquals(['Material access level was changed'], $studentEvent->fresh()->rejection_reason);
+
+        $this->assertEquals('rejected', $facultyEvent->fresh()->status);
+    }
+
+    #[Test]
+    public function pending_events_for_disqualified_users_are_revoked_when_access_level_increases(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1);
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'pending',
+        ]);
+
+        RrMaterialParents::clearBootedModels();
+        $parent = RrMaterialParents::find($parent->id);
+
+        // Increase access level to faculty+ (2) — student loses access
+        $parent->update(['access_level' => 2]);
+
+        $this->assertEquals('rejected', $event->fresh()->status);
+    }
+
+    #[Test]
+    public function events_are_not_revoked_when_access_level_decreases(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(3);
+        $committee = $this->makeUser('committee');
+
+        $event = MaterialAccessEvents::create([
+            'user_id' => $committee->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'approved',
+        ]);
+
+        RrMaterialParents::clearBootedModels();
+        $parent = RrMaterialParents::find($parent->id);
+
+        // Decrease access level — no one loses access
+        $parent->update(['access_level' => 1]);
+
+        $this->assertEquals('approved', $event->fresh()->status);
+    }
+
+    #[Test]
+    public function qualified_users_events_are_not_revoked_when_access_level_increases(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1);
+        $committee = $this->makeUser('committee');
+
+        $event = MaterialAccessEvents::create([
+            'user_id' => $committee->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'approved',
+        ]);
+
+        RrMaterialParents::clearBootedModels();
+        $parent = RrMaterialParents::find($parent->id);
+
+        // Increase to committee-only (3) — committee user still qualifies
+        $parent->update(['access_level' => 3]);
+
+        $this->assertEquals('approved', $event->fresh()->status);
+    }
+
+    #[Test]
     public function access_level_changed_notification_not_sent_for_other_field_updates(): void
     {
         Notification::fake();
@@ -376,7 +515,7 @@ class NotificationsTest extends TestCase
 
     // ── Mark As Read ──────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function mark_as_read_sets_read_at_timestamp(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
@@ -399,7 +538,7 @@ class NotificationsTest extends TestCase
         $this->assertNotNull($notification->fresh()->read_at);
     }
 
-    /** @test */
+    #[Test]
     public function mark_all_as_read_clears_all_unread_notifications(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
@@ -424,7 +563,7 @@ class NotificationsTest extends TestCase
 
     // ── Artisan Command ───────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function artisan_due_soon_command_sends_notifications_for_matching_borrows(): void
     {
         Notification::fake();

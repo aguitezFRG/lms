@@ -85,6 +85,4 @@
         @endif
     </div>
 
-    {{-- Wire poll for live updates (60s) --}}
-    <span wire:poll.60s class="hidden"></span>
 </div>

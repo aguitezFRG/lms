@@ -23,6 +23,8 @@ class ListRequests extends ListRecords
 
     protected static string $resource = RequestsResource::class;
 
+    protected ?array $tabBadgeCounts = null;
+
     protected ?string $pollingInterval = '60s';
 
     public function getTablePollingInterval(): ?string
@@ -45,39 +47,62 @@ class ListRequests extends ListRecords
     public function getTabs(): array
     {
         $userId = Auth::id();
+        $requestEventTypes = [MaterialEventType::REQUEST->value, MaterialEventType::BORROW->value];
 
         return [
             'all' => Tab::make('All')
-                ->badge(fn () => MaterialAccessEvents::where('user_id', $userId)
-                    ->whereIn('event_type', ['request', 'borrow'])->count())
+                ->badge(fn () => $this->getTabBadgeCounts()['all'])
                 ->badgeColor('gray'),
 
             'pending' => Tab::make('Pending')
-                ->badge(fn () => MaterialAccessEvents::where('user_id', $userId)
-                    ->where('status', 'pending')->count())
+                ->badge(fn () => $this->getTabBadgeCounts()['pending'])
                 ->badgeColor('warning')
-                ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->where('status', 'pending')),
+                ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query
+                    ->whereIn('event_type', $requestEventTypes)
+                    ->where('status', 'pending')),
 
             'approved' => Tab::make('Approved')
-                ->badge(fn () => MaterialAccessEvents::where('user_id', $userId)
-                    ->where('status', 'approved')->count())
+                ->badge(fn () => $this->getTabBadgeCounts()['approved'])
                 ->badgeColor('success')
-                ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->where('status', 'approved')),
+                ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query
+                    ->whereIn('event_type', $requestEventTypes)
+                    ->where('status', 'approved')),
 
             'closed' => Tab::make('Closed')
-                ->badge(fn () => MaterialAccessEvents::where('user_id', $userId)
-                    ->whereIn('status', ['rejected', 'cancelled', 'completed'])->count())
+                ->badge(fn () => $this->getTabBadgeCounts()['closed'])
                 ->badgeColor('gray')
-                ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->whereIn('status', [
-                    'rejected', 'cancelled', 'completed',
-                ])),
+                ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query
+                    ->whereIn('event_type', $requestEventTypes)
+                    ->whereIn('status', [
+                        'rejected', 'cancelled', 'completed', 'returned', 'revoked',
+                    ])),
         ];
     }
 
-    public function getHeaderWidgets(): array
+    protected function getTabBadgeCounts(): array
     {
-        return [
-            \App\Filament\Resources\User\Requests\Widgets\RequestsStatsWidget::class,
+        if ($this->tabBadgeCounts !== null) {
+            return $this->tabBadgeCounts;
+        }
+
+        $requestEventTypes = [MaterialEventType::REQUEST->value, MaterialEventType::BORROW->value];
+
+        $countsByStatus = MaterialAccessEvents::query()
+            ->where('user_id', Auth::id())
+            ->whereIn('event_type', $requestEventTypes)
+            ->selectRaw('status, COUNT(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        return $this->tabBadgeCounts = [
+            'all' => (int) $countsByStatus->sum(),
+            'pending' => (int) ($countsByStatus['pending'] ?? 0),
+            'approved' => (int) ($countsByStatus['approved'] ?? 0),
+            'closed' => (int) ($countsByStatus['rejected'] ?? 0)
+                + (int) ($countsByStatus['cancelled'] ?? 0)
+                + (int) ($countsByStatus['completed'] ?? 0)
+                + (int) ($countsByStatus['returned'] ?? 0)
+                + (int) ($countsByStatus['revoked'] ?? 0),
         ];
     }
 
@@ -105,7 +130,9 @@ class ListRequests extends ListRecords
                         'pending' => 'warning',
                         'approved' => 'success',
                         'rejected' => 'danger',
+                        'revoked' => 'danger',
                         'completed' => 'gray',
+                        'returned' => 'gray',
                         'cancelled' => 'gray',
                         default => 'gray',
                     })

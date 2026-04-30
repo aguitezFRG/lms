@@ -38,8 +38,12 @@ class MaterialAccessEvents extends Model
     protected static function booted(): void
     {
         static::updated(function (MaterialAccessEvents $event) {
-            // Request is approved -> mark material as unavailable
-            if ($event->wasChanged('status') && $event->status === 'approved') {
+            // Physical borrows consume a copy; digital approvals should preserve availability.
+            if (
+                $event->wasChanged('status') &&
+                $event->status === 'approved' &&
+                $event->event_type === 'borrow'
+            ) {
                 $event->material?->updateQuietly(['is_available' => false]);
             }
 

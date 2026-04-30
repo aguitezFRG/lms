@@ -84,7 +84,7 @@ class UserSeeder extends Seeder
         ]);
 
         // ── Additional random users for a fuller dataset ───────────────────────
-        User::factory(8)->create(['role' => 'student']);
-        User::factory(3)->create(['role' => 'faculty']);
+        // User::factory(8)->create(['role' => 'student']);
+        // User::factory(3)->create(['role' => 'faculty']);
     }
 }

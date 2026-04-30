@@ -8,6 +8,8 @@ return [
     |--------------------------------------------------------------------------
     | Default Cache Store
     |--------------------------------------------------------------------------
+    | Local/dev default uses "database" to avoid requiring Redis.
+    | Production should use "redis" for better concurrency and latency.
     |
     | This option controls the default cache store that will be used by the
     | framework. This connection is utilized if another isn't explicitly

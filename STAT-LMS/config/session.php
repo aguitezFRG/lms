@@ -11,7 +11,8 @@ return [
     |
     | This option determines the default session driver that is utilized for
     | incoming requests. Laravel supports a variety of storage options to
-    | persist session data. Database storage is a great default choice.
+    | persist session data. Database storage is a safe local/dev default,
+    | while Redis is recommended for production.
     |
     | Supported: "file", "cookie", "database", "memcached",
     |            "redis", "dynamodb", "array"
@@ -68,8 +69,9 @@ return [
     |--------------------------------------------------------------------------
     |
     | When using the "database" or "redis" session drivers, you may specify a
-    | connection that should be used to manage these sessions. This should
-    | correspond to a connection in your database configuration options.
+    | connection that should be used to manage these sessions. For Redis
+    | sessions in production, set SESSION_CONNECTION to a Redis connection
+    | name (typically "default") from config/database.php.
     |
     */
 

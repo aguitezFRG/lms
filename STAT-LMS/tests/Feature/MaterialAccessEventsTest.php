@@ -3,11 +3,13 @@
 namespace Tests\Feature;
 
 use App\Filament\Resources\MaterialAccessEvents\Pages\EditMaterialAccessEvents;
+use App\Filament\Resources\MaterialAccessEvents\Pages\ListMaterialAccessEvents;
 use App\Models\MaterialAccessEvents;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -69,7 +71,7 @@ class MaterialAccessEventsTest extends TestCase
 
     // ── Submission ────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function student_can_submit_digital_request(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy(1, digital: true);
@@ -88,7 +90,7 @@ class MaterialAccessEventsTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function student_can_submit_physical_borrow_request(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
@@ -106,7 +108,33 @@ class MaterialAccessEventsTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
+    public function stale_user_view_cannot_create_request_after_access_level_is_elevated_and_forces_refresh(): void
+    {
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: true);
+        $student = $this->makeUser('student');
+        $this->actingAs($student);
+
+        $component = Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ViewCatalog::class, [
+            'record' => $parent->id,
+        ]);
+
+        // Simulate stale UI: page was opened while accessible, then access gets elevated.
+        $parent->update(['access_level' => 2]);
+
+        $component
+            ->callAction('requestDigital')
+            ->assertRedirect(\App\Filament\Resources\User\Catalogs\CatalogResource::getUrl().'?requestBlocked=1');
+
+        $this->assertDatabaseMissing('material_access_events', [
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'pending',
+        ]);
+    }
+
+    #[Test]
     public function duplicate_request_for_same_copy_is_blocked(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy(1, digital: true);
@@ -133,7 +161,7 @@ class MaterialAccessEventsTest extends TestCase
 
     // ── Approval ──────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function committee_member_can_approve_a_pending_request(): void
     {
         NotificationFacade::fake();
@@ -157,13 +185,13 @@ class MaterialAccessEventsTest extends TestCase
     }
 
     /**
-     * @test
      *
      * The observer fires on the Eloquent `updated` event. Notification::fake()
      * replaces the notification dispatcher BEFORE the save, so the observer
      * should capture the fake. We verify by saving directly on the model
      * rather than through the Livewire form to isolate the observer behaviour.
      */
+    #[Test]
     public function approving_a_request_sends_notification_to_requester(): void
     {
         NotificationFacade::fake();
@@ -183,7 +211,7 @@ class MaterialAccessEventsTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function due_date_must_be_in_the_future_when_approving(): void
     {
         $event = $this->makeEvent(['status' => 'pending']);
@@ -199,8 +227,28 @@ class MaterialAccessEventsTest extends TestCase
             ->assertHasErrors(['data.due_at']);
     }
 
-    /** @test */
-    public function approving_a_request_sets_copy_is_available_to_false(): void
+    #[Test]
+    public function approving_a_physical_borrow_sets_copy_is_available_to_false(): void
+    {
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'borrow',
+            'status' => 'pending',
+        ]);
+
+        $this->assertDatabaseHas('rr_materials', ['id' => $copy->id, 'is_available' => true]);
+
+        $event->update(['status' => 'approved']);
+
+        $this->assertDatabaseHas('rr_materials', ['id' => $copy->id, 'is_available' => false]);
+    }
+
+    #[Test]
+    public function approving_a_digital_request_keeps_copy_available(): void
     {
         $event = $this->makeEvent(['status' => 'pending']);
         $copyId = $event->rr_material_id;
@@ -209,10 +257,10 @@ class MaterialAccessEventsTest extends TestCase
 
         $event->update(['status' => 'approved']);
 
-        $this->assertDatabaseHas('rr_materials', ['id' => $copyId, 'is_available' => false]);
+        $this->assertDatabaseHas('rr_materials', ['id' => $copyId, 'is_available' => true]);
     }
 
-    /** @test */
+    #[Test]
     public function approving_a_request_populates_approved_at(): void
     {
         $event = $this->makeEvent(['status' => 'pending']);
@@ -224,7 +272,7 @@ class MaterialAccessEventsTest extends TestCase
         $this->assertNotNull($event->fresh()->approved_at);
     }
 
-    /** @test */
+    #[Test]
     public function rejecting_a_request_does_not_change_copy_availability(): void
     {
         $event = $this->makeEvent(['status' => 'pending']);
@@ -240,7 +288,6 @@ class MaterialAccessEventsTest extends TestCase
     // ── Rejection ─────────────────────────────────────────────────────────────
 
     /**
-     * @test
      *
      * Workaround: Filament v5.1.3 has a testing-compatibility issue where
      * calling save() on an EditRecord form after setting status='rejected'
@@ -253,6 +300,7 @@ class MaterialAccessEventsTest extends TestCase
      * the pattern used by rejecting_a_request_does_not_change_copy_availability
      * and rejecting_a_request_sends_notification_to_requester.
      */
+    #[Test]
     public function staff_can_reject_a_pending_request(): void
     {
         NotificationFacade::fake();
@@ -286,12 +334,12 @@ class MaterialAccessEventsTest extends TestCase
     }
 
     /**
-     * @test
      *
      * Same as approving_a_request_sends_notification_to_requester — test
      * the observer directly via model update to avoid Livewire form
      * internals swallowing the Notification::fake() intercept.
      */
+    #[Test]
     public function rejecting_a_request_sends_notification_to_requester(): void
     {
         NotificationFacade::fake();
@@ -311,9 +359,82 @@ class MaterialAccessEventsTest extends TestCase
         );
     }
 
+
+    #[Test]
+    public function pending_tab_shows_oldest_requests_first(): void
+    {
+        $committee = $this->makeUser('committee');
+        $this->actingAs($committee);
+
+        $older = $this->makeEvent();
+        $older->forceFill(['created_at' => now()->subDays(2)])->saveQuietly();
+
+        $newer = $this->makeEvent();
+        $newer->forceFill(['created_at' => now()->subDay()])->saveQuietly();
+
+        Livewire::test(ListMaterialAccessEvents::class)
+            ->set('activeTab', 'pending')
+            ->call('loadTable')
+            ->assertCanSeeTableRecords([$older, $newer], inOrder: true);
+    }
+
+    #[Test]
+    public function material_access_logs_search_hint_mentions_material_titles(): void
+    {
+        $committee = $this->makeUser('committee');
+        $this->actingAs($committee);
+
+        Livewire::test(ListMaterialAccessEvents::class)
+            ->assertSee('Search material titles in pending requests');
+    }
+
+    #[Test]
+    public function committee_member_can_approve_a_pending_request_from_the_list_page(): void
+    {
+        NotificationFacade::fake();
+
+        $event = $this->makeEvent(['status' => 'pending']);
+        $committee = $this->makeUser('committee');
+        $this->actingAs($committee);
+
+        Livewire::test(ListMaterialAccessEvents::class)
+            ->set('activeTab', 'pending')
+            ->callTableAction('approve', $event, [
+                'due_at' => now()->addDays(3)->toDateString(),
+            ]);
+
+        $this->assertDatabaseHas('material_access_events', [
+            'id' => $event->id,
+            'status' => 'approved',
+            'approver_id' => $committee->id,
+        ]);
+    }
+
+    #[Test]
+    public function committee_member_can_reject_a_pending_request_from_the_list_page(): void
+    {
+        NotificationFacade::fake();
+
+        $event = $this->makeEvent(['status' => 'pending']);
+        $committee = $this->makeUser('committee');
+        $this->actingAs($committee);
+
+        Livewire::test(ListMaterialAccessEvents::class)
+            ->set('activeTab', 'pending')
+            ->callTableAction('reject', $event, [
+                'rejection_reason' => ['Duplicate request'],
+            ]);
+
+        $this->assertDatabaseHas('material_access_events', [
+            'id' => $event->id,
+            'status' => 'rejected',
+            'approver_id' => $committee->id,
+        ]);
+    }
+
     // ── Cancellation ──────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function requester_can_cancel_their_own_pending_request(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
@@ -339,7 +460,7 @@ class MaterialAccessEventsTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function requester_cannot_cancel_an_already_approved_request(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
@@ -360,7 +481,7 @@ class MaterialAccessEventsTest extends TestCase
         )->assertActionHidden('cancel');
     }
 
-    /** @test */
+    #[Test]
     public function student_cannot_cancel_another_students_request(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
@@ -381,7 +502,7 @@ class MaterialAccessEventsTest extends TestCase
 
     // ── Overdue Auto-detection ────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function is_overdue_flag_is_set_when_due_date_has_passed(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
@@ -406,7 +527,7 @@ class MaterialAccessEventsTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function is_overdue_not_set_when_due_date_is_in_the_future(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
@@ -428,7 +549,7 @@ class MaterialAccessEventsTest extends TestCase
 
     // ── Visibility / Policy ───────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function committee_can_view_all_access_events_in_admin_panel(): void
     {
         $event1 = $this->makeEvent();
@@ -443,7 +564,7 @@ class MaterialAccessEventsTest extends TestCase
             ->assertSee($event2->id);
     }
 
-    /** @test */
+    #[Test]
     public function student_sees_only_their_own_requests_in_my_requests(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();
@@ -466,7 +587,7 @@ class MaterialAccessEventsTest extends TestCase
             ->assertDontSee($theirEvent->id);
     }
 
-    /** @test */
+    #[Test]
     public function student_cannot_access_edit_page_of_access_events_in_admin_panel(): void
     {
         $event = $this->makeEvent();

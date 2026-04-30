@@ -4,9 +4,10 @@ namespace App\Notifications;
 
 use App\Models\MaterialAccessEvents;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class BorrowDueSoon extends Notification
+class BorrowDueSoon extends Notification implements ShouldQueue
 {
     use Queueable;
 

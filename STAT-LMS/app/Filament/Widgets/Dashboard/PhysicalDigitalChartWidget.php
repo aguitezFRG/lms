@@ -5,6 +5,7 @@ namespace App\Filament\Widgets\Dashboard;
 use App\Models\MaterialAccessEvents;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Facades\Cache;
 
 class PhysicalDigitalChartWidget extends ChartWidget
 {
@@ -14,7 +15,7 @@ class PhysicalDigitalChartWidget extends ChartWidget
 
     protected ?string $pollingInterval = null;
 
-    protected static bool $isLazy = false;
+    protected static bool $isLazy = true;
 
     protected ?int $numDays = 5;
 
@@ -41,7 +42,14 @@ class PhysicalDigitalChartWidget extends ChartWidget
 
     protected function getData(): array
     {
-        [$labels, $physical, $digital] = $this->buildSeries();
+        $filter = $this->filter ?? 'daily';
+        $cacheDate = now()->toDateString();
+
+        [$labels, $physical, $digital] = Cache::remember(
+            "dashboard.physical-digital.{$filter}.{$cacheDate}",
+            now()->addMinutes(5),
+            fn (): array => $this->buildSeries()
+        );
 
         return [
             'labels' => $labels,

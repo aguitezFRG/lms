@@ -75,15 +75,15 @@ class Dashboard extends BaseDashboard
         $canViewBorrows = Gate::allows('viewBorrows', static::class);
         $canViewAccess = Gate::allows('viewAccess', static::class);
 
-        // Cache pending counts for 60 s — refreshed on action events and on each poll.
+        // Cache pending counts for 5 minutes — refreshed on action events and on each poll.
         $pendingBorrowCount = $canViewBorrows
-            ? Cache::remember('dashboard.pending_borrows', 60, fn () => MaterialAccessEvents::where('event_type', 'borrow')
+            ? Cache::remember('dashboard.pending_borrows', 300, fn () => MaterialAccessEvents::where('event_type', 'borrow')
                 ->where('status', 'pending')->count()
             )
             : 0;
 
         $pendingAccessCount = $canViewAccess
-            ? Cache::remember('dashboard.pending_accesses', 60, fn () => MaterialAccessEvents::where('event_type', 'request')
+            ? Cache::remember('dashboard.pending_accesses', 300, fn () => MaterialAccessEvents::where('event_type', 'request')
                 ->where('status', 'pending')->count()
             )
             : 0;

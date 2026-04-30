@@ -66,7 +66,11 @@ class MaterialAccessEventsResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $user = auth()->user();
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()->with([
+            'user',
+            'approver',
+            'material.parent',
+        ]);
 
         if (! $user) {
             return $query->whereNull('id');

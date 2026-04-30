@@ -63,6 +63,7 @@ class RrMaterialsTable
                 // Ensure we include soft-deleted records for filtering and actions
                 $query->withTrashed();
                 $query->whereHas('parent');
+                $query->with('parent');
             })
             ->filters([
                 // 1. Format Filter (Digital vs Physical)

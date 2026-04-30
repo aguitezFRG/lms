@@ -155,7 +155,7 @@ class RrMaterialParentsSeeder extends Seeder
         }
 
         // ── Additional random materials ────────────────────────────────────────
-        RrMaterialParents::factory(5)->create(['access_level' => 1, 'material_type' => fake()->randomElement([1, 3])]);
-        RrMaterialParents::factory(3)->create(['access_level' => 2, 'material_type' => 2]);
+        // RrMaterialParents::factory(5)->create(['access_level' => 1, 'material_type' => fake()->randomElement([1, 3])]);
+        // RrMaterialParents::factory(3)->create(['access_level' => 2, 'material_type' => 2]);
     }
 }
