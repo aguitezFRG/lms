@@ -14,6 +14,7 @@ use Illuminate\Support\HtmlString;
 class SystemUsageStatsWidget extends BaseWidget
 {
     protected static bool $isLazy = true;
+
     private const PLACEHOLDER_COLUMNS = [
         'lg' => 3,
         'xl' => 3,

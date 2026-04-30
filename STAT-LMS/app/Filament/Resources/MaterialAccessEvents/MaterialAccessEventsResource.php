@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MaterialAccessEvents;
 
+use App\Enums\UserRole;
 use App\Filament\Resources\MaterialAccessEvents\Pages\CreateMaterialAccessEvents;
 use App\Filament\Resources\MaterialAccessEvents\Pages\EditMaterialAccessEvents;
 use App\Filament\Resources\MaterialAccessEvents\Pages\ListMaterialAccessEvents;
@@ -76,7 +77,7 @@ class MaterialAccessEventsResource extends Resource
             return $query->whereNull('id');
         }
 
-        if ($user->role === \App\Enums\UserRole::RR) {
+        if ($user->role === UserRole::RR) {
             return $query
                 ->whereHas('material.parent', fn (Builder $q) => $q->where('access_level', 1))
                 ->whereHas('material', fn (Builder $m) => $m->where('is_digital', false));

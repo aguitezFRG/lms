@@ -6,8 +6,9 @@ use App\Enums\MaterialEventType;
 use App\Enums\UserRole;
 use App\Models\MaterialAccessEvents;
 use App\Models\RrMaterials;
-use Illuminate\Support\Str;
+use finfo;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class MaterialStreamController extends Controller
 {
@@ -61,7 +62,7 @@ class MaterialStreamController extends Controller
             abort(404);
         }
 
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
         $detectedMime = $finfo->file($path);
 
         if ($detectedMime !== 'application/pdf') {
@@ -103,12 +104,12 @@ class MaterialStreamController extends Controller
             abort(403, 'Unauthorized access to secured library material.');
         }
 
-        // Committee bypass approval requirement
+        // Admin-tier roles can bypass per-request approvals.
         if (in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE])) {
             return;
         }
 
-        // IT bypasses approval requirement only for level 1 and 2 materials
+        // IT bypass is intentionally capped below level 3.
         if ($user->role === UserRole::IT && $level <= 2) {
             return;
         }

@@ -39,6 +39,7 @@ class MaterialAccessEventsObserver
         }
 
         if ($materialAccessEvents->status === 'approved') {
+            // approved_at is stamped quietly to avoid triggering duplicate update flows.
             $materialAccessEvents->updateQuietly(['approved_at' => now()]);
         }
 

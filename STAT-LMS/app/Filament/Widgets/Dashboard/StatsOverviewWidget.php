@@ -16,6 +16,7 @@ class StatsOverviewWidget extends BaseWidget
     protected static bool $isLazy = true;
 
     private const STAT_CARD_MIN_HEIGHT_CLASS = 'min-h-36';
+
     private const PLACEHOLDER_COLUMNS = [
         'md' => 4,
         'xl' => 4,
@@ -24,6 +25,7 @@ class StatsOverviewWidget extends BaseWidget
     protected ?string $placeholderHeight = '8rem';
 
     protected int|string|array $columnSpan = 'full';
+
     protected int|array|null $columns = [
         'md' => 4,
         'xl' => 4,

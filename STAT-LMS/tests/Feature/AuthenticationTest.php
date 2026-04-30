@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Filament\Pages\Auth\AdminLogin;
 use App\Filament\Pages\Auth\UserLogin;
 use App\Models\User;
+use Filament\Facades\Filament;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -273,7 +275,7 @@ class AuthenticationTest extends TestCase
         $user = $this->makeUser('student', ['password' => bcrypt('password')]);
 
         $this->assertTrue(
-            $user->canAccessPanel(\Filament\Facades\Filament::getPanel('user')),
+            $user->canAccessPanel(Filament::getPanel('user')),
             'Student should be able to access the user panel'
         );
 
@@ -335,7 +337,7 @@ class AuthenticationTest extends TestCase
         $this->actingAs($user);
 
         // Bypass CSRF middleware so the test POST succeeds.
-        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
+        $this->withoutMiddleware(VerifyCsrfToken::class)
             ->post('/admin/logout')
             ->assertRedirect();
 

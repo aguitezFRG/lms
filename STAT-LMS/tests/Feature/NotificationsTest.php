@@ -343,7 +343,6 @@ class NotificationsTest extends TestCase
     // ── AccessLevelChanged ────────────────────────────────────────────────────
 
     /**
-     *
      * FIX: Notification::fake() must be called BEFORE the model update that
      * triggers the notification. In the original test, fake() was called after
      * creating the MaterialAccessEvent but that is fine — the critical ordering
