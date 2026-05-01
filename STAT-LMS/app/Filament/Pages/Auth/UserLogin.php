@@ -2,6 +2,9 @@
 
 namespace App\Filament\Pages\Auth;
 
+use App\Enums\UserRole;
+use App\Filament\Pages\AdminOnboarding;
+use App\Filament\Pages\User\UserOnboarding;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
@@ -54,6 +57,22 @@ class UserLogin extends Login
         }
     }
 
+    /**
+     * Route the authenticated user to the correct panel based on their role.
+     */
+    protected function getAuthenticatedUrl(): string
+    {
+        $user = auth()->user();
+
+        if ($user === null) {
+            return UserOnboarding::getUrl();
+        }
+
+        return $this->isAdminRole($user->role)
+            ? AdminOnboarding::getUrl()
+            : UserOnboarding::getUrl();
+    }
+
     public function authenticate(): ?LoginResponse
     {
         $email = $this->data['email'] ?? null;
@@ -101,7 +120,17 @@ class UserLogin extends Login
     public function getSubheading(): string|Htmlable|null
     {
         return new HtmlString(
-            'Staff or committee member? <a href="/admin/login" class="text-primary-600 hover:underline font-medium">Sign in here</a>'
+            '<span class="text-gray-600 dark:text-gray-400">Committee or Reading Room Staff?</span> <a href="/admin/login" class="text-primary-600 hover:underline font-medium">Sign in here</a>'
         );
+    }
+
+    private function isAdminRole(UserRole $role): bool
+    {
+        return in_array($role, [
+            UserRole::SUPER_ADMIN,
+            UserRole::COMMITTEE,
+            UserRole::IT,
+            UserRole::RR,
+        ], true);
     }
 }
