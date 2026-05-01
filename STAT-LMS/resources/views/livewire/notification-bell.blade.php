@@ -20,7 +20,7 @@
                          flex items-center justify-center rounded-full
                          bg-danger-600 text-white text-[10px] font-bold leading-none
                          ring-2 ring-white dark:ring-gray-900">
-                {{ $this->unreadCount > 99 ? '99+' : $this->unreadCount }}
+                {{ $this->unreadCount > 9 ? '9+' : $this->unreadCount }}
             </span>
         @endif
     </button>
