@@ -319,4 +319,22 @@ class ProfilePagesTest extends TestCase
         Livewire::test(\App\Livewire\NotificationBell::class)
             ->assertSee((string) $unreadCount);
     }
+
+    #[Test]
+    public function notification_bell_unread_badge_caps_at_9_plus(): void
+    {
+        [$parent, $copy] = $this->makeParentAndCopy();
+        $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
+
+        for ($i = 0; $i < 11; $i++) {
+            $event = $this->makeEvent($student, $copy, 'pending');
+            $event->update(['status' => 'approved']);
+        }
+
+        $this->actingAs($student);
+
+        Livewire::test(\App\Livewire\NotificationBell::class)
+            ->assertSee('9+');
+    }
+
 }
