@@ -32,7 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\DecryptLivewirePasswords::class,
         ]);
 
-        $middleware->redirectGuestsTo('/app/login');
+        $middleware->redirectGuestsTo('/login');
 
         $middleware->alias([
             'profile.complete' => \App\Http\Middleware\EnsureProfileComplete::class,
