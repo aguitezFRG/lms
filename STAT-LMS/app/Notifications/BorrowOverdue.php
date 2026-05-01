@@ -7,14 +7,13 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class BorrowDueSoon extends Notification implements ShouldQueue
+class BorrowOverdue extends Notification implements ShouldQueue
 {
     use Queueable;
 
     public function __construct(
         protected MaterialAccessEvents $event,
-        protected int $daysUntilDue,
-        protected ?string $sessionId = null
+        protected ?string $sessionId = null,
     ) {}
 
     public function via(object $notifiable): array
@@ -25,14 +24,13 @@ class BorrowDueSoon extends Notification implements ShouldQueue
     public function toDatabase(object $notifiable): array
     {
         $title = $this->event->material?->parent?->title ?? 'a material';
-        $due = $this->event->due_at?->format('F d, Y') ?? 'soon';
+        $due = $this->event->due_at?->format('F d, Y') ?? 'an earlier date';
 
         return [
-            'type' => 'borrow_due_soon',
-            'title' => $this->daysUntilDue === 1 ? 'Borrow Due Tomorrow!' : "Borrow Due in {$this->daysUntilDue} Days",
-            'message' => "Your borrowed copy of \"{$title}\" is due on {$due}. Please return it on time to avoid overdue penalties.",
+            'type' => 'borrow_overdue',
+            'title' => 'Borrow Overdue',
+            'message' => "Your borrowed copy of \"{$title}\" was due on {$due}. Please return it as soon as possible.",
             'event_id' => $this->event->id,
-            'days_until_due' => $this->daysUntilDue,
             'session_id' => $this->sessionId,
         ];
     }
