@@ -6,17 +6,10 @@
 @source '../**/*.js';
 @source '../../app*.php';
 
-@font-face {
-    font-family: 'Montserrat';
-    src: local('Montserrat'), local('Montserrat Regular');
-    font-style: normal;
-    font-weight: 100 900;
-    font-display: swap;
-}
-
 @theme {
-    --font-sans: 'Montserrat', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans",
+        sans-serif, BlinkMacSystemFont, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji",
+        "Segoe UI Symbol", "Noto Color Emoji";
 
     --font-serif: 'Crimson Text', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
 }

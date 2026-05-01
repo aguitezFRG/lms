@@ -47,14 +47,16 @@ class MaterialAccessEvents extends Model
                 $event->material?->updateQuietly(['is_available' => false]);
             }
 
-            // Material is returned -> mark material as available and event as completed
+            // Returning a borrow closes the event and re-opens copy availability.
+            // Keep these writes explicit so downstream observers receive final state.
             if ($event->wasChanged('returned_at') && $event->returned_at !== null) {
                 $event->material()->update(['is_available' => true]);
                 $event->update(['status' => 'returned']);
                 $event->update(['completed_at' => now()]);
             }
 
-            // Request is rejected -> mark event as completed (material availability remains unchanged)
+            // Rejection finalizes the record and clears approval-related timestamps.
+            // saveQuietly avoids recursive status side-effects during cleanup.
             if ($event->wasChanged('status') && $event->status === 'rejected') {
                 $event->material()->update(['is_available' => true]);
                 $event->completed_at = now();

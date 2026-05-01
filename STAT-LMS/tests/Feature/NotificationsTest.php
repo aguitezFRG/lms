@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\AccessLevelChanged;
 use App\Notifications\AccountDetailsChanged;
 use App\Notifications\BorrowDueSoon;
+use App\Notifications\BorrowOverdue;
 use App\Notifications\RequestStatusChanged;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -340,10 +341,30 @@ class NotificationsTest extends TestCase
         Notification::assertNotSentTo($committee, BorrowDueSoon::class);
     }
 
+    #[Test]
+    public function overdue_borrow_notification_sent_on_login_for_active_overdue_borrows(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->subDay()->endOfDay(),
+        ]);
+
+        event(new Login('web', $student, false));
+
+        Notification::assertSentTo($student, BorrowOverdue::class);
+    }
+
     // ── AccessLevelChanged ────────────────────────────────────────────────────
 
     /**
-     *
      * FIX: Notification::fake() must be called BEFORE the model update that
      * triggers the notification. In the original test, fake() was called after
      * creating the MaterialAccessEvent but that is fine — the critical ordering

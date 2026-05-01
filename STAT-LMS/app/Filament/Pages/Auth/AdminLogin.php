@@ -2,7 +2,9 @@
 
 namespace App\Filament\Pages\Auth;
 
+use App\Enums\UserRole;
 use App\Filament\Pages\AdminOnboarding;
+use App\Filament\Pages\User\UserOnboarding;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
@@ -10,8 +12,8 @@ use Filament\Auth\Pages\Login;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\HtmlString;
 use Illuminate\Validation\ValidationException;
 
 class AdminLogin extends Login
@@ -56,12 +58,20 @@ class AdminLogin extends Login
     }
 
     /**
-     * After successful authentication, redirect to the onboarding page
-     * unless a specific intended URL is already stored in the session.
+     * Route the authenticated user to the correct panel based on their role.
+     * This page is the unified entry point, so both admin and user roles may log in here.
      */
     protected function getAuthenticatedUrl(): string
     {
-        return AdminOnboarding::getUrl();
+        $user = auth()->user();
+
+        if ($user === null) {
+            return AdminOnboarding::getUrl();
+        }
+
+        return $this->isAdminRole($user->role)
+            ? AdminOnboarding::getUrl()
+            : UserOnboarding::getUrl();
     }
 
     public function authenticate(): ?LoginResponse
@@ -94,10 +104,6 @@ class AdminLogin extends Login
             ]);
         }
 
-        if (! session()->has('url.intended')) {
-            session()->put('url.intended', $this->getAuthenticatedUrl());
-        }
-
         return parent::authenticate();
     }
 
@@ -115,7 +121,17 @@ class AdminLogin extends Login
     public function getSubheading(): string|Htmlable|null
     {
         return new HtmlString(
-            'Student or faculty? <a href="/app/login" class="text-primary-600 hover:underline font-medium">Sign in here</a>'
+            '<span class="text-gray-600 dark:text-gray-400">Faculty or Student?</span> <a href="/app/login" class="text-primary-600 hover:underline font-medium">Sign in here</a>'
         );
+    }
+
+    private function isAdminRole(UserRole $role): bool
+    {
+        return in_array($role, [
+            UserRole::SUPER_ADMIN,
+            UserRole::COMMITTEE,
+            UserRole::IT,
+            UserRole::RR,
+        ], true);
     }
 }

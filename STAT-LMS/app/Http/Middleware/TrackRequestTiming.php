@@ -17,7 +17,7 @@ class TrackRequestTiming
     public function handle(Request $request, Closure $next): Response
     {
         $enabled = (bool) config('performance.request_timing.enabled', false);
-        $paths = config('performance.request_timing.paths', ['/app/login', '/admin/login', '/app/user-onboarding']);
+        $paths = config('performance.request_timing.paths', ['/admin/login', '/app/login', '/app/user-onboarding']);
 
         if (! $enabled || ! $this->isTrackedPath($request, $paths)) {
             return $next($request);

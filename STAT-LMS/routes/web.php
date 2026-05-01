@@ -7,7 +7,6 @@ use App\Http\Controllers\PasswordEncryptionKeyController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    // TO FIX: Users still need to manually setup the login page they want to access (admin or user) instead of being redirected based on their role
     if (auth()->check()) {
         $role = auth()->user()->role;
 

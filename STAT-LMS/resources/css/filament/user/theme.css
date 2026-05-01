@@ -5,9 +5,13 @@
 @source '../../../../resources/views/components/**/*.blade.php';
 @source '../../../../resources/views/livewire/**/*.blade.php';
 
-/* UP Visual Identity Guide — Typeface: Montserrat (Avenir/Helvetica substitute for unofficial materials) */
 :root {
-    --font-sans: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+    --font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans",
+        sans-serif, BlinkMacSystemFont, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji",
+        "Segoe UI Symbol", "Noto Color Emoji";
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans",
+        sans-serif, BlinkMacSystemFont, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji",
+        "Segoe UI Symbol", "Noto Color Emoji";
     --rr-topbar-height: 4rem;
     --up-maroon: #8D1436;
     --up-forest-green: #014421;
@@ -15,13 +19,35 @@
 }
 
 .fi-header-heading {
-    font-family: 'Montserrat', ui-sans-serif, sans-serif;
+    font-family: var(--font-sans);
     font-weight: 700;
 }
 
 .fi-sidebar-nav-item-label {
-    font-family: 'Montserrat', ui-sans-serif, sans-serif;
+    font-family: var(--font-sans);
     font-weight: 500;
+}
+
+.fi-simple-header-heading {
+    font-family: var(--font-sans);
+    font-size: 2.125rem;
+    line-height: 1.15;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.fi-simple-header-subheading {
+    margin-top: 0.875rem;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5;
+    color: rgb(55 65 81);
+}
+
+@media (min-width: 768px) {
+    .fi-simple-header-heading {
+        font-size: 2.4rem;
+    }
 }
 
 .fi-section {
@@ -45,6 +71,37 @@
     display: none;
 }
 
+/* Make hamburger states visibly distinct for sidebar closed vs open. */
+.fi-topbar-open-sidebar-btn,
+.fi-topbar-open-collapse-sidebar-btn {
+    color: rgb(156 163 175);
+}
+
+.fi-topbar-open-sidebar-btn:hover,
+.fi-topbar-open-collapse-sidebar-btn:hover {
+    color: rgb(107 114 128);
+}
+
+.fi-topbar-close-sidebar-btn,
+.fi-topbar-close-collapse-sidebar-btn {
+    color: rgb(55 65 81);
+}
+
+.fi-topbar-close-sidebar-btn:hover,
+.fi-topbar-close-collapse-sidebar-btn:hover {
+    color: rgb(31 41 55);
+}
+
+.dark .fi-topbar-open-sidebar-btn,
+.dark .fi-topbar-open-collapse-sidebar-btn {
+    color: rgb(156 163 175);
+}
+
+.dark .fi-topbar-close-sidebar-btn,
+.dark .fi-topbar-close-collapse-sidebar-btn {
+    color: rgb(229 231 235);
+}
+
 @media (min-width: 1024px) {
     .fi-topbar-collapse-sidebar-btn-ctn {
         display: block;
@@ -64,8 +121,37 @@
     width: auto;
 }
 
+.fi-user-menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.rr-user-menu-first-name {
+    display: none;
+    max-width: 11rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    color: rgb(31 41 55);
+}
+
+.dark .rr-user-menu-first-name {
+    color: rgb(243 244 246);
+}
+
+@media (min-width: 768px) {
+    .rr-user-menu-first-name {
+        display: inline;
+    }
+}
+
 .fi-topbar-start .fi-logo {
-    font-family: 'Montserrat', ui-sans-serif, sans-serif;
+    font-family: var(--font-sans);
     font-size: 1rem;
     font-weight: 700;
     letter-spacing: 0.01em;

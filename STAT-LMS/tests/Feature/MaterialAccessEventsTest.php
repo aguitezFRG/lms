@@ -4,8 +4,13 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\MaterialAccessEvents\Pages\EditMaterialAccessEvents;
 use App\Filament\Resources\MaterialAccessEvents\Pages\ListMaterialAccessEvents;
+use App\Filament\Resources\User\Catalogs\CatalogResource;
+use App\Filament\Resources\User\Catalogs\Pages\ViewCatalog;
+use App\Filament\Resources\User\Requests\Pages\ListRequests;
+use App\Filament\Resources\User\Requests\Pages\ViewRequests;
 use App\Models\MaterialAccessEvents;
 use App\Models\User;
+use App\Notifications\RequestStatusChanged;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Livewire\Livewire;
@@ -78,7 +83,7 @@ class MaterialAccessEventsTest extends TestCase
         $student = $this->makeUser('student');
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ViewCatalog::class, [
+        Livewire::test(ViewCatalog::class, [
             'record' => $parent->id,
         ])->callAction('requestDigital');
 
@@ -97,7 +102,7 @@ class MaterialAccessEventsTest extends TestCase
         $student = $this->makeUser('student');
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ViewCatalog::class, [
+        Livewire::test(ViewCatalog::class, [
             'record' => $parent->id,
         ])->callAction('borrowPhysical');
 
@@ -115,7 +120,7 @@ class MaterialAccessEventsTest extends TestCase
         $student = $this->makeUser('student');
         $this->actingAs($student);
 
-        $component = Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ViewCatalog::class, [
+        $component = Livewire::test(ViewCatalog::class, [
             'record' => $parent->id,
         ]);
 
@@ -124,7 +129,7 @@ class MaterialAccessEventsTest extends TestCase
 
         $component
             ->callAction('requestDigital')
-            ->assertRedirect(\App\Filament\Resources\User\Catalogs\CatalogResource::getUrl().'?requestBlocked=1');
+            ->assertRedirect(CatalogResource::getUrl().'?requestBlocked=1');
 
         $this->assertDatabaseMissing('material_access_events', [
             'user_id' => $student->id,
@@ -151,7 +156,7 @@ class MaterialAccessEventsTest extends TestCase
         $this->actingAs($student);
 
         // The requestDigital action on ViewCatalog checks for duplicates
-        Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ViewCatalog::class, [
+        Livewire::test(ViewCatalog::class, [
             'record' => $parent->id,
         ])->assertActionDisabled('requestDigital');
 
@@ -185,7 +190,6 @@ class MaterialAccessEventsTest extends TestCase
     }
 
     /**
-     *
      * The observer fires on the Eloquent `updated` event. Notification::fake()
      * replaces the notification dispatcher BEFORE the save, so the observer
      * should capture the fake. We verify by saving directly on the model
@@ -207,7 +211,7 @@ class MaterialAccessEventsTest extends TestCase
 
         NotificationFacade::assertSentTo(
             $requester,
-            \App\Notifications\RequestStatusChanged::class
+            RequestStatusChanged::class
         );
     }
 
@@ -288,7 +292,6 @@ class MaterialAccessEventsTest extends TestCase
     // ── Rejection ─────────────────────────────────────────────────────────────
 
     /**
-     *
      * Workaround: Filament v5.1.3 has a testing-compatibility issue where
      * calling save() on an EditRecord form after setting status='rejected'
      * causes "Call to a member function getDefaultTestingSchemaName() on null".
@@ -334,7 +337,6 @@ class MaterialAccessEventsTest extends TestCase
     }
 
     /**
-     *
      * Same as approving_a_request_sends_notification_to_requester — test
      * the observer directly via model update to avoid Livewire form
      * internals swallowing the Notification::fake() intercept.
@@ -355,10 +357,9 @@ class MaterialAccessEventsTest extends TestCase
 
         NotificationFacade::assertSentTo(
             $requester,
-            \App\Notifications\RequestStatusChanged::class
+            RequestStatusChanged::class
         );
     }
-
 
     #[Test]
     public function pending_tab_shows_oldest_requests_first(): void
@@ -450,7 +451,7 @@ class MaterialAccessEventsTest extends TestCase
         $this->actingAs($student);
 
         Livewire::test(
-            \App\Filament\Resources\User\Requests\Pages\ViewRequests::class,
+            ViewRequests::class,
             ['record' => $event->id]
         )->callAction('cancel');
 
@@ -476,7 +477,7 @@ class MaterialAccessEventsTest extends TestCase
         $this->actingAs($student);
 
         Livewire::test(
-            \App\Filament\Resources\User\Requests\Pages\ViewRequests::class,
+            ViewRequests::class,
             ['record' => $event->id]
         )->assertActionHidden('cancel');
     }
@@ -558,7 +559,7 @@ class MaterialAccessEventsTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\MaterialAccessEvents\Pages\ListMaterialAccessEvents::class)
+        Livewire::test(ListMaterialAccessEvents::class)
             ->call('loadTable')
             ->assertSee($event1->id)
             ->assertSee($event2->id);
@@ -582,7 +583,7 @@ class MaterialAccessEventsTest extends TestCase
 
         $this->actingAs($student1);
 
-        Livewire::test(\App\Filament\Resources\User\Requests\Pages\ListRequests::class)
+        Livewire::test(ListRequests::class)
             ->assertSee($myEvent->id)
             ->assertDontSee($theirEvent->id);
     }

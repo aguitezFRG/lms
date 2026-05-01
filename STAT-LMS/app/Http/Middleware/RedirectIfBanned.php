@@ -11,9 +11,7 @@ class RedirectIfBanned
     public function handle(Request $request, Closure $next): Response
     {
         if (auth()->check() && auth()->user()->is_banned) {
-            $loginUrl = $request->is('admin/*') || $request->is('admin')
-                ? url('/admin/login')
-                : url('/app/login');
+            $loginUrl = url('/app/login');
 
             auth()->logout();
             $request->session()->invalidate();

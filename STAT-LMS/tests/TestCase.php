@@ -2,18 +2,22 @@
 
 namespace Tests;
 
+use App\Models\MaterialAccessEvents;
 use App\Models\RrMaterialParents;
 use App\Models\RrMaterials;
 use App\Models\User;
+use App\Observers\MaterialAccessEventsObserver;
 use App\Observers\RepositoryChangeLogsObserver;
+use App\Observers\UserObserver;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Cache;
 
 abstract class TestCase extends BaseTestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
-        \Illuminate\Support\Facades\Cache::flush();
+        Cache::flush();
     }
 
     /**
@@ -22,12 +26,12 @@ abstract class TestCase extends BaseTestCase
      */
     protected function reRegisterObservers(): void
     {
-        \App\Models\User::observe(\App\Observers\UserObserver::class);
-        \App\Models\User::observe(\App\Observers\RepositoryChangeLogsObserver::class);
-        \App\Models\RrMaterialParents::observe(\App\Observers\RepositoryChangeLogsObserver::class);
-        \App\Models\RrMaterials::observe(\App\Observers\RepositoryChangeLogsObserver::class);
-        \App\Models\MaterialAccessEvents::observe(\App\Observers\MaterialAccessEventsObserver::class);
-        \App\Models\MaterialAccessEvents::observe(\App\Observers\RepositoryChangeLogsObserver::class);
+        User::observe(UserObserver::class);
+        User::observe(RepositoryChangeLogsObserver::class);
+        RrMaterialParents::observe(RepositoryChangeLogsObserver::class);
+        RrMaterials::observe(RepositoryChangeLogsObserver::class);
+        MaterialAccessEvents::observe(MaterialAccessEventsObserver::class);
+        MaterialAccessEvents::observe(RepositoryChangeLogsObserver::class);
     }
 
     /**

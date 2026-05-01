@@ -239,4 +239,43 @@
 
         return originalFetch(input, init);
     };
+
+    async function encryptPasswordForm(event) {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) {
+            return;
+        }
+
+        if (form.dataset.passwordEncrypted !== 'true') {
+            return;
+        }
+
+        const passwordField = form.querySelector('input[name="password"]');
+        if (!(passwordField instanceof HTMLInputElement)) {
+            return;
+        }
+
+        const value = passwordField.value ?? '';
+        if (!value || value.startsWith('ENC:')) {
+            return;
+        }
+
+        event.preventDefault();
+
+        try {
+            const key = await getPublicKey();
+            if (!key) {
+                throw new Error('Public key not found');
+            }
+
+            passwordField.value = await encryptValue(key, value);
+            form.submit();
+        } catch (err) {
+            notifyEncryptionFailure(err);
+        }
+    }
+
+    document.addEventListener('submit', (event) => {
+        void encryptPasswordForm(event);
+    }, true);
 })();

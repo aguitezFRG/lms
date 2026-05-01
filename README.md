@@ -1,108 +1,140 @@
 # INSTAT-RR-SPRIS
 
-Reading Room repository system for UP INSTAT — manages research materials, physical/digital copy tracking, borrow/access requests, and audit logs.
+Reading Room repository system for UP INSTAT.
 
-## Tech Stack
+This repository’s primary application is in `STAT-LMS/`. Manage research materials, physical/digital copies, borrow/access workflows, and immutable audit logs through role-based admin and user panels.
+
+## Project Structure
+
+- `STAT-LMS/` — Laravel + Filament application (main project)
+
+## Stack
 
 - Laravel 12 + PHP 8.2
-- Filament v5 (UI)
-- SQLite (dev/test), in-memory for tests
+- Filament v5 (locked to `v5.1.3` in current project state)
+- SQLite for dev/test
 - Vite + TailwindCSS v4
 - PHPUnit 11
 
 ## Two Panels
 
-| Panel | Path     | Roles                          |
-| ----- | -------- | ------------------------------ |
-| Admin | `/admin` | Committee, IT, Staff/Custodian |
-| User  | `/app`   | Faculty, Student               |
+| Panel | Path | Roles |
+|------|------|------|
+| Admin | `/admin` | `super_admin`, `committee`, `it`, `staff/custodian` |
+| User | `/app` | `faculty`, `student` |
+
+Panel providers:
+- `STAT-LMS/app/Providers/Filament/AdminPanelProvider.php`
+- `STAT-LMS/app/Providers/Filament/UserPanelProvider.php`
 
 ## Core Data Model
 
-```
-RrMaterialParents  (title, abstract, keywords, SDGs, access_level, author, adviser)
-    └── RrMaterials[]  (is_digital, is_available, file_name)
-            ├── MaterialAccessEvents[]  (borrow/request events: status, due_at, approver)
-            └── RepositoryChangeLogs[]  (audit trail)
+```text
+RrMaterialParents (title, abstract, access_level:1-3, SDGs...)
+  └── RrMaterials (is_digital, is_available, file_name)
+        ├── MaterialAccessEvents (borrow/request lifecycle)
+        └── RepositoryChangeLogs (immutable audit)
 ```
 
-All models use UUIDs + soft deletes. `access_level` on RrMaterialParents: 1=Student, 2=Faculty/Staff, 3=Committee/IT only.
+All core models use UUID primary keys and soft deletes.
+
+Access levels:
+- `1` = student
+- `2` = faculty/staff
+- `3` = committee/IT
 
 ## User Roles
 
-| Role                   | Value             | Access Level |
-| ---------------------- | ----------------- | ------------ |
-| Reading Room Committee | `committee`       | 3            |
-| IT Administrator       | `it`              | 3            |
-| Staff/Custodian        | `staff/custodian` | 2            |
-| Faculty Member         | `faculty`         | 2            |
-| Student User           | `student`         | 1            |
+| Role | Value | Effective Access Level |
+|------|------|------|
+| Super Admin | `super_admin` | admin-level operations |
+| Reading Room Committee | `committee` | 3 |
+| IT Administrator | `it` | 3 |
+| Staff/Custodian | `staff/custodian` | 2 |
+| Faculty Member | `faculty` | 2 |
+| Student User | `student` | 1 |
 
 ## Admin Panel Features
 
 ### Repository Management
 
-**RR Materials** — catalog CRUD (title, abstract, keywords, SDGs, material type, publication date, author, adviser); role-filtered by access level; soft deletes; material types: Book, Thesis, Journal, Dissertation, Others
+- RR Materials catalog CRUD (title, abstract, keywords, SDGs, material type, publication date, author, adviser)
+- Per-copy tracking for digital and physical materials
+- Availability status and access-level controls
 
-**Material Copies** — per-copy tracking (digital/physical); availability status; digital file storage on local disk; access-level filtering
+### Access and Audit
 
-### Access & Audit
+- Material access request/borrow workflow (approve/reject + reason)
+- Overdue tracking and approver assignment
+- Immutable `RepositoryChangeLogs` entries for model mutations
 
-**Material Access Events** — borrow/request approval workflow; inline approve/reject with rejection reason; overdue tracking; approver assignment; no delete (immutable)
+### Dashboard
 
-**Repository Change Logs** — read-only audit trail of all model changes; records editor, before/after values, timestamp
-
-### Dashboard Widgets
-
-- Stats: Borrowed count, Overdue count, Requests count, Visitor count (polling every 60s)
-- Pending Digital Access Requests table — inline approve/reject
-- Pending Borrow Requests table — inline approve/reject
-- Charts: Physical vs Digital access over time (line chart); Visitors vs Borrowers over time (bar chart)
+- Summary stats widgets
+- Pending requests widgets with inline actions
+- Trends/usage charts
 
 ## User Panel Features
 
-### Catalog Browser (`/app/user/catalogs`)
+### Catalog (`/app/catalogs`)
 
-- Card-grid view of available materials filtered by user's access level
-- Search by title, author, keywords
-- Filters: material type, format (digital/physical), publication date range, SDG tags, availability toggle
-- Pagination (15/page)
+- Role-filtered catalog browsing and search
+- Filtering for type/format/date/SDG and availability controls
+- Visibility logic includes materials the user can still access via approved or pending requests, even when general availability is constrained
 
-### Material Detail View
+### Material Detail
 
-- Request Digital Copy — submits for staff approval (disabled if already active request or user is banned)
-- Borrow Physical Copy — submits borrow request (disabled if already active borrow or user is banned)
-- View Document — direct access once approved (Committee/IT bypass approval)
+- Request digital access
+- Request physical borrow
+- Open digital viewer/stream when authorized
 
-### My Requests (`/app/user/requests`)
+### My Requests (`/app/requests`)
 
-- Lists all personal borrow/access requests with status, type, due date
+- View own request history and current statuses
 - Cancel pending requests
-- Real-time status polling every 20s
+- Status-toast polling at `5s`
 
 ### Profile
 
-- Change password
+- Account profile management and password update
 
 ## Key Behaviors
 
-- **Access level change** on a material → sends `AccessLevelChanged` notification to all users with active requests on its copies
-- **Request approved/rejected** → sends `RequestStatusChanged` notification to the requester
-- **Borrow due soon** → `BorrowDueSoon` notification triggered on login
-- **Admin edits user account** → sends `AccountDetailsChanged` notification to affected user
-- **Overdue auto-detection** — events are marked overdue on retrieval if `due_at` has passed
-- **User banned** → all active access events are immediately revoked
-- **Digital file update** → old file is deleted from disk automatically
+- Access-level updates notify impacted users via `AccessLevelChanged`
+- Request status transitions notify requesters via `RequestStatusChanged` for `approved`, `rejected`, and `revoked`
+- Due-soon borrow reminders are emitted by `BorrowDueSoon`
+- Account edits can trigger `AccountDetailsChanged`
+- Banning a user revokes active access events
+- Digital file replacement removes the old file from storage
 
-## Setup & Commands
+## Setup and Commands
 
-All commands run from `STAT-LMS/`:
+Run all project commands from `STAT-LMS/`.
 
 ```bash
-composer setup        # initial setup
-composer dev          # start server + queue + logs + Vite (concurrently)
-composer test         # run full test suite
-php artisan test --filter=TestName  # single test
-./vendor/bin/pint     # code style (Laravel Pint)
-npm run build         # build frontend assets
+cd STAT-LMS
 ```
+
+| Task | Command | Notes |
+|------|------|------|
+| Initial setup | `composer setup` | Runs install, env bootstrap, key generate, migration (`--force`), npm install, build |
+| Start dev environment | `composer dev` | Runs server, queue listener, pail logs, Vite dev server, and local warmup curls concurrently |
+| Run all tests | `composer test` | Clears config then runs `php artisan test` |
+| Run specific tests | `php artisan test --filter=TestName` | Preferred filtered test run |
+| Lint/format | `./vendor/bin/pint` | Laravel Pint |
+| Frontend dev | `npm run dev` | Vite dev server |
+| Build assets | `npm run build` | Vite production build |
+
+## Testing Defaults
+
+Testing uses in-memory SQLite via `STAT-LMS/phpunit.xml`:
+- `DB_CONNECTION=sqlite`
+- `DB_DATABASE=:memory:`
+- `QUEUE_CONNECTION=sync`
+- `CACHE_STORE=array`
+- `SESSION_DRIVER=array`
+
+## Notes
+
+- Keep command and behavior documentation in this root `README.md` as the canonical source.
+- Keep `STAT-LMS/README.md` concise to reduce duplication and drift.

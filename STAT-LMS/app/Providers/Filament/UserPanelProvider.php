@@ -38,7 +38,7 @@ class UserPanelProvider extends PanelProvider
             ->brandLogo(new HtmlString('
                 <div style="display: flex; align-items: center; gap: 16px; padding: 4px 0;">
                     <img src="'.asset('images/up-seal.png').'" alt="UP Seal" style="height: 2.5rem; width: auto; flex-shrink: 0;" />
-                    <span style="font-family: Montserrat, ui-sans-serif, sans-serif; font-size: 1.1rem; font-weight: 600; white-space: nowrap; letter-spacing: 0.01em;">
+                    <span style="font-family: ui-sans-serif, system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, Ubuntu, Cantarell, &quot;Noto Sans&quot;, sans-serif, BlinkMacSystemFont, &quot;Helvetica Neue&quot;, Arial, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;, &quot;Noto Color Emoji&quot;; font-size: 1.1rem; font-weight: 600; white-space: nowrap; letter-spacing: 0.01em;">
                         INSTAT-RR-SPRIS
                     </span>
                 </div>

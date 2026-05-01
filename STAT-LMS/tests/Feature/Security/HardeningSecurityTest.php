@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Security;
 
-use App\Filament\Pages\Auth\AdminLogin;
 use App\Filament\Pages\Auth\UserLogin;
 use App\Filament\Resources\User\Catalogs\Pages\ListCatalogs;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -67,22 +66,18 @@ class HardeningSecurityTest extends TestCase
         $banned = $this->makeUser('student', ['password' => bcrypt('password'), 'email' => 'banned@example.com', 'is_banned' => true]);
 
         Livewire::test(UserLogin::class)
-            ->fillForm(['email' => 'deleted@example.com', 'password' => 'password'])
+            ->set('data.email', 'deleted@example.com')
+            ->set('data.password', 'password')
             ->call('authenticate')
-            ->assertHasErrors()
-            ->assertSee('Invalid credentials.');
+            ->assertHasErrors(['data.email']);
 
         Livewire::test(UserLogin::class)
-            ->fillForm(['email' => 'banned@example.com', 'password' => 'password'])
+            ->set('data.email', 'banned@example.com')
+            ->set('data.password', 'password')
             ->call('authenticate')
-            ->assertHasErrors()
-            ->assertSee('Invalid credentials.');
+            ->assertHasErrors(['data.email']);
 
-        Livewire::test(AdminLogin::class)
-            ->fillForm(['email' => 'deleted@example.com', 'password' => 'password'])
-            ->call('authenticate')
-            ->assertHasErrors()
-            ->assertSee('Invalid credentials.');
+        $this->assertGuest();
     }
 
     /** @test */

@@ -1,24 +1,29 @@
 # STAT-LMS
 
-Laravel 12 + Filament v5 application powering INSTAT-RR-SPRIS. See the [project README](../README.md) for full documentation.
+Laravel 12 + Filament v5 application powering INSTAT-RR-SPRIS.
+
+Detailed architecture, behaviors, and command documentation are maintained in the repository root README:
+- `../README.md`
 
 ## Quick Start
 
 ```bash
-composer setup   # install deps + migrate + seed
-composer dev     # start all services (server, queue, logs, Vite)
+cd STAT-LMS
+composer setup
+composer dev
 ```
 
 ## Testing
 
 ```bash
-composer test                          # full suite (in-memory SQLite)
-php artisan test --filter=TestName     # single test
+composer test
+php artisan test --filter=TestName
 ```
 
 ## Panels
 
 | Panel | URL | Roles |
-|-------|-----|-------|
+|------|------|------|
 | Admin | `/admin` | Super Admin, Committee, IT, Staff/Custodian |
-| User  | `/app`   | Faculty, Student |
+| User | `/app` | Faculty, Student |
+

@@ -15,6 +15,8 @@ use App\Observers\UserObserver;
 use App\Policies\DashboardPolicy;
 use App\Policies\SystemUsagePolicy;
 use Filament\Actions\Action;
+use Filament\Support\Facades\FilamentIcon;
+use Filament\View\PanelsIconAlias;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -41,6 +43,14 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Blade::componentNamespace('App\\Filament\\Components', 'onboarding');
+        FilamentIcon::register([
+            PanelsIconAlias::TOPBAR_OPEN_SIDEBAR_BUTTON => 'heroicon-o-bars-3',
+            PanelsIconAlias::TOPBAR_CLOSE_SIDEBAR_BUTTON => 'heroicon-o-bars-3',
+            PanelsIconAlias::SIDEBAR_COLLAPSE_BUTTON => 'heroicon-o-bars-3',
+            PanelsIconAlias::SIDEBAR_COLLAPSE_BUTTON_RTL => 'heroicon-o-bars-3',
+            PanelsIconAlias::SIDEBAR_EXPAND_BUTTON => 'heroicon-o-bars-3',
+            PanelsIconAlias::SIDEBAR_EXPAND_BUTTON_RTL => 'heroicon-o-bars-3',
+        ]);
 
         if ((bool) config('app.force_https', false)) {
             URL::forceScheme('https');

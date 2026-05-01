@@ -3,12 +3,14 @@
 namespace App\Filament\Resources\MaterialAccessEvents\Pages;
 
 use App\Filament\Resources\MaterialAccessEvents\MaterialAccessEventsResource;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Contracts\Support\Htmlable;
 
 class EditMaterialAccessEvents extends EditRecord
 {
@@ -23,7 +25,7 @@ class EditMaterialAccessEvents extends EditRecord
         }
     }
 
-    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    public function getHeading(): string|Htmlable
     {
         return $this->record->material->parent->title;
     }
@@ -52,7 +54,7 @@ class EditMaterialAccessEvents extends EditRecord
         }
 
         if (! empty($data['due_at'])) {
-            $data['due_at'] = \Carbon\Carbon::parse($data['due_at'])->endOfDay()->toDateTimeString();
+            $data['due_at'] = Carbon::parse($data['due_at'])->endOfDay()->toDateTimeString();
         }
 
         return $data;
