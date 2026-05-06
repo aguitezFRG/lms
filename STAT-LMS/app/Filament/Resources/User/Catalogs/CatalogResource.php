@@ -84,8 +84,9 @@ class CatalogResource extends Resource
         ?string $panel = null,
         ?Model $tenant = null,
         bool $shouldGuessMissingParameters = false,
+        ?string $configuration = null,
     ): string {
-        return parent::getUrl($name, $parameters, $isAbsolute, $panel ?? 'user', $tenant, $shouldGuessMissingParameters);
+        return parent::getUrl($name, $parameters, $isAbsolute, $panel ?? 'user', $tenant, $shouldGuessMissingParameters, $configuration);
     }
 
     public static function getPages(): array
