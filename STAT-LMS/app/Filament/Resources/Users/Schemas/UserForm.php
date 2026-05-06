@@ -8,11 +8,12 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
 use Illuminate\Validation\Rules\Password;
 
 class UserForm
 {
-    public static function configure($schema)
+    public static function configure(Schema $schema): Schema
     {
 
         $updateFullName = function (callable $set, callable $get) {

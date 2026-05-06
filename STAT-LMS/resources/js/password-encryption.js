@@ -52,6 +52,8 @@
         return /password$/i.test(key);
     }
 
+    // ── component.updates (wire:model bindings) ───────────────────────────────
+
     function hasPasswordField(components) {
         for (const component of components) {
             const updates = component.updates;
@@ -69,21 +71,7 @@
         return false;
     }
 
-    async function encryptPasswordsInUpdates(components) {
-        if (!hasPasswordField(components)) {
-            return;
-        }
-
-        const meta = getPublicKeyMeta();
-        if (!meta) {
-            throw new Error('[pw-enc] Public key meta tag not found.');
-        }
-
-        const key = await getPublicKey();
-        if (!key) {
-            throw new Error('[pw-enc] Public key could not be imported.');
-        }
-
+    async function encryptPasswordsInUpdates(components, cryptoKey) {
         for (const component of components) {
             const updates = component.updates;
             if (!updates || typeof updates !== 'object') {
@@ -93,11 +81,83 @@
             for (const updateKey of Object.keys(updates)) {
                 const value = updates[updateKey];
                 if (isPasswordKey(updateKey) && typeof value === 'string' && value.length > 0) {
-                    updates[updateKey] = await encryptValue(key, value);
+                    updates[updateKey] = await encryptValue(cryptoKey, value);
                 }
             }
         }
     }
+
+    // ── component.calls params (Filament Action form submissions) ─────────────
+
+    function hasPasswordInValue(value) {
+        if (typeof value !== 'object' || value === null) {
+            return false;
+        }
+        if (Array.isArray(value)) {
+            return value.some(hasPasswordInValue);
+        }
+        for (const [k, v] of Object.entries(value)) {
+            if (isPasswordKey(k) && typeof v === 'string' && v.length > 0) {
+                return true;
+            }
+            if (hasPasswordInValue(v)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function hasPasswordInCalls(components) {
+        for (const component of components) {
+            if (!Array.isArray(component.calls)) {
+                continue;
+            }
+            for (const call of component.calls) {
+                if (hasPasswordInValue(call.params)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    async function encryptPasswordsInObject(obj, cryptoKey) {
+        if (typeof obj !== 'object' || obj === null) {
+            return;
+        }
+        if (Array.isArray(obj)) {
+            for (const item of obj) {
+                await encryptPasswordsInObject(item, cryptoKey);
+            }
+
+            return;
+        }
+        for (const k of Object.keys(obj)) {
+            const v = obj[k];
+            if (isPasswordKey(k) && typeof v === 'string' && v.length > 0 && !v.startsWith('ENC:')) {
+                obj[k] = await encryptValue(cryptoKey, v);
+            } else {
+                await encryptPasswordsInObject(v, cryptoKey);
+            }
+        }
+    }
+
+    async function encryptPasswordsInCalls(components, cryptoKey) {
+        for (const component of components) {
+            if (!Array.isArray(component.calls)) {
+                continue;
+            }
+            for (const call of component.calls) {
+                if (Array.isArray(call.params)) {
+                    await encryptPasswordsInObject(call.params, cryptoKey);
+                }
+            }
+        }
+    }
+
+    // ── Failure notification ──────────────────────────────────────────────────
 
     function notifyEncryptionFailure(reason) {
         console.error('[pw-enc] Cannot encrypt password field:', reason);
@@ -120,98 +180,7 @@
         }
     }
 
-    window.passwordChangeForm = function passwordChangeForm() {
-        return {
-            currentPassword: '',
-            newPassword: '',
-            confirmPassword: '',
-            showCurrent: false,
-            showNew: false,
-            showConfirm: false,
-            publicKey: null,
-            submitting: false,
-            errors: {},
-
-            async init() {
-                try {
-                    this.publicKey = await getPublicKey();
-                } catch (err) {
-                    console.error('[pw-enc] Failed to import public key for modal:', err);
-                }
-            },
-
-            async encrypt(plaintext) {
-                const encoded = new TextEncoder().encode(plaintext);
-                const encrypted = await window.crypto.subtle.encrypt(
-                    { name: 'RSA-OAEP' },
-                    this.publicKey,
-                    encoded,
-                );
-                return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
-            },
-
-            validate() {
-                this.errors = {};
-
-                if (!this.currentPassword) {
-                    this.errors.currentPassword = 'Current password is required.';
-                }
-
-                if (!this.newPassword) {
-                    this.errors.newPassword = 'New password is required.';
-                } else if (this.newPassword.length < 8) {
-                    this.errors.newPassword = 'Password must be at least 8 characters.';
-                } else if (!/[a-z]/.test(this.newPassword) || !/[A-Z]/.test(this.newPassword)) {
-                    this.errors.newPassword = 'Password must contain both uppercase and lowercase letters.';
-                } else if (!/[0-9]/.test(this.newPassword)) {
-                    this.errors.newPassword = 'Password must contain at least one number.';
-                } else if (!/[^a-zA-Z0-9]/.test(this.newPassword)) {
-                    this.errors.newPassword = 'Password must contain at least one symbol.';
-                } else if (this.newPassword === this.currentPassword) {
-                    this.errors.newPassword = 'New password must differ from the current one.';
-                }
-
-                if (this.newPassword && this.confirmPassword !== this.newPassword) {
-                    this.errors.confirmPassword = 'Passwords do not match.';
-                }
-
-                return Object.keys(this.errors).length === 0;
-            },
-
-            async submit() {
-                if (!this.validate() || this.submitting) {
-                    return;
-                }
-
-                if (!this.publicKey) {
-                    notifyEncryptionFailure('Public key not loaded; please refresh the page.');
-                    return;
-                }
-
-                this.submitting = true;
-                try {
-                    const encCurrent = await this.encrypt(this.currentPassword);
-                    const encNew = await this.encrypt(this.newPassword);
-
-                    await this.$wire.submitEncryptedPasswordChange(`ENC:${encCurrent}`, `ENC:${encNew}`);
-                    this.resetForm();
-                } catch (err) {
-                    console.error('[pw-enc] Modal encryption/submission error:', err);
-                    notifyEncryptionFailure(err);
-                } finally {
-                    this.submitting = false;
-                }
-            },
-
-            resetForm() {
-                this.currentPassword = '';
-                this.newPassword = '';
-                this.confirmPassword = '';
-                this.errors = {};
-                this.submitting = false;
-            },
-        };
-    };
+    // ── Fetch interceptor ─────────────────────────────────────────────────────
 
     const originalFetch = window.fetch.bind(window);
 
@@ -226,19 +195,43 @@
                 return originalFetch(input, init);
             }
 
-            if (Array.isArray(payload.components) && hasPasswordField(payload.components)) {
-                try {
-                    await encryptPasswordsInUpdates(payload.components);
-                    init = { ...init, body: JSON.stringify(payload) };
-                } catch (err) {
-                    notifyEncryptionFailure(err);
-                    return Promise.reject(err);
+            if (Array.isArray(payload.components)) {
+                const needsUpdates = hasPasswordField(payload.components);
+                const needsCalls = hasPasswordInCalls(payload.components);
+
+                if (needsUpdates || needsCalls) {
+                    try {
+                        const meta = getPublicKeyMeta();
+                        if (!meta) {
+                            throw new Error('[pw-enc] Public key meta tag not found.');
+                        }
+
+                        const cryptoKey = await getPublicKey();
+                        if (!cryptoKey) {
+                            throw new Error('[pw-enc] Public key could not be imported.');
+                        }
+
+                        if (needsUpdates) {
+                            await encryptPasswordsInUpdates(payload.components, cryptoKey);
+                        }
+                        if (needsCalls) {
+                            await encryptPasswordsInCalls(payload.components, cryptoKey);
+                        }
+
+                        init = { ...init, body: JSON.stringify(payload) };
+                    } catch (err) {
+                        notifyEncryptionFailure(err);
+
+                        return Promise.reject(err);
+                    }
                 }
             }
         }
 
         return originalFetch(input, init);
     };
+
+    // ── Login form submit handler ─────────────────────────────────────────────
 
     async function encryptPasswordForm(event) {
         const form = event.target;

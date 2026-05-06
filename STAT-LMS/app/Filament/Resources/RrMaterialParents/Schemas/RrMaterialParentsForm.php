@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\RrMaterialParents\Schemas;
 
+use App\Enums\SDGOptions;
 use App\Models\User;
+use App\Rules\SDGTags;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
@@ -13,6 +15,35 @@ use Filament\Schemas\Schema;
 
 class RrMaterialParentsForm
 {
+    private static array $MATERIAL_KEYWORD_SUGGESTIONS = [
+        'Regression Analysis',
+        'Hypothesis Testing',
+        'Multivariate Analysis',
+        'Time Series Analysis',
+        'Bayesian Inference',
+        'Sampling Design',
+        'Experimental Design',
+        'Non-parametric Statistics',
+        'Survival Analysis',
+        'Machine Learning',
+        'Categorical Data Analysis',
+        'Spatial Statistics',
+        'Biostatistics',
+        'Econometrics',
+        'Quality Control',
+        'Probability Theory',
+        'Stochastic Processes',
+        'Data Mining',
+        'Statistical Modeling',
+        'Estimation Theory',
+        'Analysis of Variance (ANOVA)',
+        'Correlation Analysis',
+        'Longitudinal Data Analysis',
+        'Principal Component Analysis (PCA)',
+        'Survey Methodology',
+    ];
+
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -81,33 +112,7 @@ class RrMaterialParentsForm
                             ->columnSpanFull()
                             ->required()
                             ->rules(['array', 'max:20'])
-                            ->suggestions([
-                                'Regression Analysis',
-                                'Hypothesis Testing',
-                                'Multivariate Analysis',
-                                'Time Series Analysis',
-                                'Bayesian Inference',
-                                'Sampling Design',
-                                'Experimental Design',
-                                'Non-parametric Statistics',
-                                'Survival Analysis',
-                                'Machine Learning',
-                                'Categorical Data Analysis',
-                                'Spatial Statistics',
-                                'Biostatistics',
-                                'Econometrics',
-                                'Quality Control',
-                                'Probability Theory',
-                                'Stochastic Processes',
-                                'Data Mining',
-                                'Statistical Modeling',
-                                'Estimation Theory',
-                                'Analysis of Variance (ANOVA)',
-                                'Correlation Analysis',
-                                'Longitudinal Data Analysis',
-                                'Principal Component Analysis (PCA)',
-                                'Survey Methodology',
-                            ])
+                            ->suggestions(fn () => self::$MATERIAL_KEYWORD_SUGGESTIONS)
                             ->nestedRecursiveRules([
                                 'string',
                                 'max:255',
@@ -117,30 +122,13 @@ class RrMaterialParentsForm
                             ->label('SDGs (Sustainable Development Goals)')
                             ->placeholder('Type SDG and press Enter')
                             ->columnSpanFull()
-                            ->rules(['array', 'max:17'])
-                            ->suggestions([
-                                'No Poverty',
-                                'Zero Hunger',
-                                'Good Health and Well-being',
-                                'Quality Education',
-                                'Gender Equality',
-                                'Clean Water and Sanitation',
-                                'Affordable and Clean Energy',
-                                'Decent Work and Economic Growth',
-                                'Industry, Innovation and Infrastructure',
-                                'Reduced Inequality',
-                                'Sustainable Cities and Communities',
-                                'Responsible Consumption and Production',
-                                'Climate Action',
-                                'Life Below Water',
-                                'Life on Land',
-                                'Peace, Justice and Strong Institutions',
-                                'Partnerships for the Goals',
-                            ])
+                            ->rules(['array', 'max:17', 'distinct'])
+                            ->suggestions(collect(SDGOptions::cases())->map(fn ($case) => $case->value)->toArray())
                             ->required()
                             ->nestedRecursiveRules([
                                 'string',
                                 'max:255',
+                                new SDGTags(),
                             ]),
 
                         DatePicker::make('publication_date')
