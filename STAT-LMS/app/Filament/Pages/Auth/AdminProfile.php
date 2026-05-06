@@ -4,6 +4,7 @@ namespace App\Filament\Pages\Auth;
 
 use App\Services\PasswordEncryptionService;
 use Filament\Actions\Action;
+use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
 use Filament\Infolists\Contracts\HasInfolists;
@@ -13,6 +14,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class AdminProfile extends Page implements HasInfolists
 {
@@ -59,38 +61,103 @@ class AdminProfile extends Page implements HasInfolists
                 ->modalHeading('Change Your Password')
                 ->modalDescription('Enter your current password, then choose a new one.')
                 ->modalWidth('md')
-                ->modalContent(view('filament.components.password-change-modal'))
-                ->modalFooterActions([])
-                ->action(fn () => null),
+                ->form([
+                    TextInput::make('current_password')
+                        ->label('Current Password')
+                        ->password()
+                        ->revealable()
+                        ->required()
+                        ->autocomplete('current-password'),
+
+                    TextInput::make('new_password')
+                        ->label('New Password')
+                        ->password()
+                        ->revealable()
+                        ->required()
+                        ->autocomplete('new-password')
+                        ->helperText('Min. 8 characters with uppercase, lowercase, number, and symbol.')
+                        ->rules([Password::min(8)->mixedCase()->numbers()->symbols()])
+                        ->different('current_password'),
+
+                    TextInput::make('confirm_password')
+                        ->label('Confirm New Password')
+                        ->password()
+                        ->revealable()
+                        ->required()
+                        ->same('new_password')
+                        ->autocomplete('new-password'),
+                ])
+                ->action(function (array $data, Action $action): void {
+                    if (! Hash::check($data['current_password'], auth()->user()->password)) {
+                        Notification::make()
+                            ->title('Incorrect password')
+                            ->body('Your current password is wrong.')
+                            ->danger()
+                            ->send();
+
+                        $action->halt();
+
+                        return;
+                    }
+
+                    auth()->user()->update(['password' => Hash::make($data['new_password'])]);
+
+                    Notification::make()
+                        ->title('Password updated successfully')
+                        ->success()
+                        ->send();
+                }),
         ];
     }
 
     // ── Encrypted Password Change ─────────────────────────────────────────────
     //
-    // Called by the Alpine modal — receives RSA-OAEP ciphertext, never plaintext.
+    // Called directly (e.g. by tests) with RSA-OAEP ciphertext. Verifies the
+    // ENC: prefix was present so we can be sure encryption was used.
 
     public function submitEncryptedPasswordChange(string $encryptedCurrent, string $encryptedNew): void
     {
+        if (! str_starts_with($encryptedCurrent, 'ENC:') || ! str_starts_with($encryptedNew, 'ENC:')) {
+            Notification::make()
+                ->title('Security error')
+                ->body('Password must be submitted via encrypted connection.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         $service = app(PasswordEncryptionService::class);
 
         try {
             $currentPassword = $service->decrypt($this->stripEncPrefix($encryptedCurrent));
             $newPassword = $service->decrypt($this->stripEncPrefix($encryptedNew));
         } catch (\Throwable) {
-            Notification::make()->title('Security error')->body('Password could not be decrypted. Please try again.')->danger()->send();
+            Notification::make()
+                ->title('Security error')
+                ->body('Password could not be decrypted. Please try again.')
+                ->danger()
+                ->send();
 
             return;
         }
 
         if (! Hash::check($currentPassword, auth()->user()->password)) {
-            Notification::make()->title('Incorrect password')->body('Your current password is wrong.')->danger()->send();
+            Notification::make()
+                ->title('Incorrect password')
+                ->body('Your current password is wrong.')
+                ->danger()
+                ->send();
 
             return;
         }
 
         auth()->user()->update(['password' => Hash::make($newPassword)]);
 
-        Notification::make()->title('Password updated successfully')->success()->send();
+        Notification::make()
+            ->title('Password updated successfully')
+            ->success()
+            ->send();
     }
 
     private function stripEncPrefix(string $value): string
