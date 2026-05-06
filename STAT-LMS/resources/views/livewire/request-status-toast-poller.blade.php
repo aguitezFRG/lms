@@ -104,5 +104,5 @@
         </script>
     @endscript
 
-    <span wire:poll.5s="pollForNewNotifications" class="hidden"></span>
+    <span wire:poll.60s="pollForNewNotifications" class="hidden"></span>
 </div>
