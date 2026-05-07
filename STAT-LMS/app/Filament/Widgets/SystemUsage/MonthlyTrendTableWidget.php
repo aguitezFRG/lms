@@ -36,6 +36,7 @@ class MonthlyTrendTableWidget extends BaseWidget
             : "DATE_FORMAT(created_at, '%Y-%m')";
 
         return $table
+            ->defaultKeySort(false)
             ->query(
                 MaterialAccessEvents::query()
                     ->selectRaw("{$dateFormat} as month, COUNT(*) as count, MIN(id) as sort_id")

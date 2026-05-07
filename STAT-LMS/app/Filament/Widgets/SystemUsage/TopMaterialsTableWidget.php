@@ -27,6 +27,7 @@ class TopMaterialsTableWidget extends BaseWidget
     public function table(Table $table): Table
     {
         return $table
+            ->defaultKeySort(false)
             ->query(
                 MaterialAccessEvents::query()
                     ->selectRaw('rr_material_id as id, rr_material_id, COUNT(*) as request_count')
