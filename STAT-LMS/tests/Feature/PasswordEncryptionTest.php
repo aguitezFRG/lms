@@ -202,6 +202,87 @@ class PasswordEncryptionTest extends TestCase
         $this->assertArrayNotHasKey('updates', $payload['components'][0]);
     }
 
+    /** @test */
+    public function middleware_decrypts_enc_prefixed_password_in_calls_params(): void
+    {
+        $enc = 'ENC:'.$this->encryptWithPublicKey('secret123');
+        $body = json_encode([
+            'components' => [
+                [
+                    'snapshot' => '{}',
+                    'updates' => [],
+                    'calls' => [
+                        [
+                            'path' => '',
+                            'method' => 'submitEncryptedPasswordChange',
+                            'params' => [
+                                ['current_password' => $enc, 'new_password' => $enc],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $payload = $this->runMiddleware($body);
+        $params = $payload['components'][0]['calls'][0]['params'][0];
+        $this->assertSame('secret123', $params['current_password']);
+        $this->assertSame('secret123', $params['new_password']);
+    }
+
+    /** @test */
+    public function middleware_leaves_non_password_keys_in_calls_unchanged(): void
+    {
+        $body = json_encode([
+            'components' => [
+                [
+                    'snapshot' => '{}',
+                    'updates' => [],
+                    'calls' => [
+                        [
+                            'path' => '',
+                            'method' => 'someMethod',
+                            'params' => [
+                                ['email' => 'ENC:should_stay', 'current_password' => 'ENC:'.base64_encode('garbage')],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $payload = $this->runMiddleware($body);
+        $params = $payload['components'][0]['calls'][0]['params'][0];
+        $this->assertSame('ENC:should_stay', $params['email']);
+    }
+
+    /** @test */
+    public function middleware_survives_bad_ciphertext_in_calls(): void
+    {
+        $raw = 'ENC:'.base64_encode('not-real-ciphertext');
+        $body = json_encode([
+            'components' => [
+                [
+                    'snapshot' => '{}',
+                    'updates' => [],
+                    'calls' => [
+                        [
+                            'path' => '',
+                            'method' => 'submitEncryptedPasswordChange',
+                            'params' => [
+                                ['current_password' => $raw],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $payload = $this->runMiddleware($body);
+        $params = $payload['components'][0]['calls'][0]['params'][0];
+        $this->assertSame($raw, $params['current_password']);
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // AdminProfile::submitEncryptedPasswordChange
     // ─────────────────────────────────────────────────────────────────────────
