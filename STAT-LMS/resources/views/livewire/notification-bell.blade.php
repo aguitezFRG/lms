@@ -7,7 +7,7 @@
     <button
         type="button"
         x-on:click="open = !open"
-        class="relative flex items-center justify-center w-9 h-9 rounded-lg
+        class="rr-bell-btn relative flex items-center justify-center w-9 h-9 rounded-lg
                text-gray-500 hover:text-gray-700 hover:bg-gray-100
                dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-white/5
                transition-colors"
@@ -19,7 +19,7 @@
             <span class="absolute top-0.5 right-0.5 min-w-[1.1rem] h-[1.1rem] px-1
                          flex items-center justify-center rounded-full
                          bg-danger-600 text-white text-[10px] font-bold leading-none
-                         ring-2 ring-white dark:ring-gray-900">
+                         rr-unread-badge ring-2 ring-white dark:ring-gray-900">
                 {{ $this->unreadCount > 9 ? '9+' : $this->unreadCount }}
             </span>
         @endif
@@ -40,14 +40,14 @@
                 top: (document.querySelector('header')?.getBoundingClientRect().bottom ?? 56) + 4 + 'px',
                 width: 'auto' }
             : {}"
-        class="absolute right-0 top-full mt-2 z-50
+        class="rr-notif-panel absolute right-0 top-full mt-2 z-50
                w-[min(28rem,calc(100vw-1rem))] max-h-[32rem]
                flex flex-col overflow-hidden
                rounded-xl border border-gray-200 bg-white shadow-xl
                dark:border-white/10 dark:bg-gray-900"
     >
         {{-- Header row (sticky) --}}
-        <div class="flex-shrink-0 flex items-center justify-between px-4 py-3
+        <div class="rr-notif-panel-header flex-shrink-0 flex items-center justify-between px-4 py-3
                     border-b border-gray-100 dark:border-white/10">
             <span class="text-sm font-semibold text-gray-800 dark:text-white">
                 Notifications
@@ -73,7 +73,7 @@
 
         {{-- Footer: view all link (user panel only) --}}
         @if (auth()->user()?->role?->value && in_array(auth()->user()->role->value, ['faculty', 'student']))
-            <div class="flex-shrink-0 border-t border-gray-100 dark:border-white/10 px-4 py-2.5 text-center">
+            <div class="rr-notif-panel-footer flex-shrink-0 border-t border-gray-100 dark:border-white/10 px-4 py-2.5 text-center">
                 <a
                     href="{{ \App\Filament\Pages\User\UserProfile::getUrl() }}?activeProfileTab=notifications"
                     class="text-xs font-medium text-primary-600 hover:text-primary-700
