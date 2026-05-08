@@ -2,6 +2,7 @@
     'activeFilterCount' => 0,
     'typeFilter'        => '',
     'formatFilter'      => '',
+    'adviserFilter'     => '',
     'pubDateFrom'       => '',
     'pubDateTo'         => '',
     'sdgFilter'         => [],
@@ -35,6 +36,19 @@
                     icon="heroicon-m-x-mark"
                     size="xs"
                     color="success"
+                    class="ml-0.5"
+                />
+            </x-filament::badge>
+        @endif
+
+        @if ($adviserFilter !== '')
+            <x-filament::badge color="info">
+                Adviser: {{ $adviserFilter }}
+                <x-filament::icon-button
+                    wire:click="removeFilter('adviserFilter')"
+                    icon="heroicon-m-x-mark"
+                    size="xs"
+                    color="info"
                     class="ml-0.5"
                 />
             </x-filament::badge>

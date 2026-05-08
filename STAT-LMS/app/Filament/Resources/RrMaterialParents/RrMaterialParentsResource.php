@@ -55,7 +55,7 @@ class RrMaterialParentsResource extends Resource
 
     public static function infolist(Schema $schema): Schema
     {
-        return RrMaterialParentsInfolist::configure($schema);
+        return RrMaterialParentsInfolist::configure($schema, linkMetadata: false);
     }
 
     public static function table(Table $table): Table

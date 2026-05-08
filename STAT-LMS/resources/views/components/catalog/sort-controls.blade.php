@@ -64,7 +64,7 @@
                 x-transition:leave="transition ease-in duration-75"
                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                 x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
-                class="absolute right-0 top-full z-50 mt-1 w-44 origin-top-right rounded-lg border border-gray-200 bg-white py-1 shadow-lg
+                class="rr-sort-dropdown-panel absolute right-0 top-full z-50 mt-1 w-44 origin-top-right rounded-lg border border-gray-200 bg-white py-1 shadow-lg
                         dark:border-white/10 dark:bg-gray-800"
             >
                 <template x-for="opt in options" :key="opt.value">

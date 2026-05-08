@@ -47,7 +47,7 @@
         </div>
 
         <div
-            class="h-px flex-1 transition-colors {{ $step < 2 ? 'bg-gray-200 dark:bg-white/10' : '' }}"
+            class="rr-profile-step-connector h-px flex-1 transition-colors {{ $step < 2 ? 'bg-gray-200 dark:bg-white/10' : '' }}"
             @if($step >= 2) style="background-color: #8D1436;" @endif
         ></div>
 
@@ -83,7 +83,7 @@
     {{-- Step 2: Student Number --}}
     @if ($step === 2)
         <div class="space-y-4">
-            <div class="rounded-lg bg-gray-50 px-4 py-3 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
+            <div class="rr-profile-name-box rounded-lg bg-gray-50 px-4 py-3 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
                 <p class="text-xs text-gray-500 dark:text-gray-400">Name on record</p>
                 <p class="mt-0.5 text-sm font-medium text-gray-950 dark:text-white">
                     {{ trim(implode(' ', array_filter([$data['f_name'] ?? '', $data['m_name'] ?? '', $data['l_name'] ?? '']))) }}

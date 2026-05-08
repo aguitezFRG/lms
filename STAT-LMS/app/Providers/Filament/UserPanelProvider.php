@@ -6,6 +6,7 @@ use App\Filament\Pages\Auth\UserLogin;
 use App\Filament\Pages\Onboarding\CompleteProfile;
 use App\Filament\Pages\User\UserOnboarding;
 use App\Filament\Pages\User\UserProfile;
+use App\Http\Middleware\EnsureProfileComplete;
 use App\Http\Middleware\RedirectIfBanned;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -87,6 +88,10 @@ class UserPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn () => view('filament.components.theme-bootstrap'),
+            )
+            ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn () => view('filament.components.password-encryption-script'),
             )
@@ -110,7 +115,7 @@ class UserPanelProvider extends PanelProvider
             ->authMiddleware([
                 RedirectIfBanned::class,
                 Authenticate::class,
-                \App\Http\Middleware\EnsureProfileComplete::class,
+                EnsureProfileComplete::class,
             ]);
     }
 }

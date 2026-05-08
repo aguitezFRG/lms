@@ -7,6 +7,7 @@ use App\Models\RrMaterialParents;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class ListCatalogs extends Page
@@ -37,6 +38,8 @@ class ListCatalogs extends Page
 
     public string $formatFilter = '';
 
+    public string $adviserFilter = '';
+
     public string $pubDateFrom = '';
 
     public string $pubDateTo = '';
@@ -56,6 +59,8 @@ class ListCatalogs extends Page
     public string $draftTypeFilter = '';
 
     public string $draftFormatFilter = '';
+
+    public string $draftAdviserFilter = '';
 
     public string $draftPubDateFrom = '';
 
@@ -90,6 +95,7 @@ class ListCatalogs extends Page
         'searchScope' => ['except' => 'all'],
         'typeFilter' => ['except' => ''],
         'formatFilter' => ['except' => ''],
+        'adviserFilter' => ['except' => ''],
         'pubDateFrom' => ['except' => ''],
         'pubDateTo' => ['except' => ''],
         'sdgFilter' => ['except' => []],
@@ -106,6 +112,7 @@ class ListCatalogs extends Page
         $this->normalizeSort();
         $this->draftTypeFilter = $this->typeFilter;
         $this->draftFormatFilter = $this->formatFilter;
+        $this->draftAdviserFilter = $this->adviserFilter;
         $this->draftPubDateFrom = $this->pubDateFrom;
         $this->draftPubDateTo = $this->pubDateTo;
         $this->draftSdgFilter = $this->sdgFilter;
@@ -221,6 +228,7 @@ class ListCatalogs extends Page
 
         $this->typeFilter = $this->draftTypeFilter;
         $this->formatFilter = $this->draftFormatFilter;
+        $this->adviserFilter = $this->draftAdviserFilter;
         $this->pubDateFrom = $this->draftPubDateFrom;
         $this->pubDateTo = $this->draftPubDateTo;
         $this->sdgFilter = $this->draftSdgFilter;
@@ -246,6 +254,7 @@ class ListCatalogs extends Page
     {
         $this->draftTypeFilter = '';
         $this->draftFormatFilter = '';
+        $this->draftAdviserFilter = '';
         $this->draftPubDateFrom = '';
         $this->draftPubDateTo = '';
         $this->draftSdgFilter = [];
@@ -258,6 +267,7 @@ class ListCatalogs extends Page
     {
         $this->typeFilter = '';
         $this->formatFilter = '';
+        $this->adviserFilter = '';
         $this->pubDateFrom = '';
         $this->pubDateTo = '';
         $this->sdgFilter = [];
@@ -276,6 +286,7 @@ class ListCatalogs extends Page
         match ($filter) {
             'typeFilter' => $this->typeFilter = '',
             'formatFilter' => $this->formatFilter = '',
+            'adviserFilter' => $this->adviserFilter = '',
             'pubDate' => [$this->pubDateFrom = '', $this->pubDateTo = ''],
             'availableOnly' => $this->availableOnly = true,  // revert to default (hide unavailable)
             'sdg' => $this->sdgFilter = array_values(
@@ -287,6 +298,7 @@ class ListCatalogs extends Page
         // Keep draft in sync
         $this->draftTypeFilter = $this->typeFilter;
         $this->draftFormatFilter = $this->formatFilter;
+        $this->draftAdviserFilter = $this->adviserFilter;
         $this->draftPubDateFrom = $this->pubDateFrom;
         $this->draftPubDateTo = $this->pubDateTo;
         $this->draftSdgFilter = $this->sdgFilter;
@@ -312,7 +324,7 @@ class ListCatalogs extends Page
 
     // ── Optimised query ───────────────────────────────────────────────────────
 
-    protected function getQuery(): \Illuminate\Database\Eloquent\Builder
+    protected function getQuery(): Builder
     {
         $user = Auth::user();
         $userLevel = $user->role->getAccessLevel();
@@ -333,10 +345,12 @@ class ListCatalogs extends Page
                     match ($this->searchScope) {
                         'title' => $inner->where('title', 'like', $term),
                         'author' => $inner->where('author', 'like', $term),
+                        'adviser' => $inner->where('adviser', 'like', $term),
                         'keyword' => $inner->where('keywords', 'like', $term),
                         default => $inner
                             ->where('title', 'like', $term)
                             ->orWhere('author', 'like', $term)
+                            ->orWhere('adviser', 'like', $term)
                             ->orWhere('keywords', 'like', $term),
                     };
                 });
@@ -374,6 +388,17 @@ class ListCatalogs extends Page
                                 ->whereHas('material', fn ($m) => $m->where('is_digital', false));
                         });
                 });
+            })
+            ->when($this->adviserFilter !== '', function ($q) {
+                $driver = config('database.default');
+                if ($driver === 'mysql') {
+                    $q->whereRaw(
+                        'JSON_CONTAINS(adviser, ?)',
+                        [json_encode($this->adviserFilter)]
+                    );
+                } else {
+                    $q->whereRaw('adviser LIKE ?', ['%"'.$this->adviserFilter.'"%']);
+                }
             })
 
             // ── Publication date range ────────────────────────────────────────
@@ -477,6 +502,7 @@ class ListCatalogs extends Page
         $activeFilterCount = collect([
             $this->typeFilter !== '',
             $this->formatFilter !== '',
+            $this->adviserFilter !== '',
             $this->pubDateFrom !== '',
             $this->pubDateTo !== '',
             ...array_fill(0, count($this->sdgFilter), true),
@@ -487,6 +513,7 @@ class ListCatalogs extends Page
         $draftFilterCount = collect([
             $this->draftTypeFilter !== '',
             $this->draftFormatFilter !== '',
+            $this->draftAdviserFilter !== '',
             $this->draftPubDateFrom !== '',
             $this->draftPubDateTo !== '',
             ...array_fill(0, count($this->draftSdgFilter), true),

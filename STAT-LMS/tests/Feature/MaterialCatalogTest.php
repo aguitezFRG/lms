@@ -2,7 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\RrMaterialParents\Pages\CreateRrMaterialParents;
+use App\Filament\Resources\RrMaterialParents\Pages\EditRrMaterialParents;
+use App\Filament\Resources\RrMaterialParents\Pages\ListRrMaterialParents;
+use App\Filament\Resources\RrMaterialParents\Pages\ViewRrMaterialParents;
+use App\Filament\Resources\User\Catalogs\CatalogResource;
+use App\Filament\Resources\User\Catalogs\Pages\ListCatalogs;
+use App\Filament\Resources\User\Catalogs\Pages\ViewCatalog;
 use App\Models\RrMaterialParents;
+use App\Models\RrMaterials;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -52,7 +60,7 @@ class MaterialCatalogTest extends TestCase
         $student = $this->makeUser('student');
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ListCatalogs::class)
+        Livewire::test(ListCatalogs::class)
             ->set('availableOnly', false)
             ->assertSee('Public Paper')
             ->assertDontSee('Restricted Paper')
@@ -69,7 +77,7 @@ class MaterialCatalogTest extends TestCase
         $faculty = $this->makeUser('faculty');
         $this->actingAs($faculty);
 
-        Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ListCatalogs::class)
+        Livewire::test(ListCatalogs::class)
             ->set('availableOnly', false)
             ->assertSee('Public Paper')
             ->assertSee('Restricted Paper')
@@ -86,7 +94,7 @@ class MaterialCatalogTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\ListRrMaterialParents::class)
+        Livewire::test(ListRrMaterialParents::class)
             ->call('loadTable')
             ->assertSee('Public Paper')
             ->assertSee('Restricted Paper')
@@ -103,7 +111,7 @@ class MaterialCatalogTest extends TestCase
         $staff = $this->makeUser('staff/custodian');
         $this->actingAs($staff);
 
-        Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\ListRrMaterialParents::class)
+        Livewire::test(ListRrMaterialParents::class)
             ->call('loadTable')
             ->assertSee('Public Paper')
             ->assertSee('Restricted Paper')
@@ -125,7 +133,7 @@ class MaterialCatalogTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\CreateRrMaterialParents::class)
+        Livewire::test(CreateRrMaterialParents::class)
             ->fillForm([
                 'title' => 'New Statistical Journal',
                 'material_type' => 3,
@@ -161,7 +169,7 @@ class MaterialCatalogTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\CreateRrMaterialParents::class)
+        Livewire::test(CreateRrMaterialParents::class)
             ->fillForm([
                 'title' => '',
                 'material_type' => 1,
@@ -182,10 +190,66 @@ class MaterialCatalogTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(
-            \App\Filament\Resources\RrMaterialParents\Pages\ViewRrMaterialParents::class,
+            ViewRrMaterialParents::class,
             ['record' => $material->id]
         )
             ->assertSee('Viewable Material');
+    }
+
+    /** @test */
+    public function admin_material_infolist_metadata_is_not_linked_to_user_catalog(): void
+    {
+        $material = $this->makeMaterial(1, [
+            'title' => 'Plain Metadata Material',
+            'material_type' => 2,
+            'author' => 'Dr. Santos',
+            'adviser' => ['Dr. Reyes'],
+            'keywords' => ['regression'],
+            'sdgs' => ['Quality Education'],
+        ]);
+        $committee = $this->makeUser('committee');
+        $this->actingAs($committee);
+
+        Livewire::test(ViewRrMaterialParents::class, ['record' => $material->id])
+            ->assertSee('Plain Metadata Material')
+            ->assertSee('Dr. Santos')
+            ->assertSee('Dr. Reyes')
+            ->assertSee('regression')
+            ->assertSee('Quality Education')
+            ->assertDontSeeHtml('/app/user/catalogs')
+            ->assertDontSeeHtml('typeFilter=')
+            ->assertDontSeeHtml('adviserFilter=')
+            ->assertDontSeeHtml('sdgFilter=')
+            ->assertDontSeeHtml('searchScope=');
+    }
+
+    /** @test */
+    public function user_catalog_infolist_metadata_links_to_catalog_filters(): void
+    {
+        $material = $this->makeMaterial(1, [
+            'title' => 'Linked Metadata Material',
+            'material_type' => 2,
+            'author' => 'Dr. Santos',
+            'adviser' => ['Dr. Reyes'],
+            'keywords' => ['regression'],
+            'sdgs' => ['Quality Education'],
+        ]);
+        $student = $this->makeUser('student');
+        $this->actingAs($student);
+
+        Livewire::test(ViewCatalog::class, ['record' => $material->id])
+            ->assertSee('Linked Metadata Material')
+            ->assertSeeHtml(e(CatalogResource::getUrl('index', ['typeFilter' => '2'])))
+            ->assertSeeHtml(e(CatalogResource::getUrl('index', [
+                'search' => 'Dr. Santos',
+                'searchScope' => 'author',
+            ])))
+            ->assertSeeHtml(e(CatalogResource::getUrl('index', ['adviserFilter' => 'Dr. Reyes'])))
+            ->assertSeeHtml(e(CatalogResource::getUrl('index', [
+                'searchScope' => 'keyword',
+                'search' => 'regression',
+            ])))
+            ->assertSeeHtml(e(CatalogResource::getUrl('index', ['sdgFilter' => ['Quality Education']])));
     }
 
     /** @test */
@@ -221,7 +285,7 @@ class MaterialCatalogTest extends TestCase
         $this->actingAs($it);
 
         Livewire::test(
-            \App\Filament\Resources\RrMaterialParents\Pages\EditRrMaterialParents::class,
+            EditRrMaterialParents::class,
             ['record' => $material->id]
         )
             ->fillForm([
@@ -258,7 +322,7 @@ class MaterialCatalogTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(
-            \App\Filament\Resources\RrMaterialParents\Pages\EditRrMaterialParents::class,
+            EditRrMaterialParents::class,
             ['record' => $material->id]
         )
             ->callAction('delete');
@@ -277,7 +341,7 @@ class MaterialCatalogTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(
-            \App\Filament\Resources\RrMaterialParents\Pages\EditRrMaterialParents::class,
+            EditRrMaterialParents::class,
             ['record' => $material->id]
         )
             ->callAction('restore');
@@ -290,8 +354,8 @@ class MaterialCatalogTest extends TestCase
     {
         // Use raw factories to preserve booted() hooks (make* helpers flush event listeners)
         $parent = RrMaterialParents::factory()->create();
-        $copyA = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
-        $copyB = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
+        $copyA = RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
+        $copyB = RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
 
         $parent->delete();
 
@@ -303,8 +367,8 @@ class MaterialCatalogTest extends TestCase
     public function restoring_parent_respects_individual_copy_deletion_precedence(): void
     {
         $parent = RrMaterialParents::factory()->create();
-        $copyA = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
-        $copyB = \App\Models\RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
+        $copyA = RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
+        $copyB = RrMaterials::factory()->create(['material_parent_id' => $parent->id, 'is_digital' => false, 'is_available' => true]);
 
         // Delete copyB individually before deleting the parent
         $copyB->delete();
@@ -330,7 +394,7 @@ class MaterialCatalogTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\ListRrMaterialParents::class)
+        Livewire::test(ListRrMaterialParents::class)
             ->call('loadTable')
             ->assertSee('Active Material')
             ->assertDontSee('Deleted Material');
@@ -345,7 +409,7 @@ class MaterialCatalogTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\ListRrMaterialParents::class)
+        Livewire::test(ListRrMaterialParents::class)
             ->call('loadTable')
             ->filterTable('trashed', 'with')
             ->assertSee('Deleted Material');
@@ -362,7 +426,7 @@ class MaterialCatalogTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\ListRrMaterialParents::class)
+        Livewire::test(ListRrMaterialParents::class)
             ->call('loadTable')
             ->filterTable('material_type', [1])
             ->assertSee('Book Title')
@@ -378,7 +442,7 @@ class MaterialCatalogTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\RrMaterialParents\Pages\ListRrMaterialParents::class)
+        Livewire::test(ListRrMaterialParents::class)
             ->call('loadTable')
             ->searchTable('Bayesian')
             ->assertSee('Unique Bayesian Study')
@@ -396,7 +460,7 @@ class MaterialCatalogTest extends TestCase
 
         // Setting "To" earlier than the existing "From" should clear "From" (not "To"),
         // so the user's new "To" value is preserved.
-        $component = Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ListCatalogs::class)
+        $component = Livewire::test(ListCatalogs::class)
             ->set('availableOnly', false)
             ->set('draftPubDateFrom', '2024-06-01')
             ->set('draftPubDateTo', '2024-01-01');
@@ -415,7 +479,7 @@ class MaterialCatalogTest extends TestCase
 
         // Setting "From" later than the existing "To" should clear "To" (not "From"),
         // so the user's new "From" value is preserved.
-        $component = Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ListCatalogs::class)
+        $component = Livewire::test(ListCatalogs::class)
             ->set('availableOnly', false)
             ->set('draftPubDateTo', '2024-01-01')
             ->set('draftPubDateFrom', '2024-06-01');
@@ -433,7 +497,7 @@ class MaterialCatalogTest extends TestCase
         $this->actingAs($student);
 
         // Guard clears "From" when "To" is set earlier, leaving only "To" active.
-        $component = Livewire::test(\App\Filament\Resources\User\Catalogs\Pages\ListCatalogs::class)
+        $component = Livewire::test(ListCatalogs::class)
             ->set('availableOnly', false)
             ->set('filterPanelOpen', true)
             ->set('draftPubDateFrom', '2024-06-01')
@@ -449,5 +513,39 @@ class MaterialCatalogTest extends TestCase
             ->assertSet('pubDateFrom', '')
             ->assertSet('pubDateTo', '2024-01-01')
             ->assertSet('filterPanelOpen', false);
+    }
+
+    /** @test */
+    public function user_catalog_adviser_filter_from_query_string_filters_results_in_sqlite(): void
+    {
+        $this->makeMaterial(1, ['title' => 'With Reyes', 'adviser' => ['Dr. Reyes']]);
+        $this->makeMaterial(1, ['title' => 'With Cruz', 'adviser' => ['Dr. Cruz']]);
+
+        $student = $this->makeUser('student');
+        $this->actingAs($student);
+
+        Livewire::withQueryParams(['adviserFilter' => 'Dr. Reyes'])
+            ->test(ListCatalogs::class)
+            ->set('availableOnly', false)
+            ->assertSet('adviserFilter', 'Dr. Reyes')
+            ->assertSet('draftAdviserFilter', 'Dr. Reyes')
+            ->assertSee('With Reyes')
+            ->assertDontSee('With Cruz');
+    }
+
+    /** @test */
+    public function user_catalog_sdg_filter_matches_json_values_in_sqlite(): void
+    {
+        $this->makeMaterial(1, ['title' => 'SDG Health', 'sdgs' => ['Good Health and Well-being']]);
+        $this->makeMaterial(1, ['title' => 'SDG Climate', 'sdgs' => ['Climate Action']]);
+
+        $student = $this->makeUser('student');
+        $this->actingAs($student);
+
+        Livewire::test(ListCatalogs::class)
+            ->set('availableOnly', false)
+            ->set('sdgFilter', ['Climate Action'])
+            ->assertSee('SDG Climate')
+            ->assertDontSee('SDG Health');
     }
 }

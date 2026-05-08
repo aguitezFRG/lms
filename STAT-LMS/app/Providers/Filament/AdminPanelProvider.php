@@ -95,6 +95,10 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn () => view('filament.components.theme-bootstrap'),
+            )
+            ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn () => view('filament.components.password-encryption-script'),
             )

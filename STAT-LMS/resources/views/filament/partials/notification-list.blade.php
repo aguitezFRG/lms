@@ -68,9 +68,9 @@
                     x-on:mouseleave="endPress()"
                     x-on:click="if (!isLong) $wire.{{ $markReadMethod }}('{{ $n['id'] }}')"
                     @class([
-                        'flex items-start gap-4 px-4 py-4 cursor-pointer transition-colors duration-150 rounded-xl select-none',
-                        'bg-primary-50/60 dark:bg-primary-950/20 hover:bg-primary-50 dark:hover:bg-primary-950/30' => $n['is_unread'],
-                        'bg-white dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.08]'          => ! $n['is_unread'],
+                        'rr-notif-item flex items-start gap-4 px-4 py-4 cursor-pointer transition-colors duration-150 rounded-xl select-none',
+                        'rr-notif-unread bg-primary-50/60 dark:bg-primary-950/20 hover:bg-primary-50 dark:hover:bg-primary-950/30' => $n['is_unread'],
+                        'rr-notif-read bg-white dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.08]' => ! $n['is_unread'],
                     ])
                 >
                     {{-- Icon badge --}}
@@ -110,7 +110,7 @@
             @endforeach
         </div>
     @else
-        <div class="flex flex-col items-center justify-center gap-2 py-16 rounded-xl border border-dashed border-gray-200 dark:border-white/10 text-center">
+        <div class="rr-notif-empty flex flex-col items-center justify-center gap-2 py-16 rounded-xl border border-dashed border-gray-200 dark:border-white/10 text-center">
             <x-heroicon-o-bell-slash class="w-8 h-8 text-gray-300 dark:text-gray-600" />
             <p class="text-sm font-medium text-gray-400 dark:text-gray-500">No notifications yet</p>
         </div>
@@ -140,7 +140,7 @@
                 x-transition:leave-start="opacity-100 scale-100"
                 x-transition:leave-end="opacity-0 scale-95"
                 x-on:click.stop
-                class="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 shadow-2xl
+                class="rr-notif-detail w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 shadow-2xl
                        border border-gray-200 dark:border-white/10 overflow-hidden"
             >
                 <template x-if="selected">
@@ -156,7 +156,7 @@
                                 <span x-text="selected.since"></span>
                             </p>
                         </div>
-                        <div class="border-t border-gray-100 dark:border-white/10 px-5 py-3 flex justify-end">
+                        <div class="rr-notif-detail-divider border-t border-gray-100 dark:border-white/10 px-5 py-3 flex justify-end">
                             <button
                                 type="button"
                                 x-on:click="showDetail = false; isLong = false"

@@ -21,6 +21,7 @@
         :active-filter-count="$activeFilterCount"
         :type-filter="$typeFilter"
         :format-filter="$formatFilter"
+        :adviser-filter="$adviserFilter"
         :pub-date-from="$pubDateFrom"
         :pub-date-to="$pubDateTo"
         :sdg-filter="$sdgFilter"
@@ -32,6 +33,7 @@
         :draft-filter-count="$draftFilterCount"
         :draft-type-filter="$draftTypeFilter"
         :draft-format-filter="$draftFormatFilter"
+        :draft-adviser-filter="$draftAdviserFilter"
         :draft-pub-date-from="$draftPubDateFrom"
         :draft-pub-date-to="$draftPubDateTo"
         :draft-sdg-filter="$draftSdgFilter"
@@ -55,7 +57,7 @@
                 <x-catalog.pagination-controls :paginator="$paginator" />
             @endif
         @else
-            <div class="rounded-xl border border-dashed border-gray-300 bg-white py-20 text-center
+            <div class="rr-catalog-empty rounded-xl border border-dashed border-gray-300 bg-white py-20 text-center
                         dark:border-white/10 dark:bg-white/5">
                 <x-heroicon-o-document-magnifying-glass class="mx-auto mb-4 h-10 w-10 text-gray-300" />
                 <p class="text-sm font-medium text-gray-500">No materials found</p>

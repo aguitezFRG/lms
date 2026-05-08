@@ -28,7 +28,7 @@
 @endphp
 
 <a href="{{ $material['view_url'] }}"
-    class="group flex w-full rounded-xl border border-gray-200 border-l-4 {{ $borderColour }}
+    class="rr-catalog-card {{ $isAvailable ? 'rr-catalog-card-available' : 'rr-catalog-card-unavailable' }} group flex w-full rounded-xl border border-gray-200 border-l-4 {{ $borderColour }}
             bg-white px-5 py-4 shadow-sm transition-all duration-150
             hover:-translate-y-0.5 hover:shadow-md
             dark:border-gray-700/60 dark:bg-white/5 dark:hover:bg-white/[0.08]">
@@ -48,7 +48,7 @@
         <div class="mt-2 flex flex-wrap items-center gap-1.5">
 
             @if ($isAvailable)
-                <span class="inline-flex items-center gap-1 rounded-full
+                <span class="rr-status-available inline-flex items-center gap-1 rounded-full
                                 bg-green-100 px-2.5 py-0.5
                                 text-xs font-semibold text-green-700
                                 dark:bg-green-900/40 dark:text-green-300">
@@ -56,7 +56,7 @@
                     Available
                 </span>
             @else
-                <span class="inline-flex items-center gap-1 rounded-full
+                <span class="rr-status-unavailable inline-flex items-center gap-1 rounded-full
                                 bg-amber-100 px-2.5 py-0.5
                                 text-xs font-semibold text-amber-700
                                 dark:bg-amber-900/40 dark:text-amber-300">
@@ -108,7 +108,7 @@
             </span>
 
             @foreach ($kwShown as $kw)
-                <span class="rounded-full bg-gray-100 px-2.5 py-0.5
+                <span class="rr-kw-pill rounded-full bg-gray-100 px-2.5 py-0.5
                                 text-xs text-gray-500
                                 dark:bg-white/10 dark:text-gray-400">
                     {{ $kw }}

@@ -3,6 +3,7 @@
     'draftFilterCount'   => 0,
     'draftTypeFilter'    => '',
     'draftFormatFilter'  => '',
+    'draftAdviserFilter' => '',
     'draftPubDateFrom'   => '',
     'draftPubDateTo'     => '',
     'draftSdgFilter'     => [],
@@ -16,12 +17,12 @@
 <div class="mb-4">
         <div
             wire:key="filter-panel"
-            class="w-full rounded-2xl
+            class="rr-filter-panel w-full rounded-2xl
                     bg-white shadow-sm ring-1 ring-black/5
                     dark:bg-gray-900 dark:ring-white/10"
         >
             {{-- Panel Header — badge reflects DRAFT filter count --}}
-            <div class="flex items-center border-b border-gray-100 px-5 py-3
+            <div class="rr-filter-panel-header flex items-center border-b border-gray-100 px-5 py-3
                         dark:border-white/10">
                 <div class="flex items-center gap-2">
                     <x-heroicon-o-adjustments-horizontal class="h-5 w-5 text-primary-600 dark:text-primary-400" />
@@ -96,6 +97,20 @@
                     <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
                         Materials with no available copies are always hidden.
                     </p>
+                </div>
+
+                {{-- Adviser --}}
+                <div>
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                        Adviser
+                    </p>
+                    <x-filament::input.wrapper>
+                        <x-filament::input
+                            wire:model.live.debounce.300ms="draftAdviserFilter"
+                            type="text"
+                            placeholder="Filter by adviser name"
+                        />
+                    </x-filament::input.wrapper>
                 </div>
 
                 {{-- Publication Date Range --}}
@@ -173,7 +188,7 @@
             </div>
 
             {{-- Panel Footer --}}
-            <div class="flex items-center justify-between border-t border-gray-100 px-5 py-3 dark:border-white/10">
+            <div class="rr-filter-panel-footer flex items-center justify-between border-t border-gray-100 px-5 py-3 dark:border-white/10">
                 <x-filament::button
                     wire:click="clearDraftFilters"
                     color="danger"

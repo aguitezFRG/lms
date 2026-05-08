@@ -2,14 +2,16 @@
 
 namespace App\Filament\Resources\RrMaterialParents\Schemas;
 
+use App\Filament\Resources\User\Catalogs\CatalogResource;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\HtmlString;
 
 class RrMaterialParentsInfolist
 {
-    public static function configure(Schema $schema): Schema
+    public static function configure(Schema $schema, bool $linkMetadata = false): Schema
     {
         return $schema
             ->components([
@@ -33,7 +35,10 @@ class RrMaterialParentsInfolist
                                     ->colors(['primary' => 1, 'success' => 2, 'warning' => 3, 'danger' => 4, 'gray' => 5])
                                     ->formatStateUsing(fn (int $state) => match ($state) {
                                         1 => 'Book', 2 => 'Thesis', 3 => 'Journal', 4 => 'Dissertation', 5 => 'Others', default => 'Unknown'
-                                    }),
+                                    })
+                                    ->url($linkMetadata
+                                        ? fn ($record): string => CatalogResource::getUrl('index', ['typeFilter' => (string) $record->material_type])
+                                        : null),
                                 TextEntry::make('publication_date')->date('F d, Y'),
                                 TextEntry::make('access_level')
                                     ->badge()
@@ -56,20 +61,28 @@ class RrMaterialParentsInfolist
                     ->components([
                         TextEntry::make('author')
                             ->label('Primary Author')
-                            ->formatStateUsing(fn ($record) => $record->authorUser?->name ?? $record->author),
+                            ->formatStateUsing(function ($record) use ($linkMetadata): HtmlString {
+                                $author = $record->authorUser?->name ?? $record->author;
+
+                                return self::catalogSearchLink($author, 'author', $linkMetadata);
+                            })
+                            ->html(),
                         TextEntry::make('adviser')
                             ->badge()
                             ->color('success')
-                            ->separator(', '),
+                            ->formatStateUsing(fn ($state) => self::catalogArrayLinks($state, 'adviserFilter', linkMetadata: $linkMetadata))
+                            ->html(),
                         TextEntry::make('keywords')
                             ->badge()
                             ->color('gray')
-                            ->separator(', '),
+                            ->formatStateUsing(fn ($state) => self::catalogArrayLinks($state, 'search', ['searchScope' => 'keyword'], $linkMetadata))
+                            ->html(),
                         TextEntry::make('sdgs')
                             ->label('SDGs')
                             ->badge()
                             ->color('warning')
-                            ->separator(', '),
+                            ->formatStateUsing(fn ($state) => self::catalogArrayLinks($state, 'sdgFilter', linkMetadata: $linkMetadata))
+                            ->html(),
                     ])->columns(2),
 
                 Section::make('System Metadata')
@@ -90,5 +103,45 @@ class RrMaterialParentsInfolist
                             ->color('danger'),
                     ])->columns(2),
             ]);
+    }
+
+    private static function catalogSearchLink(?string $value, string $scope, bool $linkMetadata): HtmlString
+    {
+        if (! $value) {
+            return new HtmlString('');
+        }
+
+        if (! $linkMetadata) {
+            return new HtmlString(e($value));
+        }
+
+        $url = CatalogResource::getUrl('index', [
+            'search' => $value,
+            'searchScope' => $scope,
+        ]);
+
+        return new HtmlString('<a href="'.e($url).'" class="underline">'.e($value).'</a>');
+    }
+
+    private static function catalogArrayLinks(mixed $state, string $param, array $extra = [], bool $linkMetadata = false): HtmlString
+    {
+        $values = array_values(array_filter(is_array($state) ? $state : [$state]));
+        if ($values === []) {
+            return new HtmlString('');
+        }
+
+        if (! $linkMetadata) {
+            return new HtmlString(implode(', ', array_map(fn ($value): string => e((string) $value), $values)));
+        }
+
+        $links = array_map(function ($value) use ($param, $extra): string {
+            $params = $extra;
+            $params[$param] = $param === 'sdgFilter' ? [(string) $value] : (string) $value;
+            $url = CatalogResource::getUrl('index', $params);
+
+            return '<a href="'.e($url).'" class="underline">'.e((string) $value).'</a>';
+        }, $values);
+
+        return new HtmlString(implode(', ', $links));
     }
 }
