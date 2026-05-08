@@ -18,6 +18,7 @@
                 { value: 'all',     label: 'All Fields' },
                 { value: 'title',   label: 'Title' },
                 { value: 'author',  label: 'Author' },
+                { value: 'adviser', label: 'Adviser' },
                 { value: 'keyword', label: 'Keyword' },
             ],
             select(val) { this.value = val; this.open = false; },
@@ -51,7 +52,7 @@
             x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
             x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
-            class="absolute left-0 top-full z-50 mt-1 w-40 origin-top-left rounded-lg border border-gray-200 bg-white py-1 shadow-lg
+            class="rr-scope-dropdown-panel absolute left-0 top-full z-50 mt-1 w-40 origin-top-left rounded-lg border border-gray-200 bg-white py-1 shadow-lg
                     dark:border-white/10 dark:bg-gray-800"
         >
             <template x-for="opt in options" :key="opt.value">
@@ -81,6 +82,7 @@
                 placeholder="{{ match($searchScope) {
                     'title'   => 'Search by title…',
                     'author'  => 'Search by author name…',
+                    'adviser' => 'Search by adviser name…',
                     'keyword' => 'Search by keyword…',
                     default   => 'Search by title, author, or keyword…',
                 } }}"
