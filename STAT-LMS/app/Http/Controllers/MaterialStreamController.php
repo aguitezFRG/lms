@@ -6,6 +6,7 @@ use App\Enums\MaterialEventType;
 use App\Enums\UserRole;
 use App\Models\MaterialAccessEvents;
 use App\Models\RrMaterials;
+use App\Services\PdfWatermarkService;
 use finfo;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -42,7 +43,7 @@ class MaterialStreamController extends Controller
      * Stream the raw PDF bytes.
      * Called only by the viewer Blade — not exposed as a direct download link.
      */
-    public function stream(RrMaterials $record)
+    public function stream(RrMaterials $record, PdfWatermarkService $pdfWatermarkService)
     {
         $this->authorizeAccess($record);
 
@@ -73,7 +74,23 @@ class MaterialStreamController extends Controller
             abort(415, 'The stored file is not a valid PDF.');
         }
 
-        return response()->file($path, [
+        try {
+            $watermarked = $pdfWatermarkService->watermark(
+                pdfPath: $path,
+                user: auth()->user(),
+                materialTitle: $record->parent?->title ?? basename($record->file_name),
+                accessedAt: now()->setTimezone('Asia/Manila'),
+            );
+        } catch (\Throwable $e) {
+            Log::error('Stream failed: watermarking error', [
+                'material_id' => $record->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            abort(422, 'This PDF format is not supported for secure viewing. Please contact the administrator.');
+        }
+
+        return response($watermarked, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="'.basename($record->file_name).'"',
             // Prevent the browser from caching the authenticated PDF URL
@@ -83,6 +100,7 @@ class MaterialStreamController extends Controller
             'X-Frame-Options' => 'SAMEORIGIN',
             // Tell browsers not to sniff the content type
             'X-Content-Type-Options' => 'nosniff',
+            'Content-Length' => (string) strlen($watermarked),
         ]);
     }
 

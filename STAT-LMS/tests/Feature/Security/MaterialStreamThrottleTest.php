@@ -67,9 +67,10 @@ class MaterialStreamThrottleTest extends TestCase
         for ($i = 0; $i < 31; $i++) {
             $response = $this->get(route('materials.stream', ['record' => $material->id]));
             if ($i < 30) {
-                // First 30 should succeed (200 or 415 from mime type check)
+                // First 30 should reach the stream logic without throttling.
+                // The mock PDF may now fail server-side watermarking with 422.
                 $this->assertTrue(
-                    in_array($response->getStatusCode(), [200, 415]),
+                    in_array($response->getStatusCode(), [200, 415, 422]),
                     "Request $i should succeed (got {$response->getStatusCode()})"
                 );
             } else {

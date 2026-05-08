@@ -78,14 +78,6 @@
             display: block;
         }
 
-        /* Watermark overlay — sits on top of the PDF canvas */
-        .page-wrapper canvas.wm-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            pointer-events: none; /* clicks pass through to PDF canvas */
-        }
-
         /* ── Loading state ───────────────────────────────────────── */
         #loading {
             color: #aaa;
@@ -114,9 +106,6 @@
     <script>
         window.PDF_VIEWER_CONFIG = {
             streamUrl: @json($streamUrl),
-            userName: @json($user->name),
-            userId: @json($user->id),
-            timestamp: @json(now()->format('Y-m-d H:i')),
         };
     </script>
     @vite('resources/js/pdf-viewer.js')

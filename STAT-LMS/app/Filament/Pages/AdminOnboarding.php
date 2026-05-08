@@ -37,9 +37,11 @@ class AdminOnboarding extends Page
         array $parameters = [],
         bool $isAbsolute = true,
         ?string $panel = null,
-        ?\Illuminate\Database\Eloquent\Model $tenant = null
+        ?\Illuminate\Database\Eloquent\Model $tenant = null,
+        bool $shouldGuessMissingParameters = false,
+        ?string $configuration = null,
     ): string {
-        return parent::getUrl($parameters, $isAbsolute, $panel ?? 'admin', $tenant);
+        return parent::getUrl($parameters, $isAbsolute, $panel ?? 'admin', $tenant, $shouldGuessMissingParameters, $configuration);
     }
 
     protected function getViewData(): array
