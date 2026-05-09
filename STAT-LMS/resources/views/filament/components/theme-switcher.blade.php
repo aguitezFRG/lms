@@ -4,7 +4,7 @@
         init() {
             this.theme = window.statLmsTheme?.get?.() ?? 'light';
             window.addEventListener('stat-lms-theme:changed', (event) => {
-                this.theme = event.detail?.theme ?? 'light';
+                this.theme = event.detail?.theme ?? 'system';
             });
         },
         setTheme(nextTheme) {
@@ -48,13 +48,24 @@
         <button
             type="button"
             class="rr-theme-switcher-btn"
-            :class="{ 'rr-theme-switcher-btn-active': isActive('oled') }"
-            @click="setTheme('oled'); closeDropdown($event)"
+            :class="{ 'rr-theme-switcher-btn-active': isActive('dark-oled') }"
+            @click="setTheme('dark-oled'); closeDropdown($event)"
             aria-label="OLED theme"
             title="OLED"
         >
             {{ \Filament\Support\generate_icon_html(\Filament\Support\Icons\Heroicon::OutlinedSparkles, attributes: new \Illuminate\View\ComponentAttributeBag(['class' => 'rr-theme-switcher-icon'])) }}
             <span>OLED</span>
+        </button>
+        <button
+            type="button"
+            class="rr-theme-switcher-btn"
+            :class="{ 'rr-theme-switcher-btn-active': isActive('system') }"
+            @click="setTheme('system'); closeDropdown($event)"
+            aria-label="System theme"
+            title="System"
+        >
+            {{ \Filament\Support\generate_icon_html(\Filament\Support\Icons\Heroicon::OutlinedComputerDesktop, attributes: new \Illuminate\View\ComponentAttributeBag(['class' => 'rr-theme-switcher-icon'])) }}
+            <span>System</span>
         </button>
     </div>
 </div>

@@ -1,17 +1,36 @@
 <script>
     (function () {
         const storageKey = 'stat-lms-theme';
-        const allowedThemes = ['light', 'dark', 'oled'];
+        const allowedThemes = ['light', 'dark', 'dark-oled', 'system'];
+        const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-        const normalizeTheme = (value) => allowedThemes.includes(value) ? value : 'light';
+        const normalizeTheme = (value) => {
+            if (value === 'oled') return 'dark-oled';
+
+            return allowedThemes.includes(value) ? value : 'system';
+        };
+
+        const resolveTheme = (theme) => {
+            if (theme === 'system') return systemThemeQuery.matches ? 'dark' : 'light';
+            if (theme === 'dark-oled') return 'dark-oled';
+
+            return theme;
+        };
+
+        const getFilamentTheme = (theme) => {
+            if (theme === 'system') return 'system';
+
+            return resolveTheme(theme) === 'light' ? 'light' : 'dark';
+        };
 
         const syncFilamentTheme = (theme) => {
-            const filamentTheme = theme === 'light' ? 'light' : 'dark';
+            const filamentTheme = getFilamentTheme(theme);
+            const resolvedTheme = resolveTheme(theme);
 
             window.theme = filamentTheme;
 
             if (window.Alpine?.store) {
-                window.Alpine.store('theme', filamentTheme);
+                window.Alpine.store('theme', resolvedTheme === 'light' ? 'light' : 'dark');
             }
 
             // Keep Filament's own localStorage key in sync so its alpine:init
@@ -22,24 +41,27 @@
         };
 
         const swapClasses = (theme) => {
+            const resolvedTheme = resolveTheme(theme);
             const root = document.documentElement;
+
             root.classList.remove('dark', 'oled');
-            if (theme === 'dark') root.classList.add('dark');
-            if (theme === 'oled') root.classList.add('dark', 'oled');
+            if (resolvedTheme === 'dark') root.classList.add('dark');
+            if (resolvedTheme === 'dark-oled') root.classList.add('dark', 'oled');
             localStorage.setItem(storageKey, theme);
             syncFilamentTheme(theme);
-            window.dispatchEvent(new CustomEvent('stat-lms-theme:changed', { detail: { theme } }));
+            window.dispatchEvent(new CustomEvent('stat-lms-theme:changed', { detail: { theme, resolvedTheme } }));
         };
 
         const applyTheme = (value, animate = false) => {
             const theme = normalizeTheme(value);
+            const resolvedTheme = resolveTheme(theme);
 
             if (!animate || !document.body) {
                 swapClasses(theme);
                 return;
             }
 
-            const isDark = theme === 'dark' || theme === 'oled';
+            const isDark = resolvedTheme !== 'light';
             const overlay = document.createElement('div');
             overlay.style.cssText =
                 'position:fixed;inset:0;z-index:2147483647;pointer-events:none;' +
@@ -63,14 +85,20 @@
         window.statLmsTheme = {
             apply: (value) => applyTheme(value, true),
             get: function () {
-                return normalizeTheme(localStorage.getItem(storageKey));
+                return normalizeTheme(localStorage.getItem(storageKey) ?? localStorage.getItem('theme'));
             },
         };
 
-        applyTheme(localStorage.getItem(storageKey));
+        applyTheme(localStorage.getItem(storageKey) ?? localStorage.getItem('theme'));
+
+        systemThemeQuery.addEventListener('change', () => {
+            if (window.statLmsTheme.get() === 'system') {
+                applyTheme('system');
+            }
+        });
 
         document.addEventListener('alpine:init', () => {
-            syncFilamentTheme(normalizeTheme(localStorage.getItem(storageKey)));
+            syncFilamentTheme(window.statLmsTheme.get());
         });
     })();
 </script>
