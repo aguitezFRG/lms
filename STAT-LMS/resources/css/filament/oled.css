@@ -56,12 +56,6 @@
     white-space: nowrap;
 }
 
-@media (min-width: 640px) {
-    .rr-theme-switcher-options {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-}
-
 .dark .rr-theme-switcher-header {
     color: rgb(156 163 175);
 }
