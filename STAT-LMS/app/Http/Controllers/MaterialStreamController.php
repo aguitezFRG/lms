@@ -17,7 +17,7 @@ class MaterialStreamController extends Controller
      * Render the secure PDF viewer page.
      * This is the URL users are sent to from the Filament action.
      */
-    public function viewer(RrMaterials $record)
+    public function viewer(RrMaterials $record, PdfWatermarkService $pdfWatermarkService)
     {
         $this->authorizeAccess($record);
 
@@ -31,11 +31,18 @@ class MaterialStreamController extends Controller
             abort(404);
         }
 
+        $metadata = $pdfWatermarkService->watermarkMetadata(
+            auth()->user(),
+            now()->setTimezone('Asia/Manila')
+        );
+
         return view('filament.pdf.viewer', [
             'record' => $record,
             'streamUrl' => route('materials.stream', ['record' => $record->id]),
             'user' => auth()->user(),
             'title' => $record->parent?->title ?? basename($record->file_name),
+            'qrDataUrl' => $metadata['qrDataUrl'],
+            'infoLine' => $metadata['infoLine'],
         ]);
     }
 
@@ -87,7 +94,18 @@ class MaterialStreamController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            abort(422, 'This PDF format is not supported for secure viewing. Please contact the administrator.');
+            $original = file_get_contents($path);
+
+            return response($original, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.basename($record->file_name).'"',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, private',
+                'Pragma' => 'no-cache',
+                'X-Frame-Options' => 'SAMEORIGIN',
+                'X-Content-Type-Options' => 'nosniff',
+                'X-Watermark-Fallback' => 'true',
+                'Content-Length' => (string) strlen($original),
+            ]);
         }
 
         return response($watermarked, 200, [

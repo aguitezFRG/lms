@@ -106,6 +106,9 @@
     <script>
         window.PDF_VIEWER_CONFIG = {
             streamUrl: @json($streamUrl),
+            userName: @json($user->name ?? 'Unknown'),
+            infoLine: @json($infoLine ?? ''),
+            qrDataUrl: @json($qrDataUrl ?? null),
         };
     </script>
     @vite('resources/js/pdf-viewer.js')
