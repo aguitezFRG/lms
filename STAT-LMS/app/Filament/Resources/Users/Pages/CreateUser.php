@@ -27,4 +27,10 @@ class CreateUser extends CreateRecord
         return parent::getCancelFormAction()
             ->color('danger');
     }
+
+    protected function afterCreate(): void
+    {
+        $this->record->is_profile_complete = true;
+        $this->record->saveQuietly();
+    }
 }
