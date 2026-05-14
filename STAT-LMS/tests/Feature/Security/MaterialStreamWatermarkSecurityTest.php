@@ -142,7 +142,7 @@ PDF;
     }
 
     /** @test */
-    public function watermark_service_failure_returns_422_without_leaking_original_pdf_content(): void
+    public function watermark_service_failure_returns_original_pdf_with_fallback_header(): void
     {
         $student = $this->makeUser('student');
         $material = $this->makeApprovedDigitalMaterialForUser($student->id);
@@ -164,8 +164,17 @@ PDF;
         $response = $this->actingAs($student)
             ->get(route('materials.stream', ['record' => $material->id]));
 
-        $response->assertStatus(422);
-        $this->assertStringNotContainsString($cleanContent, (string) $response->getContent());
+        $response->assertOk();
+        $response->assertHeader('X-Watermark-Fallback', 'true');
+        $response->assertHeader('Content-Type', 'application/pdf');
+        $response->assertHeader('X-Content-Type-Options', 'nosniff');
+        $response->assertHeader('X-Frame-Options', 'SAMEORIGIN');
+        $response->assertHeader('Content-Disposition', 'inline; filename="watermark-test.pdf"');
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+        $this->assertStringContainsString('no-cache', (string) $response->headers->get('Cache-Control'));
+        $this->assertStringContainsString('must-revalidate', (string) $response->headers->get('Cache-Control'));
+        $this->assertStringContainsString('private', (string) $response->headers->get('Cache-Control'));
+        $this->assertSame($cleanContent, (string) $response->getContent());
     }
 
     /** @test */

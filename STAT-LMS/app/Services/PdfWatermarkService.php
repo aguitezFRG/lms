@@ -166,17 +166,41 @@ class PdfWatermarkService
         $startX = $edgeOffset;
         $startY = $pageHeight - $blockHeight - $edgeOffset;
 
-        // $pdf->SetFillColor(255, 255, 255);
-        // $pdf->SetAlpha(0.55);
-        // $pdf->Rect($startX, $startY, $blockWidth, $blockHeight, 'F');
-        // $pdf->SetAlpha(1);
-
         $pdf->Image($qrPath, $startX + 2.0, $startY + 2.0, $qrSize, $qrSize, 'PNG');
 
         $pdf->SetTextColor(40, 40, 40);
         $pdf->SetFont('helvetica', '', 7);
         $pdf->SetXY($startX + $qrSize + 2.0, $startY + $qrSize - 2.0);
         $pdf->Cell($blockWidth - $qrSize - 7.0, 4.0, $infoLine, 0, 0, 'L', false, '', 1);
+    }
+
+    public function watermarkMetadata(User $user, Carbon $accessedAt): array
+    {
+        $tempBase = tempnam(sys_get_temp_dir(), 'stat_lms_qr_');
+        if ($tempBase === false) {
+            return ['qrDataUrl' => null, 'infoLine' => $this->buildInfoLine($user, $accessedAt)];
+        }
+
+        $qrPngPath = $tempBase.'.png';
+        if (! @rename($tempBase, $qrPngPath)) {
+            @unlink($tempBase);
+            return ['qrDataUrl' => null, 'infoLine' => $this->buildInfoLine($user, $accessedAt)];
+        }
+
+        try {
+            $payload = $this->buildQrPayload($user, $accessedAt);
+            $this->generateQrCode($payload, $qrPngPath);
+            $qrDataUrl = 'data:image/png;base64,'.base64_encode(file_get_contents($qrPngPath));
+
+            return [
+                'qrDataUrl' => $qrDataUrl,
+                'infoLine' => $this->buildInfoLine($user, $accessedAt),
+            ];
+        } finally {
+            if (is_file($qrPngPath)) {
+                @unlink($qrPngPath);
+            }
+        }
     }
 
     private function buildQrPayload(User $user, Carbon $accessedAt): string
