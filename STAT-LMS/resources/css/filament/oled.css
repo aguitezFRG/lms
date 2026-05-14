@@ -318,6 +318,7 @@ html.oled.dark .fi-modal-window {
 html.oled.dark .fi-dropdown-panel {
     box-shadow: 0 0 0 1px rgb(255 255 255 / 0.35),
                 0 8px 24px rgb(0 0 0 / 0.7);
+    overflow: hidden;
 }
 
 html.oled.dark .fi-notifications-notification {
