@@ -75,22 +75,34 @@
 /* Make hamburger states visibly distinct for sidebar closed vs open. */
 .fi-topbar-open-sidebar-btn,
 .fi-topbar-open-collapse-sidebar-btn {
+    border-radius: 0.5rem;
     color: rgb(156 163 175);
+    transition: background-color 150ms ease, box-shadow 150ms ease, color 150ms ease;
 }
 
 .fi-topbar-open-sidebar-btn:hover,
-.fi-topbar-open-collapse-sidebar-btn:hover {
-    color: rgb(107 114 128);
+.fi-topbar-open-sidebar-btn:focus-visible,
+.fi-topbar-open-collapse-sidebar-btn:hover,
+.fi-topbar-open-collapse-sidebar-btn:focus-visible {
+    color: rgb(55 65 81);
+    background-color: rgb(243 244 246);
+    box-shadow: inset 0 0 0 1px rgb(107 114 128 / 0.22);
 }
 
 .fi-topbar-close-sidebar-btn,
 .fi-topbar-close-collapse-sidebar-btn {
+    border-radius: 0.5rem;
     color: rgb(55 65 81);
+    transition: background-color 150ms ease, box-shadow 150ms ease, color 150ms ease;
 }
 
 .fi-topbar-close-sidebar-btn:hover,
-.fi-topbar-close-collapse-sidebar-btn:hover {
-    color: rgb(31 41 55);
+.fi-topbar-close-sidebar-btn:focus-visible,
+.fi-topbar-close-collapse-sidebar-btn:hover,
+.fi-topbar-close-collapse-sidebar-btn:focus-visible {
+    color: rgb(17 24 39);
+    background-color: rgb(243 244 246);
+    box-shadow: inset 0 0 0 1px rgb(107 114 128 / 0.22);
 }
 
 .dark .fi-topbar-open-sidebar-btn,
@@ -98,9 +110,27 @@
     color: rgb(156 163 175);
 }
 
+.dark .fi-topbar-open-sidebar-btn:hover,
+.dark .fi-topbar-open-sidebar-btn:focus-visible,
+.dark .fi-topbar-open-collapse-sidebar-btn:hover,
+.dark .fi-topbar-open-collapse-sidebar-btn:focus-visible {
+    color: rgb(255 255 255);
+    background-color: rgb(55 65 81 / 0.85);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.24);
+}
+
 .dark .fi-topbar-close-sidebar-btn,
 .dark .fi-topbar-close-collapse-sidebar-btn {
     color: rgb(229 231 235);
+}
+
+.dark .fi-topbar-close-sidebar-btn:hover,
+.dark .fi-topbar-close-sidebar-btn:focus-visible,
+.dark .fi-topbar-close-collapse-sidebar-btn:hover,
+.dark .fi-topbar-close-collapse-sidebar-btn:focus-visible {
+    color: rgb(255 255 255);
+    background-color: rgb(31 41 55 / 0.92);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.24);
 }
 
 @media (min-width: 1024px) {
