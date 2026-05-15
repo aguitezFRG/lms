@@ -146,6 +146,12 @@ html.oled.dark .fi-tabs {
     border-color: rgb(39 39 42);
 }
 
+html.oled.dark .fi-dropdown-panel .fi-dropdown-list,
+html.oled.dark .fi-dropdown-panel .fi-dropdown-list-item,
+html.oled.dark .fi-dropdown-panel .fi-dropdown-header {
+    background-color: transparent;
+}
+
 /* Transparent so parent's rounded bg shows at corners, no bleed */
 html.oled.dark .fi-modal-header,
 html.oled.dark .fi-modal-footer,
@@ -251,21 +257,30 @@ html.oled.dark .fi-notifications-notification {
 
 html.oled.dark .rr-theme-switcher-btn {
     color: rgb(244 244 245);
+    box-shadow: inset 0 0 0 1px transparent;
 }
 
 html.oled.dark .rr-theme-switcher-btn:hover {
     color: rgb(255 255 255);
-    background-color: rgb(24 24 27);
+    background-color: rgb(39 39 42);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.28);
 }
 
 html.oled.dark .rr-theme-switcher-btn-active {
     color: rgb(0 0 0);
     background-color: rgb(244 244 245);
-    box-shadow: none;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.35);
+}
+
+html.oled.dark .rr-theme-switcher-btn:focus-visible {
+    color: rgb(255 255 255);
+    background-color: rgb(39 39 42);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.4);
 }
 
 html.oled.dark .fi-user-menu-trigger:hover {
-    background-color: rgb(17 24 39 / 0.88);
+    background-color: rgb(39 39 42 / 0.92);
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.3);
 }
 
 html.oled.dark .fi-user-menu-trigger .fi-user-avatar {
@@ -277,6 +292,99 @@ html.oled.dark .rr-user-menu-first-name {
 }
 
 /* ── High-contrast outlines (OLED only) ───────────────────────────────────── */
+
+html.oled.dark :where(
+    .fi-btn,
+    .fi-icon-btn,
+    .fi-link,
+    .fi-topbar-open-sidebar-btn,
+    .fi-topbar-open-collapse-sidebar-btn,
+    .fi-topbar-close-sidebar-btn,
+    .fi-topbar-close-collapse-sidebar-btn,
+    .fi-user-menu-trigger,
+    .fi-dropdown-list-item,
+    .fi-sidebar-item-button,
+    .fi-sidebar-item-button *,
+    .fi-tabs-item,
+    .fi-pagination-item,
+    .fi-ta-row,
+    .fi-ta-cell,
+    .fi-select-input-option,
+    .rr-theme-switcher-btn,
+    .rr-catalog-card,
+    .rr-scope-dropdown-panel button,
+    .rr-sort-dropdown-panel button,
+    .rr-bell-btn,
+    .rr-notif-item
+) {
+    transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease, opacity 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.oled.dark :where(
+        .fi-btn,
+        .fi-icon-btn,
+        .fi-link,
+        .fi-user-menu-trigger,
+        .fi-dropdown-list-item,
+        .fi-sidebar-item-button,
+        .fi-tabs-item,
+        .fi-pagination-item,
+        .fi-ta-row,
+        .fi-select-input-option,
+        .rr-theme-switcher-btn,
+        .rr-catalog-card,
+        .rr-scope-dropdown-panel button,
+        .rr-sort-dropdown-panel button,
+        .rr-bell-btn,
+        .rr-notif-item
+    ) {
+        transition-duration: 0ms;
+    }
+
+    html.oled.dark :where(
+        button,
+        a[href],
+        [role="button"],
+        summary,
+        .fi-btn,
+        .fi-icon-btn,
+        .fi-link,
+        .fi-dropdown-list-item,
+        .fi-sidebar-item-button,
+        .fi-tabs-item,
+        .fi-pagination-item,
+        .fi-user-menu-trigger,
+        .rr-theme-switcher-btn,
+        .rr-catalog-card,
+        .rr-scope-dropdown-panel button,
+        .rr-sort-dropdown-panel button,
+        .rr-bell-btn,
+        .rr-notif-item
+    ):hover,
+    html.oled.dark :where(
+        button,
+        a[href],
+        [role="button"],
+        summary,
+        .fi-btn,
+        .fi-icon-btn,
+        .fi-link,
+        .fi-dropdown-list-item,
+        .fi-sidebar-item-button,
+        .fi-tabs-item,
+        .fi-pagination-item,
+        .fi-user-menu-trigger,
+        .rr-theme-switcher-btn,
+        .rr-catalog-card,
+        .rr-scope-dropdown-panel button,
+        .rr-sort-dropdown-panel button,
+        .rr-bell-btn,
+        .rr-notif-item
+    ):focus-visible {
+        transform: none;
+    }
+}
 
 /* Lift surface backgrounds so cards read as distinct layers over pure black */
 html.oled.dark .fi-section,
@@ -297,6 +405,11 @@ html.oled.dark .fi-tabs {
     background-color: rgb(10 10 10);
 }
 
+html.oled.dark .fi-dropdown-panel .fi-dropdown-list,
+html.oled.dark .fi-dropdown-panel .fi-dropdown-header {
+    background-color: transparent;
+}
+
 /* box-shadow rings — work even when Filament has border:0 on the element */
 html.oled.dark .fi-section {
     box-shadow: 0 0 0 1px rgb(255 255 255 / 0.35), inset 0 0 0 0 transparent;
@@ -315,15 +428,119 @@ html.oled.dark .fi-modal-window {
                 0 25px 60px rgb(0 0 0 / 0.8);
 }
 
+html.oled.dark .fi-modal-window .fi-modal-header,
+html.oled.dark .fi-modal-window .fi-modal-content,
+html.oled.dark .fi-modal-window .fi-modal-footer {
+    border-color: transparent !important;
+}
+
+html.oled.dark .fi-modal-window .fi-modal-header {
+    border-bottom: 0 !important;
+}
+
+html.oled.dark .fi-modal-window .fi-modal-footer {
+    border-top: 0 !important;
+}
+
 html.oled.dark .fi-dropdown-panel {
     box-shadow: 0 0 0 1px rgb(255 255 255 / 0.35),
                 0 8px 24px rgb(0 0 0 / 0.7);
     overflow: hidden;
 }
 
-html.oled.dark .fi-notifications-notification {
-    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.3);
-    background-color: rgb(14 14 14);
+html.oled.dark .fi-dropdown-panel .fi-dropdown-list-item {
+    background-color: transparent;
+    border-color: transparent;
+    transition: background-color 150ms ease, color 150ms ease;
+}
+
+html.oled.dark .fi-sidebar-item-btn {
+    border-radius: 0.5rem;
+    transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease;
+}
+
+html.oled.dark .fi-dropdown-panel .fi-dropdown-list-item:hover,
+html.oled.dark .fi-dropdown-panel .fi-dropdown-list-item:focus-visible {
+    background-color: rgb(39 39 42);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
+}
+
+html.oled.dark .fi-sidebar-item > .fi-sidebar-item-btn:hover,
+html.oled.dark .fi-sidebar-item > .fi-sidebar-item-btn:focus-visible,
+html.oled.dark .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+    background-color: rgb(51 51 56) !important;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.3) !important;
+    color: rgb(255 255 255) !important;
+}
+
+html.oled.dark .fi-topbar-open-sidebar-btn:hover,
+html.oled.dark .fi-topbar-open-collapse-sidebar-btn:hover,
+html.oled.dark .fi-topbar-close-sidebar-btn:hover,
+html.oled.dark .fi-topbar-close-collapse-sidebar-btn:hover,
+html.oled.dark .fi-tabs-item:hover,
+html.oled.dark .fi-tabs-item:focus-visible,
+html.oled.dark .fi-pagination-item:hover {
+    color: rgb(255 255 255);
+    background-color: rgb(51 51 56);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.28);
+}
+
+html.oled.dark .fi-pagination-item:focus-visible {
+    color: rgb(255 255 255);
+    background-color: rgb(51 51 56);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.28);
+}
+
+html.oled.dark .fi-sidebar-item > .fi-sidebar-item-btn:hover *,
+html.oled.dark .fi-sidebar-item > .fi-sidebar-item-btn:focus-visible *,
+html.oled.dark .fi-sidebar-item.fi-active > .fi-sidebar-item-btn *,
+html.oled.dark .fi-tabs-item:hover *,
+html.oled.dark .fi-pagination-item:hover * {
+    color: rgb(255 255 255);
+}
+
+html.oled.dark .fi-ta-row:hover {
+    background-color: rgb(31 31 35);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+}
+
+html.oled.dark .fi-ta-row:hover .fi-ta-cell {
+    border-color: rgb(255 255 255 / 0.24);
+}
+
+html.oled.dark .fi-btn:hover,
+html.oled.dark .fi-icon-btn:hover {
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.45);
+}
+
+html.oled.dark .fi-btn:focus-visible,
+html.oled.dark .fi-icon-btn:focus-visible {
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.6);
+}
+
+html.oled.dark .fi-select-input .fi-dropdown-panel {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+html.oled.dark .fi-no-notification:not(.fi-inline) {
+    background-color: rgb(14 14 14) !important;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.28), 0 18px 45px rgb(0 0 0 / 0.8) !important;
+}
+
+html.oled.dark .fi-no-notification.fi-color:not(.fi-inline) {
+    background-color: color-mix(in oklab, rgb(14 14 14) 86%, var(--color-400)) !important;
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-400) 42%, transparent),
+                0 18px 45px rgb(0 0 0 / 0.8) !important;
+}
+
+html.oled.dark .fi-no-notification-title {
+    color: rgb(244 244 245) !important;
+}
+
+html.oled.dark .fi-no-notification-body,
+html.oled.dark .fi-no-notification-date {
+    color: rgb(186 186 193) !important;
 }
 
 html.oled.dark .fi-simple-main-ctn {
@@ -349,13 +566,8 @@ html.oled.dark .fi-ta-header {
     border-bottom: 1px solid rgb(255 255 255 / 0.2) !important;
 }
 
-html.oled.dark .fi-ta-footer,
-html.oled.dark .fi-modal-footer {
+html.oled.dark .fi-ta-footer {
     border-top: 1px solid rgb(255 255 255 / 0.2) !important;
-}
-
-html.oled.dark .fi-modal-header {
-    border-bottom: 1px solid rgb(255 255 255 / 0.2) !important;
 }
 
 html.oled.dark .fi-ta-row {
@@ -576,15 +788,93 @@ html.oled.dark .fi-section:has(.fi-wi-stats-overview-stat) {
     background-color: transparent !important;
 }
 
-/* Clip input wrapper children at rounded corners, preventing prefix/suffix background bleed */
-html.oled.dark .fi-input-wrp {
+/* Non-select inputs need clipped children so black internals do not square off rounded wrappers. */
+html.oled.dark .fi-input-wrp:not(.fi-fo-select) {
+    background-color: rgb(0 0 0) !important;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.45) !important;
     overflow: hidden;
 }
 
-/* choices.js dropdown list — match panel background, clip at rounded corners */
-html.oled.dark .choices__list--dropdown,
-html.oled.dark .choices__list[aria-expanded] {
-    background-color: rgb(14 14 14);
+html.oled.dark .fi-input-wrp:not(.fi-fo-select):focus-within {
+    box-shadow: 0 0 0 2px rgb(255 255 255 / 0.68) !important;
+}
+
+html.oled.dark .fi-input-wrp:not(.fi-fo-select).fi-invalid {
+    box-shadow: 0 0 0 1px rgb(248 113 113 / 0.8) !important;
+}
+
+html.oled.dark .fi-input-wrp:not(.fi-fo-select).fi-invalid:focus-within {
+    box-shadow: 0 0 0 2px rgb(248 113 113 / 0.95) !important;
+}
+
+html.oled.dark .fi-input-wrp:not(.fi-fo-select) .fi-input,
+html.oled.dark .fi-input-wrp:not(.fi-fo-select) .fi-textarea,
+html.oled.dark .fi-input-wrp:not(.fi-fo-select) .fi-tags-input,
+html.oled.dark .fi-input-wrp:not(.fi-fo-select) .fi-fo-date-time-picker-display-text-input {
+    border-color: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* OLED select outlines for Filament v5: wrapper owns the ring, internals stay transparent. */
+html.oled.dark .fi-input-wrp.fi-fo-select {
+    background-color: rgb(0 0 0) !important;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.45) !important;
+    overflow: visible !important;
+}
+
+html.oled.dark .fi-input-wrp.fi-fo-select:focus-within {
+    box-shadow: 0 0 0 2px rgb(255 255 255 / 0.68) !important;
+}
+
+html.oled.dark .fi-input-wrp.fi-fo-select.fi-invalid {
+    box-shadow: 0 0 0 1px rgb(248 113 113 / 0.8) !important;
+}
+
+html.oled.dark .fi-input-wrp.fi-fo-select.fi-invalid:focus-within {
+    box-shadow: 0 0 0 2px rgb(248 113 113 / 0.95) !important;
+}
+
+html.oled.dark .fi-input-wrp.fi-fo-select .fi-select-input,
+html.oled.dark .fi-input-wrp.fi-fo-select select.fi-select-input,
+html.oled.dark .fi-input-wrp.fi-fo-select .fi-select-input .fi-select-input-btn,
+html.oled.dark .fi-input-wrp.fi-fo-select .fi-select-input .fi-select-input-search-ctn input {
+    border-color: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+html.oled.dark .fi-input-wrp.fi-fo-select .fi-select-input,
+html.oled.dark .fi-input-wrp.fi-fo-select .fi-select-input .fi-select-input-btn {
+    border-radius: inherit !important;
+}
+
+html.oled.dark .fi-input-wrp.fi-fo-select select.fi-select-input:focus {
+    box-shadow: none !important;
+}
+
+html.oled.dark .fi-select-input .fi-dropdown-panel {
+    background-color: rgb(14 14 14) !important;
     border-color: rgb(255 255 255 / 0.35) !important;
-    overflow: hidden;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.35), 0 8px 24px rgb(0 0 0 / 0.7) !important;
+}
+
+html.oled.dark .fi-select-input .fi-select-input-search-ctn {
+    background-color: rgb(0 0 0) !important;
+    border-bottom: 1px solid rgb(255 255 255 / 0.22) !important;
+}
+
+html.oled.dark .fi-select-input .fi-select-input-search-ctn input {
+    color: rgb(244 244 245) !important;
+}
+
+html.oled.dark .fi-select-input .fi-select-input-option {
+    color: rgb(228 228 231) !important;
+}
+
+html.oled.dark .fi-select-input .fi-select-input-option.fi-active,
+html.oled.dark .fi-select-input .fi-select-input-option:hover {
+    background-color: rgb(24 24 27) !important;
 }

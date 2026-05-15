@@ -86,7 +86,11 @@ class VisitorBorrowerChartWidget extends ChartWidget
             'plugins' => ['legend' => ['display' => true]],
             'scales' => [
                 'x' => ['grid' => (object) []],
-                'y' => ['grid' => (object) [], 'beginAtZero' => true],
+                'y' => [
+                    'grid' => (object) [],
+                    'beginAtZero' => true,
+                    'ticks' => ['precision' => 0],
+                ],
             ],
             'layout' => [
                 'padding' => ['bottom' => 0],
@@ -163,4 +167,5 @@ class VisitorBorrowerChartWidget extends ChartWidget
 
         return [$labels, $visitors, $borrowers];
     }
+
 }

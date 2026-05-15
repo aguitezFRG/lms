@@ -66,12 +66,12 @@
             </x-filament::tabs.item>
         </x-filament::tabs>
 
-        <div @class(['hidden' => $activeChartTab !== 'visitor-borrower'])>
+        @if ($activeChartTab === 'visitor-borrower')
             @livewire(\App\Filament\Widgets\Dashboard\VisitorBorrowerChartWidget::class, key('chart-visitor'))
-        </div>
-        <div @class(['hidden' => $activeChartTab !== 'physical-digital'])>
+        @endif
+        @if ($activeChartTab === 'physical-digital')
             @livewire(\App\Filament\Widgets\Dashboard\PhysicalDigitalChartWidget::class, key('chart-physical'))
-        </div>
+        @endif
     @endif
 
     @if ($activeTab === 'borrows' && $canViewBorrows)
