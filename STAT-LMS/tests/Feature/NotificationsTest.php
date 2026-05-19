@@ -322,6 +322,55 @@ class NotificationsTest extends TestCase
     }
 
     #[Test]
+    public function borrow_due_in_2_days_notification_sent_on_login(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->addDays(2)->endOfDay(),
+        ]);
+
+        event(new Login('web', $student, false));
+
+        Notification::assertSentTo(
+            $student,
+            fn (BorrowDueSoon $n) => $n->toDatabase($student)['days_until_due'] === 2
+        );
+    }
+
+    #[Test]
+    public function borrow_due_today_notification_sent_on_login(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->endOfDay(),
+        ]);
+
+        event(new Login('web', $student, false));
+
+        Notification::assertSentTo(
+            $student,
+            fn (BorrowDueSoon $n) => $n->toDatabase($student)['days_until_due'] === 0
+                && $n->toDatabase($student)['title'] === 'Borrow Due Today!'
+        );
+    }
+
+    #[Test]
     public function already_returned_borrow_does_not_trigger_due_soon(): void
     {
         Notification::fake();
@@ -785,5 +834,33 @@ class NotificationsTest extends TestCase
         $this->artisan('notifications:due-soon')->assertExitCode(0);
 
         Notification::assertSentTo($student, BorrowDueSoon::class);
+    }
+
+    #[Test]
+    public function artisan_due_soon_command_sends_notifications_for_today_and_next_3_days(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        foreach ([0, 1, 2, 3] as $days) {
+            MaterialAccessEvents::create([
+                'user_id' => $student->id,
+                'rr_material_id' => $copy->id,
+                'event_type' => 'borrow',
+                'status' => 'approved',
+                'due_at' => now()->addDays($days)->endOfDay(),
+            ]);
+        }
+
+        $this->artisan('notifications:due-soon')->assertExitCode(0);
+
+        foreach ([0, 1, 2, 3] as $days) {
+            Notification::assertSentTo(
+                $student,
+                fn (BorrowDueSoon $notification): bool => $notification->toDatabase($student)['days_until_due'] === $days
+            );
+        }
     }
 }

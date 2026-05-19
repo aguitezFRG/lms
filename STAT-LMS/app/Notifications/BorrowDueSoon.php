@@ -29,7 +29,11 @@ class BorrowDueSoon extends Notification implements ShouldQueue
 
         return [
             'type' => 'borrow_due_soon',
-            'title' => $this->daysUntilDue === 1 ? 'Borrow Due Tomorrow!' : "Borrow Due in {$this->daysUntilDue} Days",
+            'title' => match ($this->daysUntilDue) {
+                0 => 'Borrow Due Today!',
+                1 => 'Borrow Due Tomorrow!',
+                default => "Borrow Due in {$this->daysUntilDue} Days",
+            },
             'message' => "Your borrowed copy of \"{$title}\" is due on {$due}. Please return it on time to avoid overdue penalties.",
             'event_id' => $this->event->id,
             'days_until_due' => $this->daysUntilDue,

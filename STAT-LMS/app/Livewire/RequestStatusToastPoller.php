@@ -197,7 +197,7 @@ class RequestStatusToastPoller extends Component
                 }
 
                 return ($notification->data['type'] ?? null) === 'borrow_due_soon'
-                    && in_array((int) ($notification->data['days_until_due'] ?? 0), [1, 3], true);
+                    && in_array((int) ($notification->data['days_until_due'] ?? -1), [0, 1, 2, 3], true);
             })
             ->map(function (DatabaseNotification $notification): array {
                 $isOverdue = ($notification->data['type'] ?? null) === 'borrow_overdue';

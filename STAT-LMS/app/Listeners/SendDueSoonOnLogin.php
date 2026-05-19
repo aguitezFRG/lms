@@ -29,7 +29,7 @@ class SendDueSoonOnLogin
 
     protected function sendDueSoonNotifications(User $user, string $sessionId): void
     {
-        foreach ([3, 1] as $days) {
+        foreach ([3, 2, 1, 0] as $days) {
             $targetDate = now()->addDays($days)->toDateString();
 
             $borrows = MaterialAccessEvents::with(['material.parent'])
