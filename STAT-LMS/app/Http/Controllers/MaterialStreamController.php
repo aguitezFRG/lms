@@ -6,6 +6,7 @@ use App\Enums\MaterialEventType;
 use App\Enums\UserRole;
 use App\Models\MaterialAccessEvents;
 use App\Models\RrMaterials;
+use App\Notifications\RequestStatusChanged;
 use App\Services\PdfWatermarkService;
 use finfo;
 use Illuminate\Support\Facades\Log;
@@ -150,14 +151,45 @@ class MaterialStreamController extends Controller
             return;
         }
 
+        $this->revokeExpiredDigitalAccess($record);
+
         $hasApproved = MaterialAccessEvents::where('user_id', $user->id)
             ->where('rr_material_id', $record->id)
             ->where('event_type', MaterialEventType::REQUEST->value)
             ->where('status', 'approved')
+            ->where(function ($query): void {
+                $query->whereNull('due_at')
+                    ->orWhere('due_at', '>', now());
+            })
             ->exists();
 
         if (! $hasApproved) {
             abort(403, 'You do not have an approved request for this material.');
+        }
+    }
+
+    protected function revokeExpiredDigitalAccess(RrMaterials $record): void
+    {
+        if (! $record->is_digital) {
+            return;
+        }
+
+        $expired = MaterialAccessEvents::with('user')
+            ->where('rr_material_id', $record->id)
+            ->where('event_type', MaterialEventType::REQUEST->value)
+            ->where('status', 'approved')
+            ->whereNotNull('due_at')
+            ->where('due_at', '<=', now())
+            ->get();
+
+        foreach ($expired as $event) {
+            $event->updateQuietly([
+                'status' => 'revoked',
+                'completed_at' => now(),
+                'is_overdue' => false,
+            ]);
+
+            $event->user?->notify(new RequestStatusChanged($event));
         }
     }
 
