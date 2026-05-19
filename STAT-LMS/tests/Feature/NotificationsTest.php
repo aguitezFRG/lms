@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\RequestStatusToastPoller;
 use App\Models\MaterialAccessEvents;
 use App\Models\RrMaterialParents;
 use App\Models\User;
@@ -281,7 +282,7 @@ class NotificationsTest extends TestCase
 
         $this->actingAs($student);
 
-        $poller = new \App\Livewire\RequestStatusToastPoller();
+        $poller = new RequestStatusToastPoller;
         $poller->loginReminderSessionId = $notification->data['session_id'];
 
         $items = \Livewire\invade($poller)->sessionReminderNotifications();
@@ -551,7 +552,7 @@ class NotificationsTest extends TestCase
 
         $this->actingAs($student);
 
-        $poller = new \App\Livewire\RequestStatusToastPoller();
+        $poller = new RequestStatusToastPoller;
         $poller->loginReminderSessionId = $notification->data['session_id'];
 
         $items = \Livewire\invade($poller)->sessionReminderNotifications();
@@ -568,12 +569,12 @@ class NotificationsTest extends TestCase
     }
 
     #[Test]
-    public function overdue_borrow_notification_fires_on_every_login_until_resolved(): void
+    public function overdue_borrow_notification_recycles_same_row_on_later_logins_until_resolved(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
         $student = $this->makeUser('student');
 
-        MaterialAccessEvents::create([
+        $event = MaterialAccessEvents::create([
             'user_id' => $student->id,
             'rr_material_id' => $copy->id,
             'event_type' => 'borrow',
@@ -582,15 +583,107 @@ class NotificationsTest extends TestCase
         ]);
 
         event(new Login('web', $student, false));
-        $countAfterFirstLogin = $student->notifications()->where('type', BorrowOverdue::class)->count();
+        $firstNotification = $student->notifications()->where('type', BorrowOverdue::class)->firstOrFail();
+        $firstNotificationId = $firstNotification->id;
+        $firstSessionId = $firstNotification->data['session_id'] ?? null;
+        $firstCreatedAt = $firstNotification->created_at;
+        $firstUpdatedAt = $firstNotification->updated_at;
+
+        session()->migrate(true);
+        $this->travel(5)->minutes();
+
+        event(new Login('web', $student, false));
+        $secondNotification = $student->notifications()->where('type', BorrowOverdue::class)->firstOrFail();
+        $secondSessionId = $secondNotification->data['session_id'] ?? null;
+
+        $this->assertSame(1, $student->notifications()->where('type', BorrowOverdue::class)->count());
+        $this->assertSame($firstNotificationId, $secondNotification->id);
+        $this->assertNotNull($firstSessionId);
+        $this->assertNotNull($secondSessionId);
+        $this->assertNotSame($firstSessionId, $secondSessionId);
+        $this->assertTrue($secondNotification->created_at->greaterThan($firstCreatedAt));
+        $this->assertTrue($secondNotification->updated_at->greaterThan($firstUpdatedAt));
+        $this->assertSame($event->id, $secondNotification->data['event_id']);
+        $this->assertSame($secondSessionId, session()->getId());
+
+        $this->travelBack();
+    }
+
+    #[Test]
+    public function recycled_overdue_borrow_notification_keeps_revocation_status_notification_separate(): void
+    {
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->subDay()->endOfDay(),
+        ]);
+
+        event(new Login('web', $student, false));
+
+        $this->assertDatabaseHas('notifications', [
+            'notifiable_type' => User::class,
+            'notifiable_id' => $student->id,
+            'type' => BorrowOverdue::class,
+        ]);
+        $this->assertDatabaseHas('notifications', [
+            'notifiable_type' => User::class,
+            'notifiable_id' => $student->id,
+            'type' => RequestStatusChanged::class,
+        ]);
 
         session()->migrate(true);
 
         event(new Login('web', $student, false));
-        $countAfterSecondLogin = $student->notifications()->where('type', BorrowOverdue::class)->count();
 
-        $this->assertGreaterThan(0, $countAfterFirstLogin);
-        $this->assertGreaterThan($countAfterFirstLogin, $countAfterSecondLogin);
+        $this->assertSame(1, $student->notifications()->where('type', BorrowOverdue::class)->count());
+        $this->assertSame(1, $student->notifications()->where('type', RequestStatusChanged::class)->count());
+        $this->assertSame('borrow_overdue', $student->notifications()->where('type', BorrowOverdue::class)->firstOrFail()->data['type']);
+        $this->assertSame($event->id, $student->notifications()->where('type', RequestStatusChanged::class)->firstOrFail()->data['event_id']);
+    }
+
+    #[Test]
+    public function returned_overdue_borrow_notification_history_is_not_bumped_on_later_logins(): void
+    {
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->subDay()->endOfDay(),
+        ]);
+
+        event(new Login('web', $student, false));
+        $notification = $student->notifications()->where('type', BorrowOverdue::class)->firstOrFail();
+        $createdAt = $notification->created_at;
+        $updatedAt = $notification->updated_at;
+        $sessionId = $notification->data['session_id'] ?? null;
+
+        $event->updateQuietly([
+            'status' => 'returned',
+            'returned_at' => now(),
+        ]);
+
+        session()->migrate(true);
+        $this->travel(5)->minutes();
+
+        event(new Login('web', $student, false));
+
+        $notification->refresh();
+
+        $this->assertSame(1, $student->notifications()->where('type', BorrowOverdue::class)->count());
+        $this->assertTrue($notification->created_at->equalTo($createdAt));
+        $this->assertTrue($notification->updated_at->equalTo($updatedAt));
+        $this->assertSame($sessionId, $notification->data['session_id'] ?? null);
+
+        $this->travelBack();
     }
 
     // ── AccessLevelChanged ────────────────────────────────────────────────────

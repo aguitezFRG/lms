@@ -64,11 +64,26 @@ class SendDueSoonOnLogin
             ->get();
 
         foreach ($overdueBorrows as $borrow) {
-            if ($this->alreadySentReminder($user, BorrowOverdue::class, $borrow->id, $sessionId)) {
+            $notification = new BorrowOverdue($borrow, $sessionId);
+            $existing = $user
+                ->notifications()
+                ->where('type', BorrowOverdue::class)
+                ->get()
+                ->first(fn ($existingNotification): bool => ($existingNotification->data['event_id'] ?? null) === $borrow->id);
+
+            if ($existing === null) {
+                $user->notifyNow($notification);
+
                 continue;
             }
 
-            $user->notifyNow(new BorrowOverdue($borrow, $sessionId));
+            $now = now();
+
+            $existing->forceFill([
+                'data' => $notification->toDatabase($user),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])->save();
         }
     }
 
