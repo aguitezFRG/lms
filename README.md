@@ -76,7 +76,7 @@ Access levels:
 
 ## User Panel Features
 
-### Catalog (`/app/catalogs`)
+### Catalog (`/app/user/catalogs`)
 
 - Role-filtered catalog browsing and search
 - Filtering for type/format/date/SDG and availability controls
@@ -88,7 +88,7 @@ Access levels:
 - Request physical borrow
 - Open digital viewer/stream when authorized
 
-### My Requests (`/app/requests`)
+### My Requests (`/app/user/requests`)
 
 - View own request history and current statuses
 - Cancel pending requests
