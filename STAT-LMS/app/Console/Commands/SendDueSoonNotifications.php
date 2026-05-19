@@ -11,11 +11,11 @@ class SendDueSoonNotifications extends Command
 {
     protected $signature = 'notifications:due-soon';
 
-    protected $description = 'Send due-soon notifications for borrows due in 1 or 3 days';
+    protected $description = 'Send due-soon notifications for borrows due today or in 1, 2, or 3 days';
 
     public function handle(): void
     {
-        $thresholds = [3, 1];
+        $thresholds = [3, 2, 1, 0];
 
         foreach ($thresholds as $days) {
             $targetDate = now()->addDays($days)->toDateString();
