@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\MaterialAccessEvents;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection;
@@ -52,6 +53,11 @@ class RequestStatusToastPoller extends Component
         $newReminderIds = $newReminderNotifications->pluck('id')->all();
         $toastItems = collect()->merge($newReminderNotifications);
 
+        $this->dispatch(
+            'borrow-reminder-active-keys',
+            reminderKeys: $this->activePersistentOverdueReminderKeys(),
+        );
+
         $newRequestStatusNotifications = $this->requestStatusNotifications();
         $alreadyDisplayedIds = $this->displayedRequestStatusToastIds();
         $newRequestStatusNotifications = $newRequestStatusNotifications
@@ -86,6 +92,7 @@ class RequestStatusToastPoller extends Component
                 status: $toast['status'],
                 persistent: $toast['persistent'],
                 kind: $toast['kind'],
+                reminderKey: $toast['reminderKey'] ?? null,
             );
         }
 
@@ -157,7 +164,7 @@ class RequestStatusToastPoller extends Component
     }
 
     /**
-     * @return Collection<int, array{id:string,created_at:Carbon,title:string,message:string,status:string,persistent:bool,kind:string,toastKey:?string}>
+     * @return Collection<int, array{id:string,created_at:Carbon,title:string,message:string,status:string,persistent:bool,kind:string,reminderKey:string}>
      */
     protected function sessionReminderNotifications(): Collection
     {
@@ -194,6 +201,8 @@ class RequestStatusToastPoller extends Component
             })
             ->map(function (DatabaseNotification $notification): array {
                 $isOverdue = ($notification->data['type'] ?? null) === 'borrow_overdue';
+                $eventId = (string) ($notification->data['event_id'] ?? '');
+                $daysUntilDue = (int) ($notification->data['days_until_due'] ?? 0);
 
                 return [
                     'id' => $notification->id,
@@ -203,9 +212,31 @@ class RequestStatusToastPoller extends Component
                     'status' => $isOverdue ? 'danger' : 'warning',
                     'persistent' => $isOverdue,
                     'kind' => 'borrow-reminder',
+                    'reminderKey' => $isOverdue
+                        ? "borrow_overdue:{$eventId}"
+                        : "borrow_due_soon:{$eventId}:{$daysUntilDue}",
                 ];
             })
             ->values();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function activePersistentOverdueReminderKeys(): array
+    {
+        return MaterialAccessEvents::query()
+            ->where('user_id', auth()->id())
+            ->where('event_type', 'borrow')
+            ->whereIn('status', ['approved', 'revoked'])
+            ->whereNull('returned_at')
+            ->whereNull('completed_at')
+            ->whereNotNull('due_at')
+            ->where('due_at', '<', now())
+            ->pluck('id')
+            ->map(fn (string $eventId): string => "borrow_overdue:{$eventId}")
+            ->values()
+            ->all();
     }
 
     protected function resolveToastStatus(DatabaseNotification $notification): ?string

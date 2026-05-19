@@ -266,7 +266,7 @@ class NotificationsTest extends TestCase
         [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
         $student = $this->makeUser('student');
 
-        MaterialAccessEvents::create([
+        $event = MaterialAccessEvents::create([
             'user_id' => $student->id,
             'rr_material_id' => $copy->id,
             'event_type' => 'borrow',
@@ -290,6 +290,7 @@ class NotificationsTest extends TestCase
         $this->assertSame('warning', $items->first()['status']);
         $this->assertFalse($items->first()['persistent']);
         $this->assertSame('borrow-reminder', $items->first()['kind']);
+        $this->assertSame("borrow_due_soon:{$event->id}:1", $items->first()['reminderKey']);
 
         \Livewire\invade($poller)->rememberDisplayedLoginReminderToastIds($items->pluck('id')->all());
 
@@ -487,7 +488,7 @@ class NotificationsTest extends TestCase
         [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
         $student = $this->makeUser('student');
 
-        MaterialAccessEvents::create([
+        $event = MaterialAccessEvents::create([
             'user_id' => $student->id,
             'rr_material_id' => $copy->id,
             'event_type' => 'borrow',
@@ -510,6 +511,7 @@ class NotificationsTest extends TestCase
         $this->assertSame('danger', $items->first()['status']);
         $this->assertTrue($items->first()['persistent']);
         $this->assertSame('borrow-reminder', $items->first()['kind']);
+        $this->assertSame("borrow_overdue:{$event->id}", $items->first()['reminderKey']);
 
         \Livewire\invade($poller)->rememberDisplayedLoginReminderToastIds($items->pluck('id')->all());
 

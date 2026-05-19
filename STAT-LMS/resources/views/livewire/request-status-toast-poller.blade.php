@@ -4,7 +4,8 @@
             const sessionId = @js(session()->getId());
             const listenerRegistryKey = '__requestStatusToastPollerListeners';
             const persistentOverdueStorageKey = `persistentOverdueBorrowToasts:${sessionId}`;
-            const dismissedOverdueStorageKey = `dismissedOverdueBorrowToastIds:${sessionId}`;
+            const dismissedOverdueStorageKey = `dismissedOverdueBorrowReminderKeys:${sessionId}`;
+            const dismissedOverdueStorageLimit = 200;
 
             const readJsonArray = (storageKey) => {
                 try {
@@ -23,71 +24,116 @@
 
             const readPersistentOverdueToasts = () => readJsonArray(persistentOverdueStorageKey);
             const writePersistentOverdueToasts = (toasts) => writeJsonArray(persistentOverdueStorageKey, toasts);
-            const readDismissedOverdueToastIds = () => readJsonArray(dismissedOverdueStorageKey);
-            const writeDismissedOverdueToastIds = (ids) => writeJsonArray(dismissedOverdueStorageKey, ids);
+            const readDismissedOverdueReminderKeys = () => readJsonArray(dismissedOverdueStorageKey);
+            const writeDismissedOverdueReminderKeys = (keys) => writeJsonArray(dismissedOverdueStorageKey, keys);
+            const getRenderedPersistentOverdueReminderKeys = () => window[listenerRegistryKey]?.renderedPersistentOverdueReminderKeys;
 
-            const normalizeToastId = (toast) => toast?.toastId ?? toast?.id ?? null;
+            const normalizeToastId = (toast) => {
+                const id = toast?.toastId ?? toast?.id ?? null;
+
+                return id === null ? null : String(id);
+            };
+
+            const normalizeReminderKey = (toast) => {
+                const reminderKey = toast?.reminderKey ?? null;
+
+                return reminderKey === null ? null : String(reminderKey);
+            };
 
             const isPersistentOverdueBorrowToast = (toast) => {
                 return toast?.persistent === true
                     && toast?.kind === 'borrow-reminder'
                     && toast?.status === 'danger'
-                    && Boolean(normalizeToastId(toast));
+                    && Boolean(normalizeReminderKey(toast));
             };
 
-            const isDismissedOverdueToastId = (toastId) => readDismissedOverdueToastIds().includes(toastId);
+            const isDismissedOverdueReminderKey = (reminderKey) => {
+                if (! reminderKey) {
+                    return false;
+                }
+
+                return readDismissedOverdueReminderKeys().includes(String(reminderKey));
+            };
 
             const rememberPersistentOverdueToast = (toast) => {
                 if (! isPersistentOverdueBorrowToast(toast)) {
                     return;
                 }
 
+                const reminderKey = normalizeReminderKey(toast);
                 const toastId = normalizeToastId(toast);
 
-                if (isDismissedOverdueToastId(toastId)) {
+                if (isDismissedOverdueReminderKey(reminderKey)) {
                     return;
                 }
 
                 const storedToasts = readPersistentOverdueToasts();
                 const nextStoredToasts = [
-                    ...storedToasts.filter((storedToast) => normalizeToastId(storedToast) !== toastId),
-                    { ...toast, toastId },
+                    ...storedToasts.filter((storedToast) => normalizeReminderKey(storedToast) !== reminderKey),
+                    { ...toast, toastId, reminderKey },
                 ];
 
                 writePersistentOverdueToasts(nextStoredToasts);
             };
 
-            const forgetPersistentOverdueToast = (toastId) => {
+            const forgetPersistentOverdueToast = (reminderKey) => {
                 const storedToasts = readPersistentOverdueToasts();
-                const nextStoredToasts = storedToasts.filter((storedToast) => normalizeToastId(storedToast) !== toastId);
+                const nextStoredToasts = storedToasts.filter((storedToast) => normalizeReminderKey(storedToast) !== reminderKey);
 
                 if (nextStoredToasts.length !== storedToasts.length) {
                     writePersistentOverdueToasts(nextStoredToasts);
                 }
             };
 
-            const markPersistentOverdueToastDismissed = (toastId) => {
-                if (! toastId) {
+            const prunePersistentOverdueToasts = (activeReminderKeys) => {
+                if (! Array.isArray(activeReminderKeys)) {
                     return;
                 }
 
+                const activeKeys = new Set(activeReminderKeys.map((key) => String(key)));
                 const storedToasts = readPersistentOverdueToasts();
+                const nextStoredToasts = storedToasts.filter((storedToast) => activeKeys.has(normalizeReminderKey(storedToast)));
+                const renderedReminderKeys = getRenderedPersistentOverdueReminderKeys();
 
-                if (! storedToasts.some((storedToast) => normalizeToastId(storedToast) === toastId)) {
-                    return;
+                if (renderedReminderKeys instanceof Set) {
+                    for (const renderedReminderKey of renderedReminderKeys) {
+                        if (! activeKeys.has(renderedReminderKey)) {
+                            renderedReminderKeys.delete(renderedReminderKey);
+                        }
+                    }
                 }
 
-                writeDismissedOverdueToastIds([
-                    ...new Set([
-                        ...readDismissedOverdueToastIds(),
-                        toastId,
-                    ]),
-                ]);
+                const nextDismissedKeys = readDismissedOverdueReminderKeys().filter((key) => activeKeys.has(String(key)));
 
-                forgetPersistentOverdueToast(toastId);
+                if (nextDismissedKeys.length !== readDismissedOverdueReminderKeys().length) {
+                    writeDismissedOverdueReminderKeys(nextDismissedKeys);
+                }
+
+                if (nextStoredToasts.length !== storedToasts.length) {
+                    writePersistentOverdueToasts(nextStoredToasts);
+                }
             };
 
-            const renderToast = ({ toastId = null, title, message, status, persistent = false, kind = null }) => {
+            const markPersistentOverdueToastDismissed = (reminderKey) => {
+                if (! reminderKey) {
+                    return;
+                }
+
+                const normalizedReminderKey = String(reminderKey);
+                const boundedDismissedKeys = [
+                    ...new Set([
+                        ...readDismissedOverdueReminderKeys(),
+                        normalizedReminderKey,
+                    ]),
+                ].slice(-dismissedOverdueStorageLimit);
+
+                writeDismissedOverdueReminderKeys(boundedDismissedKeys);
+
+                forgetPersistentOverdueToast(normalizedReminderKey);
+                getRenderedPersistentOverdueReminderKeys()?.delete(normalizedReminderKey);
+            };
+
+            const renderToast = ({ toastId = null, title, message, status, persistent = false, kind = null, reminderKey = null }) => {
                 let toast = null;
 
                 if (window.FilamentNotification?.make) {
@@ -107,6 +153,10 @@
 
                 if (toastId && typeof toast.id === 'function') {
                     toast.id(toastId);
+                }
+
+                if (toastId && reminderKey) {
+                    window[listenerRegistryKey].reminderKeysByToastId.set(String(toastId), String(reminderKey));
                 }
 
                 if (persistent && typeof toast.persistent === 'function') {
@@ -139,21 +189,23 @@
             };
 
             window[listenerRegistryKey] ??= {};
-            window[listenerRegistryKey].renderedPersistentOverdueToastIds ??= new Set();
+            window[listenerRegistryKey].renderedPersistentOverdueReminderKeys ??= new Set();
+            window[listenerRegistryKey].reminderKeysByToastId ??= new Map();
 
             const renderPersistentOverdueToast = (toast) => {
                 const toastId = normalizeToastId(toast);
+                const reminderKey = normalizeReminderKey(toast);
 
-                if (! isPersistentOverdueBorrowToast(toast) || isDismissedOverdueToastId(toastId)) {
+                if (! isPersistentOverdueBorrowToast(toast) || isDismissedOverdueReminderKey(reminderKey)) {
                     return;
                 }
 
-                if (window[listenerRegistryKey].renderedPersistentOverdueToastIds.has(toastId)) {
+                if (window[listenerRegistryKey].renderedPersistentOverdueReminderKeys.has(reminderKey)) {
                     return;
                 }
 
-                window[listenerRegistryKey].renderedPersistentOverdueToastIds.add(toastId);
-                renderToast({ ...toast, toastId });
+                window[listenerRegistryKey].renderedPersistentOverdueReminderKeys.add(reminderKey);
+                renderToast({ ...toast, toastId, reminderKey });
             };
 
             for (const storedToast of readPersistentOverdueToasts()) {
@@ -168,8 +220,16 @@
                 window[listenerRegistryKey].notificationClosedOff();
             }
 
-            window[listenerRegistryKey].requestStatusToastOff = $wire.on('request-status-toast', ({ toastId = null, title, message, status, persistent = false, kind = null }) => {
-                const toast = { toastId, title, message, status, persistent, kind };
+            if (typeof window[listenerRegistryKey].borrowReminderActiveKeysOff === 'function') {
+                window[listenerRegistryKey].borrowReminderActiveKeysOff();
+            }
+
+            window[listenerRegistryKey].borrowReminderActiveKeysOff = $wire.on('borrow-reminder-active-keys', ({ reminderKeys = [] }) => {
+                prunePersistentOverdueToasts(reminderKeys);
+            });
+
+            window[listenerRegistryKey].requestStatusToastOff = $wire.on('request-status-toast', ({ toastId = null, title, message, status, persistent = false, kind = null, reminderKey = null }) => {
+                const toast = { toastId, title, message, status, persistent, kind, reminderKey };
 
                 rememberPersistentOverdueToast(toast);
                 renderPersistentOverdueToast(toast);
@@ -180,7 +240,18 @@
             });
 
             const handleNotificationClosed = ({ detail }) => {
-                markPersistentOverdueToastDismissed(detail?.id ?? null);
+                const toastId = detail?.id === undefined || detail?.id === null ? null : String(detail.id);
+                let reminderKey = toastId ? window[listenerRegistryKey].reminderKeysByToastId.get(toastId) : null;
+
+                if (! reminderKey) {
+                    const renderedReminderKeys = getRenderedPersistentOverdueReminderKeys();
+
+                    if (renderedReminderKeys instanceof Set && renderedReminderKeys.size === 1) {
+                        reminderKey = Array.from(renderedReminderKeys)[0];
+                    }
+                }
+
+                markPersistentOverdueToastDismissed(reminderKey);
             };
 
             window.addEventListener('notificationClosed', handleNotificationClosed);
