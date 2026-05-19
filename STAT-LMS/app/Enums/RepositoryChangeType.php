@@ -11,6 +11,7 @@ enum RepositoryChangeType: string implements HasColor, HasLabel
     case UPDATE = 'update';
     case DELETE = 'delete';
     case RESTORE = 'restore';
+    case LOGIN = 'login';
 
     public function getLabel(): ?string
     {
@@ -19,6 +20,7 @@ enum RepositoryChangeType: string implements HasColor, HasLabel
             self::UPDATE => 'Update',
             self::DELETE => 'Delete',
             self::RESTORE => 'Restore',
+            self::LOGIN => 'Login',
         };
     }
 
@@ -29,6 +31,7 @@ enum RepositoryChangeType: string implements HasColor, HasLabel
             self::UPDATE => 'primary',
             self::DELETE => 'danger',
             self::RESTORE => 'warning',
+            self::LOGIN => 'info',
         };
     }
 

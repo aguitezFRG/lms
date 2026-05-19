@@ -19,6 +19,31 @@ class RepositoryChangeLogsObserver
             ->toArray();
     }
 
+    protected function trackedAttributes(Model $model): array
+    {
+        $attributes = $model->getAttributes();
+        $fillable = $model->getFillable();
+
+        if ($fillable !== []) {
+            $attributes = array_intersect_key($attributes, array_flip($fillable));
+        }
+
+        return collect($this->filterAttributes($model, $attributes))
+            ->except(['id', 'created_at', 'updated_at', 'deleted_at'])
+            ->reject(fn ($value) => $value === null || $value === '')
+            ->toArray();
+    }
+
+    protected function stateChangeFromSnapshot(Model $model, string $oldState, string $newState): array
+    {
+        return collect($this->trackedAttributes($model))
+            ->mapWithKeys(fn ($value, string $key) => [
+                $key => ['old' => $oldState === '' ? $value : $oldState, 'new' => $newState === '' ? $value : $newState],
+            ])
+            ->prepend(['old' => $oldState ?: 'Active', 'new' => $newState], 'record_state')
+            ->toArray();
+    }
+
     /**
      * Handle the RepositoryChangeLogs "created" event.
      */
@@ -106,10 +131,7 @@ class RepositoryChangeLogsObserver
             'target_user_id' => $this->getTargetUserId($model),
             'table_changed' => $model->getTable(),
             'change_type' => RepositoryChangeType::DELETE->value,
-            'change_made' => collect($this->filterAttributes($model, $model->getDirty()))
-                ->mapWithKeys(fn ($value, $key) => [
-                    $key => ['old' => $model->getOriginal($key), 'new' => $value],
-                ])->toArray(),
+            'change_made' => $this->stateChangeFromSnapshot($model, '', 'Deleted'),
             'changed_at' => now(),
         ]);
     }
@@ -128,10 +150,7 @@ class RepositoryChangeLogsObserver
             'target_user_id' => $this->getTargetUserId($model),
             'table_changed' => $model->getTable(),
             'change_type' => RepositoryChangeType::RESTORE->value,
-            'change_made' => collect($this->filterAttributes($model, $model->getDirty()))
-                ->mapWithKeys(fn ($value, $key) => [
-                    $key => ['old' => $model->getOriginal($key), 'new' => $value],
-                ])->toArray(),
+            'change_made' => $this->stateChangeFromSnapshot($model, 'Deleted', 'Restored'),
             'changed_at' => now(),
         ]);
     }
@@ -150,10 +169,7 @@ class RepositoryChangeLogsObserver
             'target_user_id' => $this->getTargetUserId($model),
             'table_changed' => $model->getTable(),
             'change_type' => RepositoryChangeType::DELETE->value,
-            'change_made' => collect($this->filterAttributes($model, $model->getDirty()))
-                ->mapWithKeys(fn ($value, $key) => [
-                    $key => ['old' => $model->getOriginal($key), 'new' => $value],
-                ])->toArray(),
+            'change_made' => $this->stateChangeFromSnapshot($model, '', 'Deleted'),
             'changed_at' => now(),
         ]);
     }

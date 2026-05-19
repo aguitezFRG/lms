@@ -703,6 +703,59 @@ html.oled.dark .rr-kw-pill {
     border: 1px solid rgb(255 255 255 / 0.15);
 }
 
+/* Repository change-log detail table */
+html.oled.dark .rr-change-details-table.fi-in-table-repeatable > table {
+    background-color: rgb(6 6 6) !important;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.3) !important;
+    overflow: hidden;
+}
+
+html.oled.dark .rr-change-details-table.fi-in-table-repeatable > table > thead > tr > th {
+    color: rgb(244 244 245) !important;
+    background-color: rgb(14 14 14) !important;
+    border-color: rgb(255 255 255 / 0.24) !important;
+}
+
+html.oled.dark .rr-change-details-table.fi-in-table-repeatable > table > tbody {
+    border-color: rgb(255 255 255 / 0.14) !important;
+}
+
+html.oled.dark .rr-change-details-table.fi-in-table-repeatable > table > tbody > tr {
+    background-color: rgb(6 6 6);
+    border: 1px solid rgb(255 255 255 / 0.18) !important;
+}
+
+html.oled.dark .rr-change-details-table.fi-in-table-repeatable > table > tbody > tr:hover {
+    background-color: rgb(16 16 16);
+}
+
+html.oled.dark .rr-change-details-table.fi-in-table-repeatable > table > tbody > tr > td {
+    border-color: rgb(255 255 255 / 0.16) !important;
+}
+
+html.oled.dark .rr-change-details-table.fi-in-table-repeatable > table > tbody > tr > td:not(:first-child) {
+    border-inline-start-color: rgb(255 255 255 / 0.24) !important;
+}
+
+html.oled.dark .rr-change-details-table.fi-in-table-repeatable .fi-in-entry-label {
+    color: rgb(161 161 170) !important;
+}
+
+html.oled.dark .rr-change-details-table.fi-in-table-repeatable .fi-in-entry-content,
+html.oled.dark .rr-change-details-table.fi-in-table-repeatable .fi-in-text {
+    color: rgb(228 228 231) !important;
+}
+
+html.oled.dark .rr-change-details-table .rr-change-old-value.fi-in-text,
+html.oled.dark .rr-change-details-table .rr-change-old-value.fi-in-text .fi-in-text-item {
+    color: rgb(248 113 113) !important;
+}
+
+html.oled.dark .rr-change-details-table .rr-change-new-value.fi-in-text,
+html.oled.dark .rr-change-details-table .rr-change-new-value.fi-in-text .fi-in-text-item {
+    color: rgb(74 222 128) !important;
+}
+
 /* Catalog empty state */
 html.oled.dark .rr-catalog-empty {
     background-color: transparent;

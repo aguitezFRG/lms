@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Enums\RepositoryChangeType;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\SystemUsage;
 use App\Listeners\SendDueSoonOnLogin;
 use App\Models\MaterialAccessEvents;
+use App\Models\RepositoryChangeLogs;
 use App\Models\RrMaterialParents;
 use App\Models\RrMaterials;
 use App\Models\User;
@@ -94,6 +96,23 @@ class AppServiceProvider extends ServiceProvider
         User::observe(UserObserver::class);
 
         Event::listen(Login::class, SendDueSoonOnLogin::class);
+        Event::listen(Login::class, function (Login $event): void {
+            if (! $event->user instanceof User) {
+                return;
+            }
+
+            RepositoryChangeLogs::create([
+                'editor_id' => $event->user->id,
+                'target_user_id' => $event->user->id,
+                'table_changed' => 'users',
+                'change_type' => RepositoryChangeType::LOGIN->value,
+                'change_made' => [
+                    'guard' => ['old' => null, 'new' => $event->guard],
+                    'remember' => ['old' => null, 'new' => $event->remember],
+                ],
+                'changed_at' => now(),
+            ]);
+        });
 
         Action::configureUsing(function (Action $action) {
             // Log::info('Configuring action: ' . $action->getName());
