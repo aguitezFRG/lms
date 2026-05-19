@@ -36,8 +36,10 @@ class RrMaterialsForm
                 ->schema([
                     Select::make('material_parent_id')
                         ->label('Parent Material')
-                        ->options(function (?RrMaterials $record) {
-                            $blocked = self::blockedParentIds($record?->material_parent_id);
+                        ->options(function (Get $get, ?RrMaterials $record) {
+                            $blocked = $get('is_digital')
+                                ? self::blockedParentIds($record?->material_parent_id)
+                                : [];
 
                             return RrMaterialParents::query()
                                 ->whereNotIn('id', $blocked)
@@ -45,8 +47,11 @@ class RrMaterialsForm
                                 ->pluck('title', 'id');
                         })
                         ->searchable()
-                        ->getSearchResultsUsing(function (string $search, ?RrMaterials $record) {
-                            $blocked = self::blockedParentIds($record?->material_parent_id);
+                        ->getSearchResultsUsing(function (string $search, Get $get, ?RrMaterials $record) {
+                            $isDigital = $get('is_digital');
+                            $blocked = $isDigital
+                                ? self::blockedParentIds($record?->material_parent_id)
+                                : [];
 
                             $results = RrMaterialParents::query()
                                 ->whereNotIn('id', $blocked)
@@ -54,18 +59,19 @@ class RrMaterialsForm
                                 ->limit(50)
                                 ->pluck('title', 'id');
 
-                            // Notify if the typed string exactly matches a blocked parent's title
-                            $blockedMatch = RrMaterialParents::query()
-                                ->whereIn('id', $blocked)
-                                ->where('title', $search)
-                                ->first();
+                            if ($isDigital && $blocked) {
+                                $blockedMatch = RrMaterialParents::query()
+                                    ->whereIn('id', $blocked)
+                                    ->where('title', $search)
+                                    ->first();
 
-                            if ($blockedMatch) {
-                                Notification::make()
-                                    ->title('Digital Copy Already Exists')
-                                    ->body("\"{$blockedMatch->title}\" already has an active digital copy and cannot receive another.")
-                                    ->warning()
-                                    ->send();
+                                if ($blockedMatch) {
+                                    Notification::make()
+                                        ->title('Digital Copy Already Exists')
+                                        ->body("\"{$blockedMatch->title}\" already has an active digital copy and cannot receive another.")
+                                        ->warning()
+                                        ->send();
+                                }
                             }
 
                             return $results;
@@ -80,6 +86,11 @@ class RrMaterialsForm
                         ->default(true)
                         ->live(),
 
+                    Toggle::make('is_available')
+                        ->label('Available for Circulation')
+                        ->onColor('success')
+                        ->default(true),
+
                     TextInput::make('number_of_copies')
                         ->label('Number of Physical Copies')
                         ->numeric()
@@ -91,14 +102,11 @@ class RrMaterialsForm
                         ->hintColor('gray')
                         ->visible(fn (Get $get) => ! $get('is_digital'))
                         ->visible(fn (Get $get, string $operation): bool => $operation === 'create' && ! $get('is_digital'))
-                        ->required(fn (Get $get, string $operation): bool => $operation === 'create' && ! $get('is_digital')),
-
-                    Toggle::make('is_available')
-                        ->label('Available for Circulation')
-                        ->onColor('success')
-                        ->default(true),
-
-                ])->columns(2),
+                        ->required(fn (Get $get, string $operation): bool => $operation === 'create' && ! $get('is_digital'))
+                        ->columnSpan(1),
+                ])
+                ->columns(2)
+                ->columnSpanFull(),
 
             Section::make('Repository Information')
                 ->visible(fn (Get $get) => $get('is_digital'))
@@ -146,7 +154,8 @@ class RrMaterialsForm
                         ->visible(fn (Get $get) => ! $get('is_digital'))
                         ->placeholder('e.g. Shelf A-12'),
                     */
-                ]),
+                ])
+                ->columnSpanFull(),
         ]);
     }
 }
