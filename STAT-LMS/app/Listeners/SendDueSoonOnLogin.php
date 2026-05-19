@@ -56,7 +56,7 @@ class SendDueSoonOnLogin
         $overdueBorrows = MaterialAccessEvents::with(['material.parent'])
             ->where('user_id', $user->id)
             ->where('event_type', 'borrow')
-            ->where('status', 'approved')
+            ->whereIn('status', ['approved', 'revoked'])
             ->whereNull('returned_at')
             ->whereNull('completed_at')
             ->whereNotNull('due_at')

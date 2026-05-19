@@ -506,6 +506,8 @@ class MaterialAccessEventsTest extends TestCase
     #[Test]
     public function is_overdue_flag_is_set_when_due_date_has_passed(): void
     {
+        NotificationFacade::fake();
+
         [$parent, $copy] = $this->makeParentAndCopy();
         $student = $this->makeUser('student');
 
@@ -522,10 +524,61 @@ class MaterialAccessEventsTest extends TestCase
         $retrieved = MaterialAccessEvents::find($event->id);
 
         $this->assertTrue((bool) $retrieved->is_overdue);
+        $this->assertSame('revoked', $retrieved->fresh()->status);
         $this->assertDatabaseHas('material_access_events', [
             'id' => $event->id,
+            'status' => 'revoked',
             'is_overdue' => true,
         ]);
+        NotificationFacade::assertSentTo($student, RequestStatusChanged::class);
+    }
+
+    #[Test]
+    public function overdue_borrow_retrieval_notifies_only_when_state_changes(): void
+    {
+        NotificationFacade::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy();
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->subDays(3),
+            'is_overdue' => false,
+        ]);
+
+        MaterialAccessEvents::find($event->id);
+        MaterialAccessEvents::find($event->id);
+
+        NotificationFacade::assertSentToTimes($student, RequestStatusChanged::class, 1);
+    }
+
+    #[Test]
+    public function completed_overdue_borrow_is_not_revoked_on_retrieval(): void
+    {
+        NotificationFacade::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy();
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'borrow',
+            'status' => 'returned',
+            'due_at' => now()->subDays(3),
+            'returned_at' => now()->subDay(),
+            'completed_at' => now()->subDay(),
+            'is_overdue' => true,
+        ]);
+
+        $retrieved = MaterialAccessEvents::find($event->id);
+
+        $this->assertSame('returned', $retrieved->fresh()->status);
+        NotificationFacade::assertNotSentTo($student, RequestStatusChanged::class);
     }
 
     #[Test]

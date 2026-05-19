@@ -10,15 +10,22 @@ class MaterialAccessEventsObserver
 {
     public function retrieved(MaterialAccessEvents $materialAccessEvents): void
     {
-        if (
-            $materialAccessEvents->due_at &&
+        $isActiveOverdueBorrow = $materialAccessEvents->due_at &&
             $materialAccessEvents->event_type === MaterialEventType::BORROW->value &&
             ! $materialAccessEvents->returned_at &&
             ! $materialAccessEvents->completed_at &&
-            $materialAccessEvents->due_at->isPast() &&
-            ! $materialAccessEvents->is_overdue
+            $materialAccessEvents->due_at->isPast();
+
+        if (
+            $isActiveOverdueBorrow &&
+            (! $materialAccessEvents->is_overdue || $materialAccessEvents->status !== 'revoked')
         ) {
-            $materialAccessEvents->updateQuietly(['is_overdue' => true]);
+            $materialAccessEvents->updateQuietly([
+                'status' => 'revoked',
+                'is_overdue' => true,
+            ]);
+
+            $materialAccessEvents->user?->notify(new RequestStatusChanged($materialAccessEvents));
         }
 
         if (
@@ -36,7 +43,6 @@ class MaterialAccessEventsObserver
 
             $materialAccessEvents->user?->notify(new RequestStatusChanged($materialAccessEvents));
         }
-
     }
 
     /**
