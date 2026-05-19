@@ -74,8 +74,7 @@ class NotificationBell extends Component
     public function notifications(): array
     {
         return auth()->user()
-            ->notifications()
-            ->where('created_at', '>=', now()->subDays(2))
+            ->unreadNotifications()
             ->latest()
             ->get()
             ->map(fn ($n) => [

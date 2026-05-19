@@ -17,7 +17,6 @@ class ExpireDigitalAccess extends Command
         $expired = MaterialAccessEvents::with(['user', 'material'])
             ->where('event_type', 'request')
             ->where('status', 'approved')
-            ->whereNull('completed_at')
             ->where('due_at', '<=', now())
             ->whereHas('material', fn ($q) => $q->where('is_digital', true))
             ->get();
@@ -34,7 +33,11 @@ class ExpireDigitalAccess extends Command
             ->map(fn ($count) => (int) $count);
 
         foreach ($expired as $event) {
-            $event->updateQuietly(['status' => 'revoked', 'completed_at' => $now]);
+            $event->updateQuietly([
+                'status' => 'revoked',
+                'completed_at' => $now,
+                'is_overdue' => false,
+            ]);
 
             $materialId = $event->rr_material_id;
             $remainingActive = max(0, (int) ($activeCountsByMaterial[$materialId] ?? 0) - 1);

@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Enums\MaterialEventType;
 use App\Models\MaterialAccessEvents;
 use App\Notifications\RequestStatusChanged;
 
@@ -11,12 +12,29 @@ class MaterialAccessEventsObserver
     {
         if (
             $materialAccessEvents->due_at &&
+            $materialAccessEvents->event_type === MaterialEventType::BORROW->value &&
             ! $materialAccessEvents->returned_at &&
             ! $materialAccessEvents->completed_at &&
             $materialAccessEvents->due_at->isPast() &&
             ! $materialAccessEvents->is_overdue
         ) {
             $materialAccessEvents->updateQuietly(['is_overdue' => true]);
+        }
+
+        if (
+            $materialAccessEvents->due_at &&
+            $materialAccessEvents->event_type === MaterialEventType::REQUEST->value &&
+            $materialAccessEvents->status === 'approved' &&
+            $materialAccessEvents->material?->is_digital &&
+            $materialAccessEvents->due_at->isPast()
+        ) {
+            $materialAccessEvents->updateQuietly([
+                'status' => 'revoked',
+                'completed_at' => now(),
+                'is_overdue' => false,
+            ]);
+
+            $materialAccessEvents->user?->notify(new RequestStatusChanged($materialAccessEvents));
         }
 
     }
