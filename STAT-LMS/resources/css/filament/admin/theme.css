@@ -55,6 +55,50 @@
     min-height: 250px;
 }
 
+.rr-change-details-table.fi-in-table-repeatable > table > tbody > tr > td:not(:first-child) {
+    border-inline-start: 1px solid rgb(229 231 235);
+}
+
+.dark .rr-change-details-table.fi-in-table-repeatable > table > tbody > tr > td:not(:first-child) {
+    border-inline-start-color: rgb(255 255 255 / 0.05);
+}
+
+.rr-change-details-table .rr-change-old-value.fi-in-text,
+.rr-change-details-table .rr-change-old-value.fi-in-text .fi-in-text-item {
+    color: rgb(185 28 28) !important;
+}
+
+.rr-change-details-table .rr-change-new-value.fi-in-text,
+.rr-change-details-table .rr-change-new-value.fi-in-text .fi-in-text-item {
+    color: rgb(21 128 61) !important;
+}
+
+.dark .rr-change-details-table .rr-change-old-value.fi-in-text,
+.dark .rr-change-details-table .rr-change-old-value.fi-in-text .fi-in-text-item {
+    color: rgb(252 165 165) !important;
+}
+
+.dark .rr-change-details-table .rr-change-new-value.fi-in-text,
+.dark .rr-change-details-table .rr-change-new-value.fi-in-text .fi-in-text-item {
+    color: rgb(134 239 172) !important;
+}
+
+@supports (container-type: inline-size) {
+    @container (max-width: 35.999rem) {
+        .rr-change-details-table.fi-in-table-repeatable > table > tbody > tr > td:not(:first-child) {
+            border-inline-start-width: 0;
+        }
+    }
+}
+
+@supports not (container-type: inline-size) {
+    @media (max-width: 1023px) {
+        .rr-change-details-table.fi-in-table-repeatable > table > tbody > tr > td:not(:first-child) {
+            border-inline-start-width: 0;
+        }
+    }
+}
+
 /* Keep branding in topbar only */
 .fi-sidebar-header-ctn,
 .fi-sidebar-header-logo-ctn {
