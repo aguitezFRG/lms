@@ -3,11 +3,14 @@
 namespace Tests\Feature;
 
 use App\Enums\RepositoryChangeType;
+use App\Filament\Resources\RepositoryChangeLogs\Pages\ListRepositoryChangeLogs;
+use App\Filament\Resources\RepositoryChangeLogs\Pages\ViewRepositoryChangeLogs;
 use App\Models\MaterialAccessEvents;
 use App\Models\RepositoryChangeLogs;
 use App\Models\RrMaterialParents;
 use App\Models\RrMaterials;
 use App\Models\User;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -99,6 +102,7 @@ class RepositoryChangeLogsTest extends TestCase
         $this->actingAs($committee);
 
         $parent = $this->makeParent();
+        $title = $parent->title;
         $parent->delete();
 
         $this->assertDatabaseHas('repository_change_logs', [
@@ -106,6 +110,16 @@ class RepositoryChangeLogsTest extends TestCase
             'table_changed' => 'rr_material_parents',
             'change_type' => RepositoryChangeType::DELETE->value,
         ]);
+
+        $log = RepositoryChangeLogs::query()
+            ->where('table_changed', 'rr_material_parents')
+            ->where('change_type', RepositoryChangeType::DELETE->value)
+            ->latest('changed_at')
+            ->firstOrFail();
+
+        $this->assertSame($title, $log->change_made['title']['old']);
+        $this->assertSame('Deleted', $log->change_made['title']['new']);
+        $this->assertArrayNotHasKey('deleted_at', $log->change_made);
     }
 
     /** @test */
@@ -123,6 +137,15 @@ class RepositoryChangeLogsTest extends TestCase
             'table_changed' => 'rr_material_parents',
             'change_type' => RepositoryChangeType::RESTORE->value,
         ]);
+
+        $log = RepositoryChangeLogs::query()
+            ->where('table_changed', 'rr_material_parents')
+            ->where('change_type', RepositoryChangeType::RESTORE->value)
+            ->latest('changed_at')
+            ->firstOrFail();
+
+        $this->assertSame('Deleted', $log->change_made['record_state']['old']);
+        $this->assertSame('Restored', $log->change_made['record_state']['new']);
     }
 
     // ── Auto-Logging: RrMaterials ─────────────────────────────────────────────
@@ -186,6 +209,32 @@ class RepositoryChangeLogsTest extends TestCase
             'table_changed' => 'users',
             'change_type' => RepositoryChangeType::CREATE->value,
         ]);
+    }
+
+    /** @test */
+    public function successful_login_event_creates_a_user_login_change_log(): void
+    {
+        $user = $this->makeUser('student');
+
+        event(new Login('web', $user, true));
+
+        $this->assertDatabaseHas('repository_change_logs', [
+            'editor_id' => $user->id,
+            'target_user_id' => $user->id,
+            'table_changed' => 'users',
+            'change_type' => RepositoryChangeType::LOGIN->value,
+        ]);
+
+        $log = RepositoryChangeLogs::query()
+            ->where('table_changed', 'users')
+            ->where('change_type', RepositoryChangeType::LOGIN->value)
+            ->firstOrFail();
+
+        $this->assertSame('web', $log->change_made['guard']['new']);
+        $this->assertTrue($log->change_made['remember']['new']);
+        $this->assertArrayNotHasKey('password', $log->change_made);
+        $this->assertArrayNotHasKey('ip', $log->change_made);
+        $this->assertArrayNotHasKey('user_agent', $log->change_made);
     }
 
     // ── Auto-Logging: MaterialAccessEvents ────────────────────────────────────
@@ -257,7 +306,7 @@ class RepositoryChangeLogsTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\RepositoryChangeLogs\Pages\ListRepositoryChangeLogs::class)
+        Livewire::test(ListRepositoryChangeLogs::class)
             ->assertSuccessful();
     }
 
@@ -267,7 +316,7 @@ class RepositoryChangeLogsTest extends TestCase
         $it = $this->makeUser('it');
         $this->actingAs($it);
 
-        Livewire::test(\App\Filament\Resources\RepositoryChangeLogs\Pages\ListRepositoryChangeLogs::class)
+        Livewire::test(ListRepositoryChangeLogs::class)
             ->assertSuccessful();
     }
 
@@ -312,7 +361,7 @@ class RepositoryChangeLogsTest extends TestCase
             'changed_at' => now(),
         ]);
 
-        Livewire::test(\App\Filament\Resources\RepositoryChangeLogs\Pages\ListRepositoryChangeLogs::class)
+        Livewire::test(ListRepositoryChangeLogs::class)
             ->call('loadTable')
             ->filterTable('change_type', RepositoryChangeType::CREATE->value)
             ->assertCanSeeTableRecords([$createLog])
@@ -338,10 +387,46 @@ class RepositoryChangeLogsTest extends TestCase
             'changed_at' => now(),
         ]);
 
-        Livewire::test(\App\Filament\Resources\RepositoryChangeLogs\Pages\ListRepositoryChangeLogs::class)
+        Livewire::test(ListRepositoryChangeLogs::class)
             ->call('loadTable')
             ->filterTable('table_changed', 'users')
             ->assertCanSeeTableRecords([$usersLog])
             ->assertCanNotSeeTableRecords([$materialsLog]);
+    }
+
+    /** @test */
+    public function view_page_renders_native_detail_rows_for_change_types(): void
+    {
+        $committee = $this->makeUser('committee');
+        $this->actingAs($committee);
+
+        $logs = collect([
+            RepositoryChangeType::CREATE,
+            RepositoryChangeType::UPDATE,
+            RepositoryChangeType::DELETE,
+            RepositoryChangeType::RESTORE,
+            RepositoryChangeType::LOGIN,
+        ])->map(fn (RepositoryChangeType $type) => RepositoryChangeLogs::factory()->create([
+            'editor_id' => $committee->id,
+            'target_user_id' => $committee->id,
+            'table_changed' => 'users',
+            'change_type' => $type->value,
+            'change_made' => [
+                'record_state' => ['old' => null, 'new' => $type->getLabel()],
+                'email' => ['old' => 'old@example.test', 'new' => 'new@example.test'],
+            ],
+            'changed_at' => now(),
+        ]));
+
+        foreach ($logs as $log) {
+            Livewire::test(ViewRepositoryChangeLogs::class, [
+                'record' => $log->getRouteKey(),
+            ])
+                ->assertSee('Field')
+                ->assertSee('Old Value')
+                ->assertSee('New Value')
+                ->assertSee('record_state')
+                ->assertSee($log->change_type);
+        }
     }
 }
