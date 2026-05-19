@@ -12,7 +12,9 @@ use App\Notifications\BorrowOverdue;
 use App\Notifications\RequestStatusChanged;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\SendQueuedNotifications;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -231,6 +233,70 @@ class NotificationsTest extends TestCase
     }
 
     #[Test]
+    public function borrow_due_tomorrow_notification_is_stored_immediately_without_queueing(): void
+    {
+        Queue::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->addDay()->endOfDay(),
+        ]);
+
+        event(new Login('web', $student, false));
+
+        $this->assertDatabaseHas('notifications', [
+            'notifiable_type' => User::class,
+            'notifiable_id' => $student->id,
+            'type' => BorrowDueSoon::class,
+        ]);
+        Queue::assertNotPushed(SendQueuedNotifications::class);
+    }
+
+    #[Test]
+    public function borrow_due_tomorrow_notification_toast_is_dispatched_once_for_login_session(): void
+    {
+        $this->startSession();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->addDay()->endOfDay(),
+        ]);
+
+        event(new Login('web', $student, false));
+        $notification = $student->notifications()->where('type', BorrowDueSoon::class)->firstOrFail();
+        $this->assertSame('borrow_due_soon', $notification->data['type']);
+        $this->assertSame(1, (int) $notification->data['days_until_due']);
+
+        $this->actingAs($student);
+
+        $poller = new \App\Livewire\RequestStatusToastPoller();
+        $poller->loginReminderSessionId = $notification->data['session_id'];
+
+        $items = \Livewire\invade($poller)->sessionReminderNotifications();
+
+        $this->assertCount(1, $items);
+        $this->assertSame('warning', $items->first()['status']);
+        $this->assertFalse($items->first()['persistent']);
+        $this->assertSame('borrow-reminder', $items->first()['kind']);
+
+        \Livewire\invade($poller)->rememberDisplayedLoginReminderToastIds($items->pluck('id')->all());
+
+        $this->assertCount(0, \Livewire\invade($poller)->sessionReminderNotifications());
+    }
+
+    #[Test]
     public function borrow_due_in_3_days_notification_sent_on_login(): void
     {
         Notification::fake();
@@ -277,6 +343,28 @@ class NotificationsTest extends TestCase
     }
 
     #[Test]
+    public function already_completed_borrow_does_not_trigger_due_soon(): void
+    {
+        Notification::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->addDay()->endOfDay(),
+            'completed_at' => now(),
+        ]);
+
+        event(new Login('web', $student, false));
+
+        Notification::assertNotSentTo($student, BorrowDueSoon::class);
+    }
+
+    #[Test]
     public function borrow_due_soon_not_triggered_for_digital_requests(): void
     {
         Notification::fake();
@@ -298,12 +386,12 @@ class NotificationsTest extends TestCase
     }
 
     #[Test]
-    public function duplicate_due_soon_notification_suppressed_on_same_day_login(): void
+    public function borrow_due_soon_notification_fires_on_every_login_until_resolved(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
         $student = $this->makeUser('student');
 
-        $borrow = MaterialAccessEvents::create([
+        MaterialAccessEvents::create([
             'user_id' => $student->id,
             'rr_material_id' => $copy->id,
             'event_type' => 'borrow',
@@ -312,12 +400,15 @@ class NotificationsTest extends TestCase
         ]);
 
         event(new Login('web', $student, false));
-        $countAfterFirstLogin = $student->notifications()->count();
+        $countAfterFirstLogin = $student->notifications()->where('type', BorrowDueSoon::class)->count();
+
+        session()->migrate(true);
 
         event(new Login('web', $student, false));
-        $countAfterSecondLogin = $student->notifications()->count();
+        $countAfterSecondLogin = $student->notifications()->where('type', BorrowDueSoon::class)->count();
 
-        $this->assertEquals($countAfterFirstLogin, $countAfterSecondLogin);
+        $this->assertGreaterThan(0, $countAfterFirstLogin);
+        $this->assertGreaterThan($countAfterFirstLogin, $countAfterSecondLogin);
     }
 
     #[Test]
@@ -360,6 +451,95 @@ class NotificationsTest extends TestCase
         event(new Login('web', $student, false));
 
         Notification::assertSentTo($student, BorrowOverdue::class);
+    }
+
+    #[Test]
+    public function overdue_borrow_notification_is_stored_immediately_without_queueing(): void
+    {
+        Queue::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->subDay()->endOfDay(),
+        ]);
+
+        event(new Login('web', $student, false));
+
+        $this->assertDatabaseHas('notifications', [
+            'notifiable_type' => User::class,
+            'notifiable_id' => $student->id,
+            'type' => BorrowOverdue::class,
+        ]);
+        Queue::assertNotPushed(SendQueuedNotifications::class);
+    }
+
+    #[Test]
+    public function overdue_borrow_notification_toast_is_persistent_and_dispatched_once_for_login_session(): void
+    {
+        $this->startSession();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->subDay()->endOfDay(),
+        ]);
+
+        event(new Login('web', $student, false));
+        $notification = $student->notifications()->where('type', BorrowOverdue::class)->firstOrFail();
+        $this->assertSame('borrow_overdue', $notification->data['type']);
+
+        $this->actingAs($student);
+
+        $poller = new \App\Livewire\RequestStatusToastPoller();
+        $poller->loginReminderSessionId = $notification->data['session_id'];
+
+        $items = \Livewire\invade($poller)->sessionReminderNotifications();
+
+        $this->assertCount(1, $items);
+        $this->assertSame('danger', $items->first()['status']);
+        $this->assertTrue($items->first()['persistent']);
+        $this->assertSame('borrow-reminder', $items->first()['kind']);
+
+        \Livewire\invade($poller)->rememberDisplayedLoginReminderToastIds($items->pluck('id')->all());
+
+        $this->assertCount(0, \Livewire\invade($poller)->sessionReminderNotifications());
+    }
+
+    #[Test]
+    public function overdue_borrow_notification_fires_on_every_login_until_resolved(): void
+    {
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        $student = $this->makeUser('student');
+
+        MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'borrow',
+            'status' => 'approved',
+            'due_at' => now()->subDay()->endOfDay(),
+        ]);
+
+        event(new Login('web', $student, false));
+        $countAfterFirstLogin = $student->notifications()->where('type', BorrowOverdue::class)->count();
+
+        session()->migrate(true);
+
+        event(new Login('web', $student, false));
+        $countAfterSecondLogin = $student->notifications()->where('type', BorrowOverdue::class)->count();
+
+        $this->assertGreaterThan(0, $countAfterFirstLogin);
+        $this->assertGreaterThan($countAfterFirstLogin, $countAfterSecondLogin);
     }
 
     // ── AccessLevelChanged ────────────────────────────────────────────────────

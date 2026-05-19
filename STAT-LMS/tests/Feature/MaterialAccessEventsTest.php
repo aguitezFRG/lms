@@ -548,6 +548,61 @@ class MaterialAccessEventsTest extends TestCase
         $this->assertFalse((bool) $retrieved->is_overdue);
     }
 
+    #[Test]
+    public function expired_digital_access_request_is_revoked_instead_of_marked_overdue_on_retrieval(): void
+    {
+        NotificationFacade::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: true);
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'approved',
+            'due_at' => now()->subMinute(),
+            'is_overdue' => false,
+            'completed_at' => null,
+        ]);
+
+        $retrieved = MaterialAccessEvents::find($event->id);
+
+        $this->assertSame('revoked', $retrieved->fresh()->status);
+        $this->assertFalse((bool) $retrieved->fresh()->is_overdue);
+        $this->assertNotNull($retrieved->fresh()->completed_at);
+        NotificationFacade::assertSentTo($student, RequestStatusChanged::class);
+    }
+
+    #[Test]
+    public function expire_digital_access_command_revokes_expired_approved_access_without_overdue_state(): void
+    {
+        NotificationFacade::fake();
+
+        [$parent, $copy] = $this->makeParentAndCopy(1, digital: true);
+        $student = $this->makeUser('student');
+
+        $event = MaterialAccessEvents::create([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+            'event_type' => 'request',
+            'status' => 'approved',
+            'due_at' => now()->subMinute(),
+            'is_overdue' => true,
+            'completed_at' => null,
+        ]);
+
+        $this->artisan('access:expire-digital')->assertExitCode(0);
+
+        $this->assertDatabaseHas('material_access_events', [
+            'id' => $event->id,
+            'status' => 'revoked',
+            'is_overdue' => false,
+        ]);
+        $this->assertNotNull($event->fresh()->completed_at);
+        NotificationFacade::assertSentTo($student, RequestStatusChanged::class);
+    }
+
     // ── Visibility / Policy ───────────────────────────────────────────────────
 
     #[Test]

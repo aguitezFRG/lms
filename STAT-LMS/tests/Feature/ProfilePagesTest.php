@@ -321,6 +321,31 @@ class ProfilePagesTest extends TestCase
     }
 
     #[Test]
+    public function notification_bell_shows_unread_notifications_older_than_two_days(): void
+    {
+        $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
+
+        $student->notifications()->create([
+            'id' => (string) str()->uuid(),
+            'type' => 'App\\Notifications\\RequestStatusChanged',
+            'data' => [
+                'title' => 'Old unread request notification',
+                'message' => 'This unread notification is older than two days.',
+                'type' => 'request_status_changed',
+            ],
+            'created_at' => now()->subDays(3),
+            'updated_at' => now()->subDays(3),
+            'read_at' => null,
+        ]);
+
+        $this->actingAs($student);
+
+        Livewire::test(\App\Livewire\NotificationBell::class)
+            ->assertSee('1')
+            ->assertSee('Old unread request notification');
+    }
+
+    #[Test]
     public function notification_bell_unread_badge_caps_at_9_plus(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy();

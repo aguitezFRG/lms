@@ -6,10 +6,12 @@ use App\Enums\MaterialEventType;
 use App\Models\MaterialAccessEvents;
 use App\Models\RrMaterials;
 use App\Models\User;
+use App\Notifications\RequestStatusChanged;
 use App\Services\PdfWatermarkService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class MaterialStreamWatermarkSecurityTest extends TestCase
@@ -139,6 +141,38 @@ PDF;
         $this->assertStringContainsString('private', (string) $response->headers->get('Cache-Control'));
         $this->assertSame($watermarked, $response->getContent());
         $this->assertStringContainsString('WATERMARK_SENTINEL', (string) $response->getContent());
+    }
+
+    /** @test */
+    public function expired_digital_access_is_revoked_and_cannot_stream_material(): void
+    {
+        Notification::fake();
+
+        $student = $this->makeUser('student');
+        $material = $this->makeApprovedDigitalMaterialForUser($student->id);
+
+        $event = MaterialAccessEvents::where('user_id', $student->id)
+            ->where('rr_material_id', $material->id)
+            ->firstOrFail();
+
+        $event->forceFill([
+            'due_at' => now()->subMinute(),
+            'completed_at' => null,
+            'is_overdue' => true,
+        ])->saveQuietly();
+
+        $response = $this->actingAs($student)
+            ->get(route('materials.stream', ['record' => $material->id]));
+
+        $response->assertForbidden();
+
+        $this->assertDatabaseHas('material_access_events', [
+            'id' => $event->id,
+            'status' => 'revoked',
+            'is_overdue' => false,
+        ]);
+
+        Notification::assertSentTo($student, RequestStatusChanged::class);
     }
 
     /** @test */
