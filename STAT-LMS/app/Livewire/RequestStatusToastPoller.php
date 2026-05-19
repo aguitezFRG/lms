@@ -3,24 +3,28 @@
 namespace App\Livewire;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Livewire\Component;
 
 class RequestStatusToastPoller extends Component
 {
     protected const MAX_VISIBLE_TOASTS = 3;
+
     protected const DISPLAYED_REQUEST_STATUS_TOAST_IDS_KEY = 'request_status_toast_displayed_ids';
+    protected const DISPLAYED_LOGIN_REMINDER_TOAST_IDS_KEY = 'login_reminder_toast_displayed_ids';
 
     public ?string $lastSeenCreatedAt = null;
 
-    public array $lastSeenIdsAtTimestamp = [];
+    public ?string $loginReminderSessionId = null;
 
-    public bool $sessionRemindersQueued = false;
+    public array $lastSeenIdsAtTimestamp = [];
 
     public function mount(): void
     {
+        $this->loginReminderSessionId = session()->get('borrow_reminder_login_session_id', session()->getId());
+
         $latest = auth()->user()
             ->notifications()
             ->where('created_at', '>=', now()->subDays(2))
@@ -44,12 +48,9 @@ class RequestStatusToastPoller extends Component
 
     public function pollForNewNotifications(): void
     {
-        $toastItems = collect();
-
-        if (! $this->sessionRemindersQueued) {
-            $toastItems = $toastItems->merge($this->sessionReminderNotifications());
-            $this->sessionRemindersQueued = true;
-        }
+        $newReminderNotifications = $this->sessionReminderNotifications();
+        $newReminderIds = $newReminderNotifications->pluck('id')->all();
+        $toastItems = collect()->merge($newReminderNotifications);
 
         $newRequestStatusNotifications = $this->requestStatusNotifications();
         $alreadyDisplayedIds = $this->displayedRequestStatusToastIds();
@@ -79,7 +80,7 @@ class RequestStatusToastPoller extends Component
         foreach ($toDisplay as $toast) {
             $this->dispatch(
                 'request-status-toast',
-                toastId: $toast['id'],
+                toastId: $toast['toastKey'] ?? $toast['id'],
                 title: $toast['title'],
                 message: $toast['message'],
                 status: $toast['status'],
@@ -110,6 +111,10 @@ class RequestStatusToastPoller extends Component
             $this->rememberDisplayedRequestStatusToastIds(
                 $newRequestStatusNotifications->pluck('id')->all()
             );
+        }
+
+        if ($newReminderIds !== []) {
+            $this->rememberDisplayedLoginReminderToastIds($newReminderIds);
         }
     }
 
@@ -152,32 +157,43 @@ class RequestStatusToastPoller extends Component
     }
 
     /**
-     * @return Collection<int, array{id:string,created_at:\Illuminate\Support\Carbon,title:string,message:string,status:string,persistent:bool,kind:string}>
+     * @return Collection<int, array{id:string,created_at:Carbon,title:string,message:string,status:string,persistent:bool,kind:string,toastKey:?string}>
      */
     protected function sessionReminderNotifications(): Collection
     {
-        $sessionId = session()->getId();
+        $sessionId = $this->loginReminderSessionId ?? session()->get('borrow_reminder_login_session_id', session()->getId());
+        $alreadyDisplayedReminderIds = $this->displayedLoginReminderToastIds();
 
         return auth()->user()
             ->notifications()
             ->where('created_at', '>=', now()->subDays(2))
-            ->where(function (Builder $query) use ($sessionId): void {
+            ->where(function (Builder $query): void {
                 $query
-                    ->where(function (Builder $sub) use ($sessionId): void {
-                        $sub->where('data->type', 'borrow_due_soon')
-                            ->where('data->days_until_due', 1)
-                            ->where('data->session_id', $sessionId);
+                    ->where(function (Builder $sub): void {
+                        $sub->where('data->type', 'borrow_due_soon');
                     })
-                    ->orWhere(function (Builder $sub) use ($sessionId): void {
-                        $sub->where('data->type', 'borrow_overdue')
-                            ->where('data->session_id', $sessionId);
+                    ->orWhere(function (Builder $sub): void {
+                        $sub->where('data->type', 'borrow_overdue');
                     });
             })
+            ->when($alreadyDisplayedReminderIds !== [], fn (Builder $query): Builder => $query->whereNotIn('id', $alreadyDisplayedReminderIds))
             ->orderBy('created_at')
             ->orderBy('id')
             ->get()
+            ->filter(function (DatabaseNotification $notification) use ($sessionId): bool {
+                if (($notification->data['session_id'] ?? null) !== $sessionId) {
+                    return false;
+                }
+
+                if (($notification->data['type'] ?? null) === 'borrow_overdue') {
+                    return true;
+                }
+
+                return ($notification->data['type'] ?? null) === 'borrow_due_soon'
+                    && in_array((int) ($notification->data['days_until_due'] ?? 0), [1, 3], true);
+            })
             ->map(function (DatabaseNotification $notification): array {
-                $isOverdue = ($notification->data['type'] ?? '') === 'borrow_overdue';
+                $isOverdue = ($notification->data['type'] ?? null) === 'borrow_overdue';
 
                 return [
                     'id' => $notification->id,
@@ -186,7 +202,7 @@ class RequestStatusToastPoller extends Component
                     'message' => $notification->data['message'] ?? '',
                     'status' => $isOverdue ? 'danger' : 'warning',
                     'persistent' => $isOverdue,
-                    'kind' => 'normal',
+                    'kind' => 'borrow-reminder',
                 ];
             })
             ->values();
@@ -237,7 +253,7 @@ class RequestStatusToastPoller extends Component
     }
 
     /**
-     * @param array<int, string> $ids
+     * @param  array<int, string>  $ids
      */
     protected function rememberDisplayedRequestStatusToastIds(array $ids): void
     {
@@ -253,6 +269,36 @@ class RequestStatusToastPoller extends Component
         // Keep the session footprint bounded.
         session()->put(
             self::DISPLAYED_REQUEST_STATUS_TOAST_IDS_KEY,
+            array_slice($merged, -500)
+        );
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function displayedLoginReminderToastIds(): array
+    {
+        $ids = session()->get(self::DISPLAYED_LOGIN_REMINDER_TOAST_IDS_KEY, []);
+
+        return is_array($ids) ? array_values(array_filter($ids, 'is_string')) : [];
+    }
+
+    /**
+     * @param  array<int, string>  $ids
+     */
+    protected function rememberDisplayedLoginReminderToastIds(array $ids): void
+    {
+        if ($ids === []) {
+            return;
+        }
+
+        $merged = array_values(array_unique([
+            ...$this->displayedLoginReminderToastIds(),
+            ...$ids,
+        ]));
+
+        session()->put(
+            self::DISPLAYED_LOGIN_REMINDER_TOAST_IDS_KEY,
             array_slice($merged, -500)
         );
     }

@@ -1,12 +1,14 @@
 <div>
     @script
         <script>
-            const persistentToastsStorageKey = 'persistentRequestStatusToasts';
+            const sessionId = @js(session()->getId());
             const listenerRegistryKey = '__requestStatusToastPollerListeners';
+            const persistentOverdueStorageKey = `persistentOverdueBorrowToasts:${sessionId}`;
+            const dismissedOverdueStorageKey = `dismissedOverdueBorrowToastIds:${sessionId}`;
 
-            const readPersistentToasts = () => {
+            const readJsonArray = (storageKey) => {
                 try {
-                    const raw = sessionStorage.getItem(persistentToastsStorageKey);
+                    const raw = sessionStorage.getItem(storageKey);
                     const parsed = raw ? JSON.parse(raw) : [];
 
                     return Array.isArray(parsed) ? parsed : [];
@@ -15,32 +17,104 @@
                 }
             };
 
-            const writePersistentToasts = (toasts) => {
-                sessionStorage.setItem(persistentToastsStorageKey, JSON.stringify(toasts));
+            const writeJsonArray = (storageKey, value) => {
+                sessionStorage.setItem(storageKey, JSON.stringify(value));
             };
 
-            const renderToast = ({ title, message, status, persistent = false }) => {
+            const readPersistentOverdueToasts = () => readJsonArray(persistentOverdueStorageKey);
+            const writePersistentOverdueToasts = (toasts) => writeJsonArray(persistentOverdueStorageKey, toasts);
+            const readDismissedOverdueToastIds = () => readJsonArray(dismissedOverdueStorageKey);
+            const writeDismissedOverdueToastIds = (ids) => writeJsonArray(dismissedOverdueStorageKey, ids);
+
+            const normalizeToastId = (toast) => toast?.toastId ?? toast?.id ?? null;
+
+            const isPersistentOverdueBorrowToast = (toast) => {
+                return toast?.persistent === true
+                    && toast?.kind === 'borrow-reminder'
+                    && toast?.status === 'danger'
+                    && Boolean(normalizeToastId(toast));
+            };
+
+            const isDismissedOverdueToastId = (toastId) => readDismissedOverdueToastIds().includes(toastId);
+
+            const rememberPersistentOverdueToast = (toast) => {
+                if (! isPersistentOverdueBorrowToast(toast)) {
+                    return;
+                }
+
+                const toastId = normalizeToastId(toast);
+
+                if (isDismissedOverdueToastId(toastId)) {
+                    return;
+                }
+
+                const storedToasts = readPersistentOverdueToasts();
+                const nextStoredToasts = [
+                    ...storedToasts.filter((storedToast) => normalizeToastId(storedToast) !== toastId),
+                    { ...toast, toastId },
+                ];
+
+                writePersistentOverdueToasts(nextStoredToasts);
+            };
+
+            const forgetPersistentOverdueToast = (toastId) => {
+                const storedToasts = readPersistentOverdueToasts();
+                const nextStoredToasts = storedToasts.filter((storedToast) => normalizeToastId(storedToast) !== toastId);
+
+                if (nextStoredToasts.length !== storedToasts.length) {
+                    writePersistentOverdueToasts(nextStoredToasts);
+                }
+            };
+
+            const markPersistentOverdueToastDismissed = (toastId) => {
+                if (! toastId) {
+                    return;
+                }
+
+                const storedToasts = readPersistentOverdueToasts();
+
+                if (! storedToasts.some((storedToast) => normalizeToastId(storedToast) === toastId)) {
+                    return;
+                }
+
+                writeDismissedOverdueToastIds([
+                    ...new Set([
+                        ...readDismissedOverdueToastIds(),
+                        toastId,
+                    ]),
+                ]);
+
+                forgetPersistentOverdueToast(toastId);
+            };
+
+            const renderToast = ({ toastId = null, title, message, status, persistent = false, kind = null }) => {
                 let toast = null;
 
                 if (window.FilamentNotification?.make) {
                     toast = window.FilamentNotification
                         .make()
                         .title(title)
-                        .body(message)
-                        .seconds(6);
+                        .body(message);
                 } else if (window.FilamentNotification) {
                     toast = new window.FilamentNotification()
                         .title(title)
-                        .body(message)
-                        .seconds(6);
+                        .body(message);
                 }
 
                 if (! toast) {
                     return;
                 }
 
+                if (toastId && typeof toast.id === 'function') {
+                    toast.id(toastId);
+                }
+
                 if (persistent && typeof toast.persistent === 'function') {
                     toast.persistent();
+                } else if (typeof toast.seconds === 'function') {
+                    const seconds = kind === 'borrow-reminder' ? 12 : 6;
+
+                    toast.seconds(seconds);
                 }
 
                 if (status === 'danger') {
@@ -64,45 +138,57 @@
                 toast.success().send();
             };
 
-            const persistedToasts = readPersistentToasts();
-            const renderedPersistentToastIds = new Set();
+            window[listenerRegistryKey] ??= {};
+            window[listenerRegistryKey].renderedPersistentOverdueToastIds ??= new Set();
 
-            for (const persisted of persistedToasts) {
-                if (! persisted?.toastId) {
-                    continue;
+            const renderPersistentOverdueToast = (toast) => {
+                const toastId = normalizeToastId(toast);
+
+                if (! isPersistentOverdueBorrowToast(toast) || isDismissedOverdueToastId(toastId)) {
+                    return;
                 }
 
-                renderedPersistentToastIds.add(persisted.toastId);
-                renderToast(persisted);
-            }
+                if (window[listenerRegistryKey].renderedPersistentOverdueToastIds.has(toastId)) {
+                    return;
+                }
 
-            window[listenerRegistryKey] ??= {};
+                window[listenerRegistryKey].renderedPersistentOverdueToastIds.add(toastId);
+                renderToast({ ...toast, toastId });
+            };
+
+            for (const storedToast of readPersistentOverdueToasts()) {
+                renderPersistentOverdueToast(storedToast);
+            }
 
             if (typeof window[listenerRegistryKey].requestStatusToastOff === 'function') {
                 window[listenerRegistryKey].requestStatusToastOff();
             }
 
-            window[listenerRegistryKey].requestStatusToastOff = $wire.on('request-status-toast', ({ toastId = null, title, message, status, persistent = false }) => {
-                if (persistent && toastId) {
-                    if (! renderedPersistentToastIds.has(toastId)) {
-                        const nextPersistedToasts = readPersistentToasts();
-                        const exists = nextPersistedToasts.some((toast) => toast.toastId === toastId);
+            if (typeof window[listenerRegistryKey].notificationClosedOff === 'function') {
+                window[listenerRegistryKey].notificationClosedOff();
+            }
 
-                        if (! exists) {
-                            nextPersistedToasts.push({ toastId, title, message, status, persistent: true });
-                            writePersistentToasts(nextPersistedToasts);
-                        }
-                    } else {
-                        return;
-                    }
+            window[listenerRegistryKey].requestStatusToastOff = $wire.on('request-status-toast', ({ toastId = null, title, message, status, persistent = false, kind = null }) => {
+                const toast = { toastId, title, message, status, persistent, kind };
 
-                    renderedPersistentToastIds.add(toastId);
+                rememberPersistentOverdueToast(toast);
+                renderPersistentOverdueToast(toast);
+
+                if (! isPersistentOverdueBorrowToast(toast)) {
+                    renderToast(toast);
                 }
-
-                renderToast({ title, message, status, persistent });
             });
+
+            const handleNotificationClosed = ({ detail }) => {
+                markPersistentOverdueToastDismissed(detail?.id ?? null);
+            };
+
+            window.addEventListener('notificationClosed', handleNotificationClosed);
+            window[listenerRegistryKey].notificationClosedOff = () => {
+                window.removeEventListener('notificationClosed', handleNotificationClosed);
+            };
         </script>
     @endscript
 
-    <span wire:poll.60s="pollForNewNotifications" class="hidden"></span>
+    <span wire:init="pollForNewNotifications" wire:poll.60s="pollForNewNotifications" class="hidden"></span>
 </div>

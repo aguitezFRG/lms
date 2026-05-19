@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Notifications\BorrowDueSoon;
 use App\Notifications\BorrowOverdue;
 use Illuminate\Auth\Events\Login;
-use Illuminate\Support\Facades\DB;
 
 class SendDueSoonOnLogin
 {
@@ -22,6 +21,7 @@ class SendDueSoonOnLogin
         }
 
         $sessionId = session()->getId();
+        session()->put('borrow_reminder_login_session_id', $sessionId);
 
         $this->sendDueSoonNotifications($user, $sessionId);
         $this->sendOverdueNotifications($user, $sessionId);
@@ -42,20 +42,11 @@ class SendDueSoonOnLogin
                 ->get();
 
             foreach ($borrows as $borrow) {
-                $alreadyNotified = DB::table('notifications')
-                    ->where('notifiable_type', get_class($user))
-                    ->where('notifiable_id', $user->id)
-                    ->whereRaw("JSON_EXTRACT(data, '$.type') = 'borrow_due_soon'")
-                    ->whereRaw("JSON_EXTRACT(data, '$.event_id') = ?", [$borrow->id])
-                    ->whereRaw("JSON_EXTRACT(data, '$.days_until_due') = ?", [$days])
-                    ->whereRaw("JSON_EXTRACT(data, '$.session_id') = ?", [$sessionId])
-                    ->exists();
-
-                if ($alreadyNotified) {
+                if ($this->alreadySentReminder($user, BorrowDueSoon::class, $borrow->id, $sessionId, $days)) {
                     continue;
                 }
 
-                $user->notify(new BorrowDueSoon($borrow, $days, $sessionId));
+                $user->notifyNow(new BorrowDueSoon($borrow, $days, $sessionId));
             }
         }
     }
@@ -73,19 +64,37 @@ class SendDueSoonOnLogin
             ->get();
 
         foreach ($overdueBorrows as $borrow) {
-            $alreadyNotified = DB::table('notifications')
-                ->where('notifiable_type', get_class($user))
-                ->where('notifiable_id', $user->id)
-                ->whereRaw("JSON_EXTRACT(data, '$.type') = 'borrow_overdue'")
-                ->whereRaw("JSON_EXTRACT(data, '$.event_id') = ?", [$borrow->id])
-                ->whereRaw("JSON_EXTRACT(data, '$.session_id') = ?", [$sessionId])
-                ->exists();
-
-            if ($alreadyNotified) {
+            if ($this->alreadySentReminder($user, BorrowOverdue::class, $borrow->id, $sessionId)) {
                 continue;
             }
 
-            $user->notify(new BorrowOverdue($borrow, $sessionId));
+            $user->notifyNow(new BorrowOverdue($borrow, $sessionId));
         }
+    }
+
+    protected function alreadySentReminder(
+        User $user,
+        string $notificationClass,
+        string $eventId,
+        string $sessionId,
+        ?int $daysUntilDue = null
+    ): bool {
+        return $user
+            ->notifications()
+            ->where('type', $notificationClass)
+            ->where('created_at', '>=', now()->subDays(2))
+            ->get()
+            ->contains(function ($notification) use ($eventId, $sessionId, $daysUntilDue): bool {
+                if (($notification->data['event_id'] ?? null) !== $eventId) {
+                    return false;
+                }
+
+                if (($notification->data['session_id'] ?? null) !== $sessionId) {
+                    return false;
+                }
+
+                return $daysUntilDue === null
+                    || (int) ($notification->data['days_until_due'] ?? 0) === $daysUntilDue;
+            });
     }
 }
