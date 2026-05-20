@@ -109,7 +109,7 @@
         @endif
 
         {{-- Chart canvas — uses Filament's bundled Chart.js Alpine component --}}
-        <div class="fi-wi-chart rr-material-chart">
+        <div class="rr-material-chart">
         <div
             x-load
             x-load-src="{{ \Filament\Support\Facades\FilamentAsset::getAlpineComponentSrc('chart', 'filament/widgets') }}"
@@ -120,11 +120,11 @@
                 options: @js($this->getChartOptions()),
                 type: 'line',
             })"
-            class="fi-wi-chart-canvas-ctn"
+            style="position: relative; height: 360px;"
         >
             <canvas
                 x-ref="canvas"
-                style="width: 100%; max-height: 400px"
+                style="width: 100%; height: 100%;"
             ></canvas>
 
             <span x-ref="backgroundColorElement" class="fi-wi-chart-bg-color"></span>
