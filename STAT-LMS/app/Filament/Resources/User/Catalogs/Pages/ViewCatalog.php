@@ -8,6 +8,7 @@ use App\Filament\Resources\User\Catalogs\CatalogResource;
 use App\Models\MaterialAccessEvents;
 use App\Models\RrMaterialParents;
 use App\Models\RrMaterials;
+use App\Support\RoleViewMode;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
@@ -40,7 +41,7 @@ class ViewCatalog extends ViewRecord
                 ->label('Request Digital Copy')
                 ->icon('heroicon-o-paper-airplane')
                 ->color('success')
-                ->visible(fn () => $this->hasAvailableCopy(digital: true))
+                ->visible(fn () => ! RoleViewMode::isPreviewingLowerRole() && $this->hasAvailableCopy(digital: true))
                 ->disabled(fn () => auth()->user()?->is_banned || $this->hasActiveRequest(digital: true))
                 ->tooltip(fn () => auth()->user()?->is_banned
                     ? 'Your account is banned from submitting requests.'
@@ -59,7 +60,7 @@ class ViewCatalog extends ViewRecord
                 ->label('Borrow Physical Copy')
                 ->icon('heroicon-o-book-open')
                 ->color('info')
-                ->visible(fn () => $this->hasAvailableCopy(digital: false))
+                ->visible(fn () => ! RoleViewMode::isPreviewingLowerRole() && $this->hasAvailableCopy(digital: false))
                 ->disabled(fn () => auth()->user()?->is_banned || $this->hasActiveRequest(digital: false))
                 ->tooltip(fn () => auth()->user()?->is_banned
                     ? 'Your account is banned from submitting requests.'
@@ -149,7 +150,7 @@ class ViewCatalog extends ViewRecord
             ->select(['id', 'access_level'])
             ->first();
 
-        if (! $latestParent || $user->role->getAccessLevel() < (int) $latestParent->access_level) {
+        if (! $latestParent || RoleViewMode::effectiveAccessLevel($user) < (int) $latestParent->access_level) {
             $this->forcePageRefresh();
 
             return;
@@ -164,7 +165,7 @@ class ViewCatalog extends ViewRecord
                     ->lockForUpdate()
                     ->first();
 
-                if (! $parent || $user->role->getAccessLevel() < (int) $parent->access_level) {
+                if (! $parent || RoleViewMode::effectiveAccessLevel($user) < (int) $parent->access_level) {
                     throw new \RuntimeException('forbidden_access');
                 }
 
@@ -249,11 +250,11 @@ class ViewCatalog extends ViewRecord
         }
 
         // Committee and IT bypass approval requirement
-        if (in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT])) {
+        if (! RoleViewMode::isPreviewingLowerRole($user) && in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT])) {
             return $this->getDigitalCopy() !== null;
         }
 
-        $userLevel = $user->role->getAccessLevel();
+        $userLevel = RoleViewMode::effectiveAccessLevel($user);
         $accessLevel = (int) $this->record->access_level;
 
         if ($userLevel < $accessLevel) {
@@ -275,7 +276,7 @@ class ViewCatalog extends ViewRecord
     {
         $copy = $this->getDigitalCopy();
 
-        if (! $copy) {
+        if (! $copy || RoleViewMode::isPreviewingLowerRole()) {
             return;
         }
 

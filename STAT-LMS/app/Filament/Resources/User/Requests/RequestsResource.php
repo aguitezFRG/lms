@@ -6,6 +6,7 @@ use App\Filament\Resources\MaterialAccessEvents\Schemas\MaterialAccessEventsInfo
 use App\Filament\Resources\User\Requests\Pages\ListRequests;
 use App\Filament\Resources\User\Requests\Pages\ViewRequests;
 use App\Models\MaterialAccessEvents;
+use App\Support\RoleViewMode;
 use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
@@ -13,6 +14,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
@@ -36,7 +38,26 @@ class RequestsResource extends Resource
      */
     public static function shouldRegisterNavigation(): bool
     {
-        return Filament::getCurrentPanel()?->getId() === 'user';
+        return Filament::getCurrentPanel()?->getId() === 'user'
+            || (Filament::getCurrentPanel()?->getId() === 'admin' && RoleViewMode::isUserRolePreview());
+    }
+
+    public static function canViewAny(): bool
+    {
+        if (Filament::getCurrentPanel()?->getId() === 'admin') {
+            return RoleViewMode::isUserRolePreview();
+        }
+
+        return parent::canViewAny();
+    }
+
+    public static function canView(Model $record): bool
+    {
+        if (Filament::getCurrentPanel()?->getId() === 'admin' && RoleViewMode::isUserRolePreview()) {
+            return $record instanceof MaterialAccessEvents && $record->user_id === Auth::id();
+        }
+
+        return parent::canView($record);
     }
 
     public static function getLabel(): string

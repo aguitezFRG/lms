@@ -5,6 +5,7 @@ namespace App\Filament\Resources\User\Requests\Pages;
 use App\Enums\MaterialEventType;
 use App\Filament\Resources\User\Requests\RequestsResource;
 use App\Models\MaterialAccessEvents;
+use App\Support\RoleViewMode;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;
@@ -169,7 +170,7 @@ class ListRequests extends ListRecords
                         ->label('Cancel Request')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
-                        ->visible(fn (MaterialAccessEvents $record) => $record->status === 'pending')
+                        ->visible(fn (MaterialAccessEvents $record) => ! RoleViewMode::isPreviewingLowerRole() && $record->status === 'pending')
                         ->requiresConfirmation()
                         ->modalHeading('Cancel Request')
                         ->modalDescription('Are you sure you want to cancel this request? This cannot be undone.')
