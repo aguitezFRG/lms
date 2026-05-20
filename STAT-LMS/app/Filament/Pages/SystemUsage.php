@@ -57,7 +57,7 @@ class SystemUsage extends Page
 
     public function setTab(string $tab): void
     {
-        $allowedTabs = ['materials', 'trend', 'users'];
+        $allowedTabs = ['materials', 'trend', 'users', 'statistics'];
         if (in_array($tab, $allowedTabs)) {
             $this->activeTab = $tab;
         }
