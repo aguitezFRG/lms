@@ -312,3 +312,8 @@
 .dark .tippy-box[data-placement^='bottom'] > .tippy-arrow::before { border-bottom-color: rgb(39 39 42); }
 .dark .tippy-box[data-placement^='left'] > .tippy-arrow::before   { border-left-color:   rgb(39 39 42); }
 .dark .tippy-box[data-placement^='right'] > .tippy-arrow::before  { border-right-color:  rgb(39 39 42); }
+
+/* Material Statistics chart — more visible grid lines and axis labels */
+.rr-material-chart .fi-wi-chart-grid-color { color: rgb(209 213 219); } /* gray-300 vs default gray-200 */
+.dark .rr-material-chart .fi-wi-chart-grid-color { color: rgb(75 85 99); } /* gray-600 vs default gray-800 */
+.dark .rr-material-chart .fi-wi-chart-text-color { color: rgb(156 163 175); } /* gray-400 */
