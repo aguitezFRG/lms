@@ -1,13 +1,14 @@
 @props([
-    'filterPanelOpen'    => false,
-    'draftFilterCount'   => 0,
-    'draftTypeFilter'    => '',
-    'draftFormatFilter'  => '',
-    'draftAdviserFilter' => '',
-    'draftPubDateFrom'   => '',
-    'draftPubDateTo'     => '',
-    'draftSdgFilter'     => [],
-    'draftAvailableOnly' => true,
+    'filterPanelOpen'     => false,
+    'draftFilterCount'    => 0,
+    'draftTypeFilter'     => '',
+    'draftFormatFilter'   => '',
+    'draftAdviserFilter'  => '',
+    'draftKeywordFilter'  => '',
+    'draftPubDateFrom'    => '',
+    'draftPubDateTo'      => '',
+    'draftSdgFilter'      => [],
+    'draftAvailableOnly'  => true,
 ])
 
 {{-- ── 4. Filter Panel ──────────────────────────────────────────────────── --}}
@@ -111,6 +112,23 @@
                             placeholder="Filter by adviser name"
                         />
                     </x-filament::input.wrapper>
+                </div>
+
+                {{-- Keyword --}}
+                <div>
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                        Keywords
+                    </p>
+                    <x-filament::input.wrapper>
+                        <x-filament::input
+                            wire:model.live.debounce.300ms="draftKeywordFilter"
+                            type="text"
+                            placeholder="e.g. machine learning, neural networks"
+                        />
+                    </x-filament::input.wrapper>
+                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                        Separate keywords with commas. All keywords must match — results narrow with each term added.
+                    </p>
                 </div>
 
                 {{-- Publication Date Range --}}

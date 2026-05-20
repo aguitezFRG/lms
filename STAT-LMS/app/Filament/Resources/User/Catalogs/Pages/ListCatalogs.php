@@ -4,11 +4,11 @@ namespace App\Filament\Resources\User\Catalogs\Pages;
 
 use App\Filament\Resources\User\Catalogs\CatalogResource;
 use App\Models\RrMaterialParents;
+use App\Support\RoleViewMode;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Illuminate\Database\Eloquent\Builder;
-use App\Support\RoleViewMode;
 use Illuminate\Support\Facades\Auth;
 
 class ListCatalogs extends Page
@@ -57,11 +57,15 @@ class ListCatalogs extends Page
 
     public int $perPage = 15;
 
+    public string $keywordFilter = '';
+
     public string $draftTypeFilter = '';
 
     public string $draftFormatFilter = '';
 
     public string $draftAdviserFilter = '';
+
+    public string $draftKeywordFilter = '';
 
     public string $draftPubDateFrom = '';
 
@@ -97,6 +101,7 @@ class ListCatalogs extends Page
         'typeFilter' => ['except' => ''],
         'formatFilter' => ['except' => ''],
         'adviserFilter' => ['except' => ''],
+        'keywordFilter' => ['except' => ''],
         'pubDateFrom' => ['except' => ''],
         'pubDateTo' => ['except' => ''],
         'sdgFilter' => ['except' => []],
@@ -114,6 +119,7 @@ class ListCatalogs extends Page
         $this->draftTypeFilter = $this->typeFilter;
         $this->draftFormatFilter = $this->formatFilter;
         $this->draftAdviserFilter = $this->adviserFilter;
+        $this->draftKeywordFilter = $this->keywordFilter;
         $this->draftPubDateFrom = $this->pubDateFrom;
         $this->draftPubDateTo = $this->pubDateTo;
         $this->draftSdgFilter = $this->sdgFilter;
@@ -230,6 +236,7 @@ class ListCatalogs extends Page
         $this->typeFilter = $this->draftTypeFilter;
         $this->formatFilter = $this->draftFormatFilter;
         $this->adviserFilter = $this->draftAdviserFilter;
+        $this->keywordFilter = $this->draftKeywordFilter;
         $this->pubDateFrom = $this->draftPubDateFrom;
         $this->pubDateTo = $this->draftPubDateTo;
         $this->sdgFilter = $this->draftSdgFilter;
@@ -256,6 +263,7 @@ class ListCatalogs extends Page
         $this->draftTypeFilter = '';
         $this->draftFormatFilter = '';
         $this->draftAdviserFilter = '';
+        $this->draftKeywordFilter = '';
         $this->draftPubDateFrom = '';
         $this->draftPubDateTo = '';
         $this->draftSdgFilter = [];
@@ -269,6 +277,7 @@ class ListCatalogs extends Page
         $this->typeFilter = '';
         $this->formatFilter = '';
         $this->adviserFilter = '';
+        $this->keywordFilter = '';
         $this->pubDateFrom = '';
         $this->pubDateTo = '';
         $this->sdgFilter = [];
@@ -288,6 +297,7 @@ class ListCatalogs extends Page
             'typeFilter' => $this->typeFilter = '',
             'formatFilter' => $this->formatFilter = '',
             'adviserFilter' => $this->adviserFilter = '',
+            'keywordFilter' => $this->keywordFilter = '',
             'pubDate' => [$this->pubDateFrom = '', $this->pubDateTo = ''],
             'availableOnly' => $this->availableOnly = true,  // revert to default (hide unavailable)
             'sdg' => $this->sdgFilter = array_values(
@@ -300,6 +310,7 @@ class ListCatalogs extends Page
         $this->draftTypeFilter = $this->typeFilter;
         $this->draftFormatFilter = $this->formatFilter;
         $this->draftAdviserFilter = $this->adviserFilter;
+        $this->draftKeywordFilter = $this->keywordFilter;
         $this->draftPubDateFrom = $this->pubDateFrom;
         $this->draftPubDateTo = $this->pubDateTo;
         $this->draftSdgFilter = $this->sdgFilter;
@@ -390,6 +401,13 @@ class ListCatalogs extends Page
                         });
                 });
             })
+            ->when($this->keywordFilter !== '', function ($q) {
+                $terms = array_filter(array_map('trim', explode(',', $this->keywordFilter)));
+                foreach ($terms as $term) {
+                    $q->where('keywords', 'like', '%'.$term.'%');
+                }
+            })
+
             ->when($this->adviserFilter !== '', function ($q) {
                 $driver = config('database.default');
                 if ($driver === 'mysql') {
@@ -504,6 +522,7 @@ class ListCatalogs extends Page
             $this->typeFilter !== '',
             $this->formatFilter !== '',
             $this->adviserFilter !== '',
+            $this->keywordFilter !== '',
             $this->pubDateFrom !== '',
             $this->pubDateTo !== '',
             ...array_fill(0, count($this->sdgFilter), true),
@@ -515,6 +534,7 @@ class ListCatalogs extends Page
             $this->draftTypeFilter !== '',
             $this->draftFormatFilter !== '',
             $this->draftAdviserFilter !== '',
+            $this->draftKeywordFilter !== '',
             $this->draftPubDateFrom !== '',
             $this->draftPubDateTo !== '',
             ...array_fill(0, count($this->draftSdgFilter), true),
