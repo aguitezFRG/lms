@@ -2,7 +2,8 @@
 @import '../oled.css';
 
 @source '../../../../app/Filament/**/*.php';
-@source '../../../../resources/views/filament/**/*.php';
+@source '../../../../resources/views/filament/**/*.blade.php';
+@source '../../../../resources/views/components/**/*.blade.php';
 @source '../../../../resources/views/vendor/**/*.blade.php';
 @source '../../../../resources/views/livewire/**/*.blade.php';
 
