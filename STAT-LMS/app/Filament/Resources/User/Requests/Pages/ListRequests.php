@@ -163,9 +163,9 @@ class ListRequests extends ListRecords
                         'borrow' => 'Physical Borrow',
                     ]),
             ])
-            ->recordUrl(fn (MaterialAccessEvents $record): ?string => $record->status === 'approved' && $record->material?->parent
+            ->recordUrl(fn (MaterialAccessEvents $record): string => $record->status === 'approved' && $record->material?->parent
                 ? CatalogResource::getUrl('view', ['record' => $record->material->parent->id])
-                : null
+                : RequestsResource::getUrl('view', ['record' => $record->id])
             )
             ->actions([
                 ActionGroup::make([
