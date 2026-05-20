@@ -280,5 +280,35 @@
 
 .fi-ac-btn-action.fi-color-warning {
     --c-500: var(--up-gold) !important;
-
 }
+
+/* ── Tippy.js tooltip — light ────────────────────────────────────────────── */
+
+.tippy-box {
+    background-color: rgb(255 255 255);
+    color: rgb(17 24 39);
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    border: 1px solid rgb(229 231 235);
+    box-shadow: 0 4px 14px -2px rgb(0 0 0 / 0.2), 0 2px 6px -2px rgb(0 0 0 / 0.1);
+}
+
+.tippy-box[data-placement^='top'] > .tippy-arrow::before    { border-top-color:    rgb(255 255 255); }
+.tippy-box[data-placement^='bottom'] > .tippy-arrow::before { border-bottom-color: rgb(255 255 255); }
+.tippy-box[data-placement^='left'] > .tippy-arrow::before   { border-left-color:   rgb(255 255 255); }
+.tippy-box[data-placement^='right'] > .tippy-arrow::before  { border-right-color:  rgb(255 255 255); }
+
+/* ── Tippy.js tooltip — dark ─────────────────────────────────────────────── */
+
+.dark .tippy-box {
+    background-color: rgb(39 39 42);
+    color: rgb(244 244 245);
+    border: 1px solid rgb(63 63 70);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.25);
+}
+
+.dark .tippy-box[data-placement^='top'] > .tippy-arrow::before    { border-top-color:    rgb(39 39 42); }
+.dark .tippy-box[data-placement^='bottom'] > .tippy-arrow::before { border-bottom-color: rgb(39 39 42); }
+.dark .tippy-box[data-placement^='left'] > .tippy-arrow::before   { border-left-color:   rgb(39 39 42); }
+.dark .tippy-box[data-placement^='right'] > .tippy-arrow::before  { border-right-color:  rgb(39 39 42); }

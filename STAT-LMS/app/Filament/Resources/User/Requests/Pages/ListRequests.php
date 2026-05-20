@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\User\Requests\Pages;
 
 use App\Enums\MaterialEventType;
+use App\Filament\Resources\User\Catalogs\CatalogResource;
 use App\Filament\Resources\User\Requests\RequestsResource;
 use App\Models\MaterialAccessEvents;
 use App\Support\RoleViewMode;
@@ -16,6 +17,7 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class ListRequests extends ListRecords
@@ -58,21 +60,21 @@ class ListRequests extends ListRecords
             'pending' => Tab::make('Pending')
                 ->badge(fn () => $this->getTabBadgeCounts()['pending'])
                 ->badgeColor('warning')
-                ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query
+                ->modifyQueryUsing(fn (Builder $query) => $query
                     ->whereIn('event_type', $requestEventTypes)
                     ->where('status', 'pending')),
 
             'approved' => Tab::make('Approved')
                 ->badge(fn () => $this->getTabBadgeCounts()['approved'])
                 ->badgeColor('success')
-                ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query
+                ->modifyQueryUsing(fn (Builder $query) => $query
                     ->whereIn('event_type', $requestEventTypes)
                     ->where('status', 'approved')),
 
             'closed' => Tab::make('Closed')
                 ->badge(fn () => $this->getTabBadgeCounts()['closed'])
                 ->badgeColor('gray')
-                ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query
+                ->modifyQueryUsing(fn (Builder $query) => $query
                     ->whereIn('event_type', $requestEventTypes)
                     ->whereIn('status', [
                         'rejected', 'cancelled', 'completed', 'returned', 'revoked',
@@ -161,10 +163,22 @@ class ListRequests extends ListRecords
                         'borrow' => 'Physical Borrow',
                     ]),
             ])
+            ->recordUrl(fn (MaterialAccessEvents $record): string => $record->status === 'approved' && $record->material?->parent
+                ? CatalogResource::getUrl('view', ['record' => $record->material->parent->id])
+                : RequestsResource::getUrl('view', ['record' => $record->id])
+            )
             ->actions([
                 ActionGroup::make([
                     ViewAction::make()
                         ->color('gray'),
+
+                    Action::make('view_material')
+                        ->label('Navigate to material')
+                        ->tooltip('Navigate to material')
+                        ->icon('heroicon-o-arrow-top-right-on-square')
+                        ->color('success')
+                        ->visible(fn (MaterialAccessEvents $record) => $record->status === 'approved' && $record->material?->parent !== null)
+                        ->url(fn (MaterialAccessEvents $record): string => CatalogResource::getUrl('view', ['record' => $record->material->parent->id])),
 
                     Action::make('cancel')
                         ->label('Cancel Request')
