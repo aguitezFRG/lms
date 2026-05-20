@@ -33,6 +33,14 @@
         >
             Most Active Users
         </x-filament::tabs.item>
+
+        <x-filament::tabs.item
+            :active="$activeTab === 'statistics'"
+            icon="heroicon-o-chart-bar-square"
+            wire:click="setTab('statistics')"
+        >
+            Material Statistics
+        </x-filament::tabs.item>
     </x-filament::tabs>
 
     {{-- Tab Content --}}
@@ -47,6 +55,10 @@
 
         @if ($activeTab === 'users')
             @livewire(\App\Filament\Widgets\SystemUsage\TopUsersTableWidget::class, key('users'))
+        @endif
+
+        @if ($activeTab === 'statistics')
+            @livewire(\App\Filament\Widgets\SystemUsage\MaterialStatisticsWidget::class, key('statistics'))
         @endif
     </div>
 
