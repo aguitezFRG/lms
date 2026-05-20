@@ -11,6 +11,7 @@ use App\Filament\Resources\MaterialAccessEvents\Schemas\MaterialAccessEventsForm
 use App\Filament\Resources\MaterialAccessEvents\Schemas\MaterialAccessEventsInfolist;
 use App\Filament\Resources\MaterialAccessEvents\Tables\MaterialAccessEventsTable;
 use App\Models\MaterialAccessEvents;
+use App\Support\RoleViewMode;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -64,6 +65,21 @@ class MaterialAccessEventsResource extends Resource
         ];
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return RoleViewMode::effectiveRole() === UserRole::RR
+            || ! RoleViewMode::isPreviewingLowerRole();
+    }
+
+    public static function canViewAny(): bool
+    {
+        if (RoleViewMode::isUserRolePreview()) {
+            return false;
+        }
+
+        return parent::canViewAny();
+    }
+
     public static function getEloquentQuery(): Builder
     {
         $user = auth()->user();
@@ -82,7 +98,7 @@ class MaterialAccessEventsResource extends Resource
             return $query->whereNull('id');
         }
 
-        if ($user->role === UserRole::RR) {
+        if (RoleViewMode::effectiveRole($user) === UserRole::RR) {
             return $query
                 ->whereHas('material.parent', fn (Builder $q) => $q->where('access_level', 1))
                 ->whereHas('material', fn (Builder $m) => $m->where('is_digital', false));

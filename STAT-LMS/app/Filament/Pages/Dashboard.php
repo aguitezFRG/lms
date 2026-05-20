@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Widgets\Dashboard\StatsOverviewWidget;
 use App\Models\MaterialAccessEvents;
+use App\Support\RoleViewMode;
 use BackedEnum;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Support\Icons\Heroicon;
@@ -23,6 +24,11 @@ class Dashboard extends BaseDashboard
     public string $activeTab = 'general';
 
     public string $activeChartTab = 'visitor-borrower';
+
+    public static function shouldRegisterNavigation(array $parameters = []): bool
+    {
+        return ! RoleViewMode::isUserRolePreview();
+    }
 
     public function mount(): void
     {
