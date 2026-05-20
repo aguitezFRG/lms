@@ -43,7 +43,6 @@ class RrMaterialParentsForm
         'Survey Methodology',
     ];
 
-
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -122,13 +121,12 @@ class RrMaterialParentsForm
                             ->label('SDGs (Sustainable Development Goals)')
                             ->placeholder('Type SDG and press Enter')
                             ->columnSpanFull()
-                            ->rules(['array', 'max:17', 'distinct'])
+                            ->rules(['array', 'max:17', 'distinct', new SDGTags])
                             ->suggestions(collect(SDGOptions::cases())->map(fn ($case) => $case->value)->toArray())
                             ->required()
                             ->nestedRecursiveRules([
                                 'string',
                                 'max:255',
-                                new SDGTags(),
                             ]),
 
                         DatePicker::make('publication_date')
