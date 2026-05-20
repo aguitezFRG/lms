@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Enums\UserRole;
 use App\Filament\Widgets\SystemUsage\SystemUsageStatsWidget;
 use App\Models\MaterialAccessEvents;
+use App\Support\RoleViewMode;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -44,7 +45,9 @@ class SystemUsage extends Page
     {
         $user = Auth::user();
 
-        return $user && in_array($user->role, [
+        $role = RoleViewMode::effectiveRole($user);
+
+        return $user && ! RoleViewMode::isUserRolePreview($user) && in_array($role, [
             UserRole::SUPER_ADMIN,
             UserRole::COMMITTEE,
             UserRole::IT,

@@ -8,6 +8,7 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Illuminate\Database\Eloquent\Builder;
+use App\Support\RoleViewMode;
 use Illuminate\Support\Facades\Auth;
 
 class ListCatalogs extends Page
@@ -327,7 +328,7 @@ class ListCatalogs extends Page
     protected function getQuery(): Builder
     {
         $user = Auth::user();
-        $userLevel = $user->role->getAccessLevel();
+        $userLevel = RoleViewMode::effectiveAccessLevel($user);
 
         return RrMaterialParents::query()
             // Only the columns needed for the card list — keeps the result set lean

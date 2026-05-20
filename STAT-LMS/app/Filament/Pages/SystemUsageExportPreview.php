@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Enums\UserRole;
 use App\Models\MaterialAccessEvents;
+use App\Support\RoleViewMode;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -49,7 +50,7 @@ class SystemUsageExportPreview extends Page implements HasTable
     {
         $user = Auth::user();
 
-        return $user && in_array($user->role, [
+        return $user && ! RoleViewMode::isUserRolePreview($user) && in_array(RoleViewMode::effectiveRole($user), [
             UserRole::SUPER_ADMIN,
             UserRole::COMMITTEE,
             UserRole::IT,

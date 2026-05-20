@@ -10,6 +10,7 @@ use App\Filament\Resources\RrMaterialParents\Schemas\RrMaterialParentsForm;
 use App\Filament\Resources\RrMaterialParents\Schemas\RrMaterialParentsInfolist;
 use App\Filament\Resources\RrMaterialParents\Tables\RrMaterialParentsTable;
 use App\Models\RrMaterialParents;
+use App\Support\RoleViewMode;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -80,6 +81,11 @@ class RrMaterialParentsResource extends Resource
         ];
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return ! RoleViewMode::isUserRolePreview();
+    }
+
     public static function getRecordRouteBindingEloquentQuery(): Builder
     {
         return parent::getRecordRouteBindingEloquentQuery()
@@ -100,7 +106,7 @@ class RrMaterialParentsResource extends Resource
             return $query->where('access_level', '<=', 1);
         }
 
-        $userLevel = $user->role->getAccessLevel();
+        $userLevel = RoleViewMode::effectiveAccessLevel($user);
 
         // Apply the global scope: User level must be greater than or
         // equal to the material's required access level.

@@ -8,6 +8,7 @@ use App\Filament\Resources\RepositoryChangeLogs\Schemas\RepositoryChangeLogsForm
 use App\Filament\Resources\RepositoryChangeLogs\Schemas\RepositoryChangeLogsInfolist;
 use App\Filament\Resources\RepositoryChangeLogs\Tables\RepositoryChangeLogsTable;
 use App\Models\RepositoryChangeLogs;
+use App\Support\RoleViewMode;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -56,6 +57,11 @@ class RepositoryChangeLogsResource extends Resource
             'index' => ListRepositoryChangeLogs::route('/'),
             'view' => ViewRepositoryChangeLogs::route('/{record}'),
         ];
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return ! RoleViewMode::isPreviewingLowerRole();
     }
 
     public static function getEloquentQuery(): Builder

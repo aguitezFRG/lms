@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\UserRole;
 use App\Models\RrMaterialParents;
 use App\Models\User;
+use App\Support\RoleViewMode;
 
 class RrMaterialParentsPolicy
 {
@@ -22,7 +23,7 @@ class RrMaterialParentsPolicy
     public function view(User $user, RrMaterialParents $rrMaterialParents): bool
     {
 
-        $user_access_level = $user->role->getAccessLevel();
+        $user_access_level = RoleViewMode::effectiveAccessLevel($user);
 
         return $user_access_level >= $rrMaterialParents->access_level;
     }
@@ -32,6 +33,10 @@ class RrMaterialParentsPolicy
      */
     public function create(User $user): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
@@ -40,11 +45,19 @@ class RrMaterialParentsPolicy
      */
     public function update(User $user, RrMaterialParents $rrMaterialParents): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
     public function deleteAny(User $user): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
@@ -53,11 +66,19 @@ class RrMaterialParentsPolicy
      */
     public function delete(User $user, RrMaterialParents $rrMaterialParents): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
     public function restoreAny(User $user): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
@@ -66,6 +87,10 @@ class RrMaterialParentsPolicy
      */
     public function restore(User $user, RrMaterialParents $rrMaterialParents): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
@@ -74,6 +99,10 @@ class RrMaterialParentsPolicy
      */
     public function forceDelete(User $user, RrMaterialParents $rrMaterialParents): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 }

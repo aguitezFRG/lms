@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\UserRole;
 use App\Models\MaterialAccessEvents;
 use App\Models\User;
+use App\Support\RoleViewMode;
 
 class MaterialAccessEventsPolicy
 {
@@ -13,6 +14,10 @@ class MaterialAccessEventsPolicy
      */
     public function viewAny(User $user): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return RoleViewMode::effectiveRole($user) === UserRole::RR;
+        }
+
         return in_array($user->role, [
             \App\Enums\UserRole::SUPER_ADMIN,
             \App\Enums\UserRole::COMMITTEE,
@@ -29,8 +34,16 @@ class MaterialAccessEventsPolicy
     public function view(User $user, MaterialAccessEvents $materialAccessEvents): bool
     {
         // Users can view their own requests, as well as committee, IT, and RR staff can view all requests
-        return $materialAccessEvents->user_id == $user->id ||
-               in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT, UserRole::RR]);
+        $role = RoleViewMode::effectiveRole($user);
+
+        if ($role === UserRole::RR) {
+            return $materialAccessEvents->material?->parent?->access_level == 1
+                && $materialAccessEvents->material?->is_digital == false;
+        }
+
+        return ! RoleViewMode::isPreviewingLowerRole($user)
+            && ($materialAccessEvents->user_id == $user->id ||
+               in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT, UserRole::RR]));
     }
 
     /**
@@ -38,6 +51,10 @@ class MaterialAccessEventsPolicy
      */
     public function create(User $user): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
@@ -46,6 +63,10 @@ class MaterialAccessEventsPolicy
      */
     public function update(User $user, MaterialAccessEvents $materialAccessEvents): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         $user_role = $user->role;
 
         $updated_by = $materialAccessEvents->approver_id;
@@ -86,6 +107,10 @@ class MaterialAccessEventsPolicy
      */
     public function restoreAny(User $user): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
@@ -94,6 +119,10 @@ class MaterialAccessEventsPolicy
      */
     public function restore(User $user, MaterialAccessEvents $materialAccessEvents): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 

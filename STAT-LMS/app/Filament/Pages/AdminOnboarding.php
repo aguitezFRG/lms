@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Filament\Components\Admin\CommitteeFeatureCards;
 use App\Filament\Components\Admin\StaffFeatureCards;
 use App\Filament\Components\Admin\SuperAdminFeatureCards;
+use App\Support\RoleViewMode;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
@@ -22,6 +23,11 @@ class AdminOnboarding extends Page
     protected static ?string $slug = 'admin-onboarding';
 
     protected static bool $shouldRegisterNavigation = true;
+
+    public static function shouldRegisterNavigation(array $parameters = []): bool
+    {
+        return ! RoleViewMode::isUserRolePreview();
+    }
 
     public static function canAccess(): bool
     {
@@ -46,7 +52,7 @@ class AdminOnboarding extends Page
 
     protected function getViewData(): array
     {
-        $role = auth()->user()?->role;
+        $role = RoleViewMode::effectiveRole();
         $roleValue = $role?->value;
 
         $roleLabel = match ($roleValue) {

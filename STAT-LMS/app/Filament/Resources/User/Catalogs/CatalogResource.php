@@ -6,6 +6,7 @@ use App\Filament\Resources\RrMaterialParents\Schemas\RrMaterialParentsInfolist;
 use App\Filament\Resources\User\Catalogs\Pages\ListCatalogs;
 use App\Filament\Resources\User\Catalogs\Pages\ViewCatalog;
 use App\Models\RrMaterialParents;
+use App\Support\RoleViewMode;
 use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
@@ -34,7 +35,8 @@ class CatalogResource extends Resource
      */
     public static function shouldRegisterNavigation(): bool
     {
-        return Filament::getCurrentPanel()?->getId() === 'user';
+        return Filament::getCurrentPanel()?->getId() === 'user'
+            || (Filament::getCurrentPanel()?->getId() === 'admin' && RoleViewMode::isUserRolePreview());
     }
 
     public static function getLabel(): string
@@ -67,7 +69,7 @@ class CatalogResource extends Resource
             return $query->whereRaw('1 = 0');
         }
 
-        $userLevel = $user->role->getAccessLevel();
+        $userLevel = RoleViewMode::effectiveAccessLevel($user);
 
         return $query->where('access_level', '<=', $userLevel);
     }
@@ -86,7 +88,7 @@ class CatalogResource extends Resource
         bool $shouldGuessMissingParameters = false,
         ?string $configuration = null,
     ): string {
-        return parent::getUrl($name, $parameters, $isAbsolute, $panel ?? 'user', $tenant, $shouldGuessMissingParameters, $configuration);
+        return parent::getUrl($name, $parameters, $isAbsolute, $panel ?? Filament::getCurrentPanel()?->getId() ?? 'user', $tenant, $shouldGuessMissingParameters, $configuration);
     }
 
     public static function getPages(): array

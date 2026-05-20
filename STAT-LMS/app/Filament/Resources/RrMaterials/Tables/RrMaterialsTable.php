@@ -4,6 +4,7 @@ namespace App\Filament\Resources\RrMaterials\Tables;
 
 use App\Enums\MaterialEventType;
 use App\Models\MaterialAccessEvents;
+use App\Support\RoleViewMode;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -100,7 +101,7 @@ class RrMaterialsTable
                         ->label(fn ($record) => $record?->is_digital ? 'Request Copy' : 'Borrow Copy')
                         ->icon(fn ($record) => $record?->is_digital ? 'heroicon-o-paper-airplane' : 'heroicon-o-book-open')
                         ->color('info')
-                        ->visible(fn ($record) => $record && ! $record->trashed())
+                        ->visible(fn ($record) => $record && ! $record->trashed() && ! RoleViewMode::isPreviewingLowerRole())
                         ->action(function ($record) {
                             $eventType = $record->is_digital
                                 ? MaterialEventType::REQUEST

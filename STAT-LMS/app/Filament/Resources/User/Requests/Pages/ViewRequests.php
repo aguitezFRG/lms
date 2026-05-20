@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\User\Requests\Pages;
 
 use App\Filament\Resources\User\Requests\RequestsResource;
+use App\Support\RoleViewMode;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
@@ -25,7 +26,7 @@ class ViewRequests extends ViewRecord
                 ->label('Cancel Request')
                 ->icon('heroicon-o-x-circle')
                 ->color('danger')
-                ->visible(fn () => $this->record->status === 'pending')
+                ->visible(fn () => ! RoleViewMode::isPreviewingLowerRole() && $this->record->status === 'pending')
                 ->requiresConfirmation()
                 ->modalHeading('Cancel this request?')
                 ->modalDescription('This will permanently cancel your request. This action cannot be undone.')

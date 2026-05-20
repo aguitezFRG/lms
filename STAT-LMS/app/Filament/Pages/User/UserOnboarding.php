@@ -4,6 +4,7 @@ namespace App\Filament\Pages\User;
 
 use App\Filament\Components\User\FacultyFeatureCards;
 use App\Filament\Components\User\StudentFeatureCards;
+use App\Support\RoleViewMode;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
@@ -23,12 +24,13 @@ class UserOnboarding extends Page
 
     public static function shouldRegisterNavigation(array $parameters = []): bool
     {
-        return filament()->getCurrentPanel()?->getId() === 'user';
+        return filament()->getCurrentPanel()?->getId() === 'user'
+            || (filament()->getCurrentPanel()?->getId() === 'admin' && RoleViewMode::isUserRolePreview());
     }
 
     public static function canAccess(): bool
     {
-        return auth()->check() && in_array(auth()->user()->role, [
+        return auth()->check() && in_array(RoleViewMode::effectiveRole(), [
             \App\Enums\UserRole::FACULTY,
             \App\Enums\UserRole::STUDENT,
         ]);
@@ -42,12 +44,12 @@ class UserOnboarding extends Page
         bool $shouldGuessMissingParameters = false,
         ?string $configuration = null,
     ): string {
-        return parent::getUrl($parameters, $isAbsolute, $panel ?? 'user', $tenant, $shouldGuessMissingParameters, $configuration);
+        return parent::getUrl($parameters, $isAbsolute, $panel ?? filament()->getCurrentPanel()?->getId() ?? 'user', $tenant, $shouldGuessMissingParameters, $configuration);
     }
 
     protected function getViewData(): array
     {
-        $role = auth()->user()?->role;
+        $role = RoleViewMode::effectiveRole();
         $roleValue = $role?->value;
 
         $roleLabel = match ($roleValue) {

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\MaterialAccessEvents\Tables;
 
 use App\Enums\MaterialEventType;
 use App\Models\MaterialAccessEvents;
+use App\Support\RoleViewMode;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
@@ -112,7 +113,7 @@ class MaterialAccessEventsTable
                     static::makeApproveAction(),
                     static::makeRejectAction(),
                     EditAction::make()
-                        ->visible(fn (MaterialAccessEvents $record): bool => in_array($record->status, ['rejected', 'approved'], true))
+                        ->visible(fn (MaterialAccessEvents $record): bool => ! RoleViewMode::isPreviewingLowerRole() && in_array($record->status, ['rejected', 'approved'], true))
                         ->mutateFormDataUsing(fn (array $data): array => array_merge($data, [
                             'approver_id' => auth()->id(),
                         ]))
@@ -128,7 +129,7 @@ class MaterialAccessEventsTable
             ->label('Approve')
             ->icon('heroicon-o-check')
             ->color('success')
-            ->visible(fn (MaterialAccessEvents $record): bool => $record->status === 'pending')
+            ->visible(fn (MaterialAccessEvents $record): bool => ! RoleViewMode::isPreviewingLowerRole() && $record->status === 'pending')
             ->modalHeading(fn (MaterialAccessEvents $record): string => 'Material Access Logs / '.$record->material->parent->title)
             ->modalDescription(fn (MaterialAccessEvents $record): string => sprintf(
                 'Requested by %s on %s.',
@@ -168,7 +169,7 @@ class MaterialAccessEventsTable
             ->label('Reject')
             ->icon('heroicon-o-x-mark')
             ->color('danger')
-            ->visible(fn (MaterialAccessEvents $record): bool => $record->status === 'pending')
+            ->visible(fn (MaterialAccessEvents $record): bool => ! RoleViewMode::isPreviewingLowerRole() && $record->status === 'pending')
             ->modalHeading(fn (MaterialAccessEvents $record): string => 'Material Access Logs / '.$record->material->parent->title)
             ->modalDescription(fn (MaterialAccessEvents $record): string => sprintf(
                 'Requested by %s on %s.',
