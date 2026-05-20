@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Support\RoleViewMode;
 
 class UserPolicy
 {
@@ -12,6 +13,10 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
@@ -20,6 +25,10 @@ class UserPolicy
      */
     public function view(User $user, User $model): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
@@ -28,6 +37,10 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
@@ -41,6 +54,10 @@ class UserPolicy
 
     public function deleteAny(User $user): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
@@ -57,6 +74,10 @@ class UserPolicy
 
     public function restoreAny(User $user): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
@@ -79,6 +100,10 @@ class UserPolicy
     protected function canMutateUser(User $user, User $model): bool
     {
         if (! in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT])) {
+            return false;
+        }
+
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
             return false;
         }
 

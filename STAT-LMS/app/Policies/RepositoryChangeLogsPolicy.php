@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\UserRole;
 use App\Models\RepositoryChangeLogs;
 use App\Models\User;
+use App\Support\RoleViewMode;
 
 class RepositoryChangeLogsPolicy
 {
@@ -13,6 +14,10 @@ class RepositoryChangeLogsPolicy
      */
     public function viewAny(User $user): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
@@ -21,6 +26,10 @@ class RepositoryChangeLogsPolicy
      */
     public function view(User $user, RepositoryChangeLogs $repositoryChangeLogs): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
@@ -57,6 +66,10 @@ class RepositoryChangeLogsPolicy
 
     public function restoreAny(User $user): bool
     {
+        if (RoleViewMode::isPreviewingLowerRole($user)) {
+            return false;
+        }
+
         return in_array($user->role, [UserRole::SUPER_ADMIN, UserRole::COMMITTEE, UserRole::IT]);
     }
 
