@@ -4,6 +4,7 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\MaterialStreamController;
 use App\Http\Controllers\PasswordEncryptionKeyController;
+use App\Http\Controllers\RoleViewModeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -36,3 +37,7 @@ Route::middleware(['auth', 'throttle:material-stream'])->group(function () {
     Route::get('/materials/{record}/stream', [MaterialStreamController::class, 'stream'])
         ->name('materials.stream');
 });
+
+Route::post('/admin/role-view-mode', RoleViewModeController::class)
+    ->middleware(['auth'])
+    ->name('role-view-mode.update');

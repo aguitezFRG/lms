@@ -110,6 +110,10 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
                 fn () => view('filament.components.google-sso-button'),
             )
+            ->renderHook(
+                PanelsRenderHook::USER_MENU_PROFILE_AFTER,
+                fn () => view('filament.components.role-view-switcher'),
+            )
             ->strictAuthorization()
             ->globalSearch(false);
     }
