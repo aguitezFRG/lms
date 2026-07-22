@@ -361,5 +361,4 @@ class ProfilePagesTest extends TestCase
         Livewire::test(\App\Livewire\NotificationBell::class)
             ->assertSee('9+');
     }
-
 }

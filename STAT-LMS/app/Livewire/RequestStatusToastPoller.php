@@ -14,6 +14,7 @@ class RequestStatusToastPoller extends Component
     protected const MAX_VISIBLE_TOASTS = 3;
 
     protected const DISPLAYED_REQUEST_STATUS_TOAST_IDS_KEY = 'request_status_toast_displayed_ids';
+
     protected const DISPLAYED_LOGIN_REMINDER_TOAST_IDS_KEY = 'login_reminder_toast_displayed_ids';
 
     public ?string $lastSeenCreatedAt = null;

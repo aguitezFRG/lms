@@ -10,7 +10,7 @@ class PdfNormalizationServiceTest extends TestCase
 {
     private function minimalValidPdfContent(): string
     {
-        return <<<PDF
+        return <<<'PDF'
 %PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>

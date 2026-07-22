@@ -184,6 +184,7 @@ class PdfWatermarkService
         $qrPngPath = $tempBase.'.png';
         if (! @rename($tempBase, $qrPngPath)) {
             @unlink($tempBase);
+
             return ['qrDataUrl' => null, 'infoLine' => $this->buildInfoLine($user, $accessedAt)];
         }
 

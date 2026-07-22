@@ -84,15 +84,15 @@ class MaterialAccessEventsResource extends Resource
     {
         $user = auth()->user();
         $query = parent::getEloquentQuery()
-        ->with([
-            'user',
-            'approver',
-            'material.parent',
-        ])
-        ->where(
-            fn (Builder $q) => $q
-                ->whereHas('material.parent', fn (Builder $q) => $q->where('deleted_at', null))
-        );
+            ->with([
+                'user',
+                'approver',
+                'material.parent',
+            ])
+            ->where(
+                fn (Builder $q) => $q
+                    ->whereHas('material.parent', fn (Builder $q) => $q->where('deleted_at', null))
+            );
 
         if (! $user) {
             return $query->whereNull('id');

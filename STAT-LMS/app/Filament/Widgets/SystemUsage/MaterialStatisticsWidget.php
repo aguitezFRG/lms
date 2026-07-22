@@ -35,12 +35,12 @@ class MaterialStatisticsWidget extends Widget
     ];
 
     private const TYPE_COLORS = [
-        'Total'        => 'rgb(107,114,128)',
-        'Book'         => 'rgb(59,130,246)',
-        'Thesis'       => 'rgb(34,197,94)',
-        'Journal'      => 'rgb(249,115,22)',
+        'Total' => 'rgb(107,114,128)',
+        'Book' => 'rgb(59,130,246)',
+        'Thesis' => 'rgb(34,197,94)',
+        'Journal' => 'rgb(249,115,22)',
         'Dissertation' => 'rgb(168,85,247)',
-        'Others'       => 'rgb(239,68,68)',
+        'Others' => 'rgb(239,68,68)',
     ];
 
     public static function canView(): bool
@@ -55,8 +55,8 @@ class MaterialStatisticsWidget extends Widget
         $this->frames = [
             [
                 'startMonth' => 8,
-                'endMonth'   => 12,
-                'endYear'    => (int) now()->year,
+                'endMonth' => 12,
+                'endYear' => (int) now()->year,
             ],
         ];
     }
@@ -92,8 +92,8 @@ class MaterialStatisticsWidget extends Widget
 
         $this->frames[] = [
             'startMonth' => $startMonth,
-            'endMonth'   => $endMonth,
-            'endYear'    => $endYear,
+            'endMonth' => $endMonth,
+            'endYear' => $endYear,
         ];
 
         $this->dispatch('updateChartData', data: $this->getChartData());
@@ -174,14 +174,14 @@ class MaterialStatisticsWidget extends Widget
             }, range(0, 4));
 
             $datasets[] = [
-                'label'           => 'Total'.$suffix,
-                'data'            => $totalData,
-                'borderColor'     => self::TYPE_COLORS['Total'],
+                'label' => 'Total'.$suffix,
+                'data' => $totalData,
+                'borderColor' => self::TYPE_COLORS['Total'],
                 'backgroundColor' => 'transparent',
-                'borderWidth'     => 2,
-                'borderDash'      => $borderDash,
-                'tension'         => 0.3,
-                'pointRadius'     => 4,
+                'borderWidth' => 2,
+                'borderDash' => $borderDash,
+                'tension' => 0.3,
+                'pointRadius' => 4,
             ];
 
             foreach (self::TYPE_MAP as $typeId => $typeName) {
@@ -193,14 +193,14 @@ class MaterialStatisticsWidget extends Widget
                 );
 
                 $datasets[] = [
-                    'label'           => $typeName.$suffix,
-                    'data'            => $data,
-                    'borderColor'     => self::TYPE_COLORS[$typeName],
+                    'label' => $typeName.$suffix,
+                    'data' => $data,
+                    'borderColor' => self::TYPE_COLORS[$typeName],
                     'backgroundColor' => 'transparent',
-                    'borderWidth'     => 2,
-                    'borderDash'      => $borderDash,
-                    'tension'         => 0.3,
-                    'pointRadius'     => 4,
+                    'borderWidth' => 2,
+                    'borderDash' => $borderDash,
+                    'tension' => 0.3,
+                    'pointRadius' => 4,
                 ];
             }
         }
@@ -211,25 +211,25 @@ class MaterialStatisticsWidget extends Widget
     public function getChartOptions(): array
     {
         return [
-            'responsive'          => true,
+            'responsive' => true,
             'maintainAspectRatio' => false,
-            'plugins'             => [
+            'plugins' => [
                 'legend' => [
                     'position' => 'bottom',
-                    'labels'   => [
+                    'labels' => [
                         'boxWidth' => 12,
-                        'padding'  => 16,
+                        'padding' => 16,
                     ],
                 ],
                 'tooltip' => [
-                    'mode'      => 'index',
+                    'mode' => 'index',
                     'intersect' => false,
                 ],
             ],
             'scales' => [
                 'y' => [
                     'beginAtZero' => true,
-                    'ticks'       => ['precision' => 0],
+                    'ticks' => ['precision' => 0],
                 ],
             ],
         ];

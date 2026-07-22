@@ -167,5 +167,4 @@ class VisitorBorrowerChartWidget extends ChartWidget
 
         return [$labels, $visitors, $borrowers];
     }
-
 }

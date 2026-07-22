@@ -20,7 +20,7 @@ class MaterialStreamWatermarkSecurityTest extends TestCase
 
     private function minimalValidPdfContent(): string
     {
-        return <<<PDF
+        return <<<'PDF'
 %PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>
@@ -106,7 +106,8 @@ PDF;
 
         $watermarked = '%PDF-1.4 WATERMARK_SENTINEL: user=student; material=Watermark Test Material';
 
-        $watermarkService = new class($student, $material->parent?->title, $watermarked) extends PdfWatermarkService {
+        $watermarkService = new class($student, $material->parent?->title, $watermarked) extends PdfWatermarkService
+        {
             public function __construct(
                 private readonly User $expectedUser,
                 private readonly ?string $expectedTitle,
@@ -186,7 +187,8 @@ PDF;
         $cleanContent = $this->minimalValidPdfContent();
         File::put($storagePath.'/watermark-test.pdf', $cleanContent);
 
-        $watermarkService = new class extends PdfWatermarkService {
+        $watermarkService = new class extends PdfWatermarkService
+        {
             public function watermark(string $pdfPath, User $user, string $materialTitle, Carbon $accessedAt): string
             {
                 throw new \RuntimeException('Watermark failed');
@@ -216,7 +218,7 @@ PDF;
     {
         $sourcePath = tempnam(sys_get_temp_dir(), 'watermark-source-').'.pdf';
 
-        $sourcePdf = new \TCPDF();
+        $sourcePdf = new \TCPDF;
         $sourcePdf->setPrintHeader(false);
         $sourcePdf->setPrintFooter(false);
         $sourcePdf->AddPage();

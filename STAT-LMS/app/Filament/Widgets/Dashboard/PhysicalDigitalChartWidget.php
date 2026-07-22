@@ -169,5 +169,4 @@ class PhysicalDigitalChartWidget extends ChartWidget
 
         return [$labels, $physical, $digital];
     }
-
 }

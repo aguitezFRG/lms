@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use App\Services\PdfNormalizationService;
+use finfo;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Services\PdfNormalizationService;
-use finfo;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 

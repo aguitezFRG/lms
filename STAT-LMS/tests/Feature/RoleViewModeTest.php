@@ -242,7 +242,8 @@ class RoleViewModeTest extends TestCase
 
         $this->actingAs($admin)->withSession([RoleViewMode::SESSION_KEY => 'student']);
 
-        $page = new class extends ListCatalogs {
+        $page = new class extends ListCatalogs
+        {
             public function publicQuery(): \Illuminate\Database\Eloquent\Builder
             {
                 return $this->getQuery();
@@ -264,7 +265,8 @@ class RoleViewModeTest extends TestCase
 
         $this->actingAs($admin)->withSession([RoleViewMode::SESSION_KEY => 'faculty']);
 
-        $page = new class extends ListCatalogs {
+        $page = new class extends ListCatalogs
+        {
             public function publicQuery(): \Illuminate\Database\Eloquent\Builder
             {
                 return $this->getQuery();
