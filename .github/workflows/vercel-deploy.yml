@@ -1,0 +1,89 @@
+name: Deploy to Vercel
+
+on:
+  push:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vercel-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: sqlite3, pdo_sqlite, mbstring, intl, dom, xml, openssl, gd, zip
+          coverage: none
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install system tools
+        run: sudo apt-get update && sudo apt-get install --yes zip ripgrep
+
+      - name: Install Laravel dependencies
+        working-directory: STAT-LMS
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Configure test environment
+        working-directory: STAT-LMS
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Install frontend dependencies
+        working-directory: STAT-LMS
+        run: |
+          npm ci
+          npm --prefix client ci
+
+      - name: Run tests
+        working-directory: STAT-LMS
+        run: composer test
+
+      - name: Check PHP formatting
+        working-directory: STAT-LMS
+        run: ./vendor/bin/pint --test
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Link production environment
+        if: github.ref == 'refs/heads/main'
+        working-directory: STAT-LMS
+        run: vercel pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}"
+
+      - name: Link preview environment
+        if: github.ref != 'refs/heads/main'
+        working-directory: STAT-LMS
+        run: vercel pull --yes --environment=preview --token="${{ secrets.VERCEL_TOKEN }}"
+
+      - name: Build browser demo
+        working-directory: STAT-LMS
+        run: composer demo:build
+
+      - name: Deploy production
+        if: github.ref == 'refs/heads/main'
+        working-directory: STAT-LMS
+        run: vercel deploy --prebuilt --prod --token="${{ secrets.VERCEL_TOKEN }}"
+
+      - name: Deploy preview
+        if: github.ref != 'refs/heads/main'
+        working-directory: STAT-LMS
+        run: vercel deploy --prebuilt --token="${{ secrets.VERCEL_TOKEN }}"

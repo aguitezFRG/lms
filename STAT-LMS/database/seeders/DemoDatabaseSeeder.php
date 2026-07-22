@@ -32,15 +32,15 @@ class DemoDatabaseSeeder extends Seeder
         $password = '$2y$04$usesomesillystringfore7hnbRJHxXVLeakoG8K30oukPsA.ztMG';
 
         return [
-            $this->profile(UserSeeder::STUDENT_1_ID, 'Carlos Santos', 'Carlos', 'Santos', 'carlos.student@demo.invalid', 'student', '2024-00001', $password, $timestamp),
-            $this->profile(UserSeeder::FACULTY_1_ID, 'Ricardo Mendoza', 'Ricardo', 'Mendoza', 'ricardo.faculty@demo.invalid', 'faculty', '2008-00004', $password, $timestamp),
-            $this->profile(UserSeeder::STAFF_ID, 'Staff Custodian', 'Staff', 'Custodian', 'custodian@demo.invalid', 'staff/custodian', null, $password, $timestamp),
-            $this->profile(UserSeeder::COMMITTEE_ID, 'Committee Member', 'Committee', 'Member', 'committee@demo.invalid', 'committee', null, $password, $timestamp),
-            $this->profile(UserSeeder::IT_ID, 'IT Support', 'IT', 'Support', 'it@demo.invalid', 'it', null, $password, $timestamp),
-            $this->profile('22222222-2222-2222-2222-000000000009', 'Super Admin', 'Super', 'Admin', 'super-admin@demo.invalid', 'super_admin', null, $password, $timestamp),
-            $this->profile(UserSeeder::STUDENT_2_ID, 'Angelica Reyes', 'Angelica', 'Reyes', 'angelica.student@demo.invalid', 'student', '2024-00002', $password, $timestamp),
-            $this->profile(UserSeeder::STUDENT_3_ID, 'Rafael Cruz', 'Rafael', 'Cruz', 'rafael.student@demo.invalid', 'student', '2024-00003', $password, $timestamp),
-            $this->profile(UserSeeder::FACULTY_2_ID, 'Esperanza Garcia', 'Esperanza', 'Garcia', 'esperanza.faculty@demo.invalid', 'faculty', '2008-00005', $password, $timestamp),
+            $this->profile(UserSeeder::STUDENT_1_ID, 'Carlos Santos', 'Carlos', 'Santos', 'carlos.student@demo.lms', 'student', '2024-00001', $password, $timestamp),
+            $this->profile(UserSeeder::FACULTY_1_ID, 'Ricardo Mendoza', 'Ricardo', 'Mendoza', 'ricardo.faculty@demo.lms', 'faculty', '2008-00004', $password, $timestamp),
+            $this->profile(UserSeeder::STAFF_ID, 'Staff Custodian', 'Staff', 'Custodian', 'custodian@demo.lms', 'staff/custodian', null, $password, $timestamp),
+            $this->profile(UserSeeder::COMMITTEE_ID, 'Committee Member', 'Committee', 'Member', 'committee@demo.lms', 'committee', null, $password, $timestamp),
+            $this->profile(UserSeeder::IT_ID, 'IT Support', 'IT', 'Support', 'it@demo.lms', 'it', null, $password, $timestamp),
+            $this->profile('22222222-2222-2222-2222-000000000009', 'Super Admin', 'Super', 'Admin', 'super-admin@demo.lms', 'super_admin', null, $password, $timestamp),
+            $this->profile(UserSeeder::STUDENT_2_ID, 'Angelica Reyes', 'Angelica', 'Reyes', 'angelica.student@demo.lms', 'student', '2024-00002', $password, $timestamp),
+            $this->profile(UserSeeder::STUDENT_3_ID, 'Rafael Cruz', 'Rafael', 'Cruz', 'rafael.student@demo.lms', 'student', '2024-00003', $password, $timestamp),
+            $this->profile(UserSeeder::FACULTY_2_ID, 'Esperanza Garcia', 'Esperanza', 'Garcia', 'esperanza.faculty@demo.lms', 'faculty', '2008-00005', $password, $timestamp),
         ];
     }
 

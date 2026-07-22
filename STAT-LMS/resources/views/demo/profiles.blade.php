@@ -29,7 +29,7 @@
 <body class="min-h-screen bg-slate-100 text-slate-950">
     <main class="mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-6 py-12">
         <div class="mb-8 max-w-3xl">
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#8d1436]">Browser-local Laravel demo</p>
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#8d1436]">LMS Laravel demo</p>
             <h1 class="mt-3 text-4xl font-bold tracking-tight">Choose a demo profile</h1>
             <p class="mt-3 text-lg text-slate-600">Each profile uses the real Filament panels, Livewire actions, policies, and shared browser-local SQLite data.</p>
         </div>

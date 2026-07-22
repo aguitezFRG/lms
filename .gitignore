@@ -31,3 +31,6 @@ auth.json
 
 *.txt
 *report.pdf
+
+# Local deployment runbook
+/VERCEL_DEPLOYMENT.md
