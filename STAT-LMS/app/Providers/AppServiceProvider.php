@@ -36,7 +36,24 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // $this->app->singleton(
+        if (! config('demo.enabled')) {
+            return;
+        }
+
+        config()->set([
+            'cache.default' => 'file',
+            'database.default' => 'sqlite',
+            'database.connections.sqlite.database' => config('demo.database_path'),
+            'database.connections.sqlite.busy_timeout' => 5000,
+            'database.connections.sqlite.journal_mode' => 'MEMORY',
+            'database.connections.sqlite.synchronous' => 'NORMAL',
+            'filesystems.default' => 'local',
+            'filesystems.disks.local.root' => config('demo.storage_path'),
+            'mail.default' => 'log',
+            'queue.default' => 'sync',
+            'session.driver' => 'cookie',
+            'session.expire_on_close' => true,
+        ]);
     }
 
     /**
@@ -44,6 +61,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (config('demo.enabled')) {
+            URL::forceRootUrl(config('app.url'));
+        }
+
         Blade::componentNamespace('App\\Filament\\Components', 'onboarding');
         FilamentIcon::register([
             PanelsIconAlias::TOPBAR_OPEN_SIDEBAR_BUTTON => 'heroicon-o-bars-3',

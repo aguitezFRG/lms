@@ -2,9 +2,11 @@
 
 use App\Enums\UserRole;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\DemoProfileController;
 use App\Http\Controllers\MaterialStreamController;
 use App\Http\Controllers\PasswordEncryptionKeyController;
 use App\Http\Controllers\RoleViewModeController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -16,19 +18,28 @@ Route::get('/', function () {
             : redirect('/app');
     }
 
-    return redirect('/app/login');
+    return config('demo.enabled')
+        ? redirect()->route('demo.profiles.index')
+        : redirect('/app/login');
 });
+
+Route::get('/demo/profiles', [DemoProfileController::class, 'index'])->name('demo.profiles.index');
+Route::post('/demo/profiles', [DemoProfileController::class, 'select'])
+    ->withoutMiddleware(ValidateCsrfToken::class)
+    ->name('demo.profiles.select');
 
 // Public key for client-side password encryption — no auth required, no sensitive data
-Route::get('/password-encryption-key', PasswordEncryptionKeyController::class)
-    ->middleware('throttle:60,1')
-    ->name('password.encryption-key');
+if (! config('demo.enabled')) {
+    Route::get('/password-encryption-key', PasswordEncryptionKeyController::class)
+        ->middleware('throttle:60,1')
+        ->name('password.encryption-key');
 
-// Google OAuth routes — no auth middleware required for initial redirect/callback
-Route::middleware(['throttle:google-sso'])->group(function () {
-    Route::get('/auth/google/redirect', [GoogleController::class, 'redirect'])->name('auth.google.redirect');
-    Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('auth.google.callback');
-});
+    // Google OAuth routes — no auth middleware required for initial redirect/callback
+    Route::middleware(['throttle:google-sso'])->group(function () {
+        Route::get('/auth/google/redirect', [GoogleController::class, 'redirect'])->name('auth.google.redirect');
+        Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('auth.google.callback');
+    });
+}
 
 Route::middleware(['auth', 'throttle:material-stream'])->group(function () {
     Route::get('/materials/{record}/viewer', [MaterialStreamController::class, 'viewer'])

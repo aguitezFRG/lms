@@ -6,6 +6,7 @@
 
     $user = auth()->user();
     $selected = RoleViewMode::selectedRole();
+    $hiddenForDemoSuperAdmin = config('demo.enabled') && $user?->role === UserRole::SUPER_ADMIN;
 
     $options = [
         'actual' => ['label' => 'Actual', 'icon' => Heroicon::OutlinedIdentification],
@@ -15,7 +16,7 @@
     ];
 @endphp
 
-@if (RoleViewMode::canUse($user))
+@if (RoleViewMode::canUse($user) && ! $hiddenForDemoSuperAdmin)
     <div class="rr-role-view-switcher">
         <div class="rr-role-view-switcher-header">View as</div>
         <div class="rr-role-view-switcher-options" role="group" aria-label="View as">

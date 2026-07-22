@@ -22,6 +22,10 @@ class PdfNormalizationService
             throw new InvalidArgumentException("File is not a valid PDF: {$pdfPath}");
         }
 
+        if (config('demo.enabled')) {
+            return $pdfPath;
+        }
+
         $tempPath = tempnam(sys_get_temp_dir(), 'stat_lms_norm_').'.pdf';
 
         $command = sprintf(

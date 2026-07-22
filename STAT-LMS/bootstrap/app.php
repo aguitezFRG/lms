@@ -28,10 +28,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Http\Middleware\SetSecurityHeaders::class);
         $middleware->append(\App\Http\Middleware\TrackRequestTiming::class);
 
-        $middleware->web(append: [
-            \App\Http\Middleware\DecryptLivewirePasswords::class,
-        ]);
-
+        $middleware->web(
+            append: [
+                \App\Http\Middleware\DecryptLivewirePasswords::class,
+                \App\Http\Middleware\DemoAuthenticate::class,
+            ],
+        );
         $middleware->redirectGuestsTo('/login');
 
         $middleware->alias([

@@ -90,7 +90,7 @@ class UserForm
                         TextInput::make('password')
                             ->password()
                             ->revealable()
-                            ->required()
+                            ->required(fn (): bool => ! config('demo.enabled'))
                             ->dehydrated(fn ($state) => filled($state))
                             ->maxLength(255)
                             ->rules([
@@ -100,6 +100,7 @@ class UserForm
                                     ->symbols(),
                             ])
                             ->helperText('Minimum 8 characters with at least one uppercase letter, one lowercase letter, one number, and one symbol.')
+                            ->hidden(fn (): bool => config('demo.enabled'))
                             ->hiddenOn('edit'),
                     ])->columns(2),
 

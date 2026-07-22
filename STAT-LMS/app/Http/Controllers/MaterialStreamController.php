@@ -24,11 +24,11 @@ class MaterialStreamController extends Controller
 
         $path = $this->resolveMaterialPath($record);
 
-        if ($path === null) {
+        if ($path === null && ! config('demo.enabled')) {
             abort(404);
         }
 
-        if (! file_exists($path)) {
+        if (! config('demo.enabled') && ! file_exists($path)) {
             abort(404);
         }
 
@@ -56,6 +56,16 @@ class MaterialStreamController extends Controller
         $this->authorizeAccess($record);
 
         $path = $this->resolveMaterialPath($record);
+
+        if (config('demo.enabled') && ($path === null || ! file_exists($path))) {
+            $baseUrl = config('demo.static_asset_url');
+
+            abort_if(blank($baseUrl), 404);
+
+            return redirect()->away($baseUrl.'/pdfs/'.rawurlencode(basename((string) $record->file_name)), 302, [
+                'Cache-Control' => 'no-store, no-cache, must-revalidate',
+            ]);
+        }
 
         if ($path === null) {
             Log::warning('Stream blocked: invalid material file path', [

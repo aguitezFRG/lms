@@ -16,6 +16,15 @@ class User extends Authenticatable implements FilamentUser
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, HasUuids, Notifiable, SoftDeletes;
 
+    protected static function booted(): void
+    {
+        static::creating(function (User $user): void {
+            if (config('demo.enabled') && blank($user->password)) {
+                $user->password = 'demo-profile-has-no-usable-credential';
+            }
+        });
+    }
+
     /**
      * The attributes that are mass assignable.
      *

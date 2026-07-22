@@ -247,7 +247,10 @@ return [
     |
     */
 
-    'release_token' => env('LIVEWIRE_RELEASE_TOKEN', \Illuminate\Support\Str::random(32)),
+    'release_token' => env(
+        'LIVEWIRE_RELEASE_TOKEN',
+        hash('sha256', (string) env('APP_KEY', 'instat-lms')),
+    ),
 
     /*
     |---------------------------------------------------------------------------

@@ -2,13 +2,13 @@
 
 namespace App\Filament\Components\User;
 
-use Illuminate\Support\Facades\Blade;
+use App\Filament\Components\FeatureCards;
 
-class StudentFeatureCards
+class StudentFeatureCards extends FeatureCards
 {
     public static function render(): string
     {
-        return Blade::render(self::renderCards());
+        return self::renderHtml(self::renderCards());
     }
 
     private static function renderCards(): string

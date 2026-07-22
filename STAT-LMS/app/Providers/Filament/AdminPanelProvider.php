@@ -6,8 +6,9 @@ use App\Filament\Pages\AdminOnboarding;
 use App\Filament\Pages\Auth\AdminLogin;
 use App\Filament\Pages\Auth\AdminProfile;
 use App\Filament\Pages\Dashboard;
+use App\Http\Middleware\FilamentAuthenticate;
 use App\Http\Middleware\RedirectIfBanned;
-use Filament\Http\Middleware\Authenticate;
+use Filament\Actions\Action;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -47,7 +48,7 @@ class AdminPanelProvider extends PanelProvider
                 </div>
             '))
             ->brandName('INSTAT-RR-SPRIS')
-            ->login(AdminLogin::class)
+            ->login(config('demo.enabled') ? null : AdminLogin::class)
             ->colors([
                 'primary' => Color::hex('#8D1436'), // UP Maroon (PANTONE 1955C)
                 'success' => Color::hex('#014421'), // UP Forest Green (PANTONE 7484C)
@@ -71,7 +72,14 @@ class AdminPanelProvider extends PanelProvider
                 MenuItem::make()
                     ->label('My Profile')
                     ->url(fn () => AdminProfile::getUrl())
-                    ->icon(Heroicon::OutlinedUser),
+                    ->icon(Heroicon::OutlinedUser)
+                    ->visible(fn (): bool => ! config('demo.enabled')),
+                MenuItem::make()
+                    ->label('Switch demo profile')
+                    ->url(fn (): string => route('demo.profiles.index'))
+                    ->icon(Heroicon::OutlinedArrowPath)
+                    ->visible(fn (): bool => config('demo.enabled')),
+                'logout' => fn (Action $action): Action => $action->visible(fn (): bool => ! config('demo.enabled')),
             ])
             ->sidebarCollapsibleOnDesktop()
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
@@ -92,7 +100,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 RedirectIfBanned::class,
-                Authenticate::class,
+                FilamentAuthenticate::class,
             ])
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
@@ -100,7 +108,7 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,
-                fn () => view('filament.components.password-encryption-script'),
+                fn () => config('demo.enabled') ? '' : view('filament.components.password-encryption-script'),
             )
             ->renderHook(
                 PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,
@@ -108,7 +116,7 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
-                fn () => view('filament.components.google-sso-button'),
+                fn () => config('demo.enabled') ? '' : view('filament.components.google-sso-button'),
             )
             ->renderHook(
                 PanelsRenderHook::USER_MENU_PROFILE_AFTER,

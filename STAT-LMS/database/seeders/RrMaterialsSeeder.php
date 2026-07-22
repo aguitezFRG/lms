@@ -102,11 +102,10 @@ class RrMaterialsSeeder extends Seeder
             $targetPath = "{$dir}/{$copy['pdf_file']}";
             $sourcePath = database_path("seeders/.digital_copies/{$copy['pdf_file']}");
 
-            // Create directory if it doesn't exist
-            Storage::disk('local')->makeDirectory($dir);
-
-            // Copy PDF file to storage
-            Storage::disk('local')->put($targetPath, file_get_contents($sourcePath));
+            if (! config('demo.enabled')) {
+                Storage::disk('local')->makeDirectory($dir);
+                Storage::disk('local')->put($targetPath, file_get_contents($sourcePath));
+            }
 
             // Create the RrMaterials record
             RrMaterials::factory()->create([
