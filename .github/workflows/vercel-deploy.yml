@@ -53,6 +53,10 @@ jobs:
           npm ci
           npm --prefix client ci
 
+      - name: Build Laravel frontend
+        working-directory: STAT-LMS
+        run: npm run build
+
       - name: Run tests
         working-directory: STAT-LMS
         run: composer test
