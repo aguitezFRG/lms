@@ -39,3 +39,22 @@ export function internalPath(pathname) {
     const path = pathname.startsWith(PHP_PREFIX) ? pathname.slice(PHP_PREFIX.length) : pathname;
     return `${PHP_PREFIX}${path === '/' ? '/demo/profiles' : path}`;
 }
+
+export function livewireRedirectPayload(payload, location, requestUrl) {
+    if (! Array.isArray(payload?.components) || ! location) {
+        throw new Error('Invalid Livewire redirect response.');
+    }
+
+    const redirect = new URL(location, requestUrl).toString();
+
+    return {
+        components: payload.components.map((component) => ({
+            snapshot: component.snapshot,
+            effects: {
+                redirect,
+                redirectUsingNavigate: false,
+            },
+        })),
+        assets: [],
+    };
+}

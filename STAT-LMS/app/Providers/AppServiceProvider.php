@@ -17,6 +17,7 @@ use App\Observers\UserObserver;
 use App\Policies\DashboardPolicy;
 use App\Policies\SystemUsagePolicy;
 use Filament\Actions\Action;
+use Filament\Schemas\Schema;
 use Filament\Support\Facades\FilamentIcon;
 use Filament\View\PanelsIconAlias;
 use Illuminate\Auth\Events\Login;
@@ -28,6 +29,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Component;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -136,6 +138,25 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Action::configureUsing(function (Action $action) {
+            if (config('demo.enabled')) {
+                // Filament's partial action-modal renderer can emit an empty
+                // fragment in PHP-WASM. A full render keeps all action mounts
+                // and mutations on the stable Livewire rendering path.
+                $action
+                    ->mountUsing(static function (?Schema $schema, Component $livewire): void {
+                        $schema?->fill();
+
+                        if (method_exists($livewire, 'forceRender')) {
+                            $livewire->forceRender();
+                        }
+                    })
+                    ->before(static function (Component $livewire): void {
+                        if (method_exists($livewire, 'forceRender')) {
+                            $livewire->forceRender();
+                        }
+                    });
+            }
+
             // Log::info('Configuring action: ' . $action->getName());
             match ($action->getName()) {
                 'save', 'save changes', 'create' => $action->color('success'),

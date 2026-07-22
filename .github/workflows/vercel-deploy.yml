@@ -67,18 +67,18 @@ jobs:
         working-directory: STAT-LMS
         run: ./vendor/bin/pint --test
 
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
+      - name: Install pinned Vercel CLI
+        run: npm ci --prefix .github/vercel-cli --ignore-scripts --no-audit
 
       - name: Link production environment
         if: github.ref == 'refs/heads/main'
         working-directory: STAT-LMS
-        run: vercel pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}"
+        run: npm --prefix ../.github/vercel-cli exec -- vercel pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}"
 
       - name: Link preview environment
         if: github.ref != 'refs/heads/main'
         working-directory: STAT-LMS
-        run: vercel pull --yes --environment=preview --token="${{ secrets.VERCEL_TOKEN }}"
+        run: npm --prefix ../.github/vercel-cli exec -- vercel pull --yes --environment=preview --token="${{ secrets.VERCEL_TOKEN }}"
 
       - name: Build browser demo
         working-directory: STAT-LMS
@@ -87,9 +87,9 @@ jobs:
       - name: Deploy production
         if: github.ref == 'refs/heads/main'
         working-directory: STAT-LMS
-        run: vercel deploy --prebuilt --prod --token="${{ secrets.VERCEL_TOKEN }}"
+        run: npm --prefix ../.github/vercel-cli exec -- vercel deploy --prebuilt --prod --token="${{ secrets.VERCEL_TOKEN }}"
 
       - name: Deploy preview
         if: github.ref != 'refs/heads/main'
         working-directory: STAT-LMS
-        run: vercel deploy --prebuilt --token="${{ secrets.VERCEL_TOKEN }}"
+        run: npm --prefix ../.github/vercel-cli exec -- vercel deploy --prebuilt --token="${{ secrets.VERCEL_TOKEN }}"

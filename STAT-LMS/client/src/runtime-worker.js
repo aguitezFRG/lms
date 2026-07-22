@@ -12,6 +12,7 @@ import sqlite from 'php-wasm-sqlite/8.4.mjs';
 import xml from 'php-wasm-xml/8.4.mjs';
 import zlib from 'php-wasm-zlib/8.4.mjs';
 import { unzipSync } from 'fflate';
+import { livewireRedirectPayload } from './runtime-contract.js';
 
 const APP_ROOT = '/preload/app';
 const DATABASE_PATH = '/persist/database/demo.sqlite';
@@ -116,6 +117,18 @@ async function addCsrfBodyField(request) {
     return request;
 }
 
+async function handleLivewireRequest(request) {
+    const payload = await request.clone().json();
+    const response = await runtime.request(request);
+
+    if (response.status < 300 || response.status >= 400) return response;
+
+    const location = response.headers.get('location');
+    if (! location) return response;
+
+    return Response.json(livewireRedirectPayload(payload, location, request.url));
+}
+
 const runtime = new Php84Worker({
     prefix: '/__php',
     docroot: `${APP_ROOT}/public`,
@@ -170,7 +183,11 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(fetch(new Request(staticUrl, event.request)));
         return;
     }
-    if (/^\/__php\/livewire-[^/]+\/(update|upload-file)$/.test(url.pathname)) {
+    if (/^\/__php\/livewire-[^/]+\/update$/.test(url.pathname)) {
+        event.respondWith(addCsrfBodyField(event.request).then(handleLivewireRequest));
+        return;
+    }
+    if (/^\/__php\/livewire-[^/]+\/upload-file$/.test(url.pathname)) {
         event.respondWith(addCsrfBodyField(event.request).then((request) => runtime.request(request)));
         return;
     }

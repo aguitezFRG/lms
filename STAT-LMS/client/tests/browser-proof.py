@@ -60,6 +60,7 @@ with sync_playwright() as playwright:
         inner_frame.get_by_label("Email", exact=False).fill("browser.probe@demo.invalid")
         inner_frame.get_by_role("button", name="Create", exact=True).click()
         inner_frame.get_by_text("Browser Probe", exact=True).first.wait_for(timeout=120_000)
+        assert inner_frame.get_by_text("Error while loading page", exact=False).count() == 0
 
         inner_frame.goto(inner_frame.url, wait_until="domcontentloaded", timeout=120_000)
         inner_frame.goto(f"{BASE_URL}/__php/demo/profiles", wait_until="domcontentloaded", timeout=120_000)
@@ -75,6 +76,19 @@ with sync_playwright() as playwright:
         inner_frame.get_by_role("button", name="Keep current profile").click()
         print("livewire_mutation_persisted=true")
         print("profile_switch_modal_centered=true")
+
+        inner_frame.get_by_role("button", name="Carlos Santos", exact=False).click()
+        inner_frame.get_by_role("button", name="Switch profile").click()
+        inner_frame.locator("[wire\\:snapshot]").first.wait_for(timeout=120_000)
+        catalog_url = f"{BASE_URL}/__php/app/user/catalogs/22222222-2222-2222-2222-000000000003"
+        inner_frame.goto(catalog_url, wait_until="domcontentloaded", timeout=120_000)
+        inner_frame.get_by_role("button", name="Request Digital Copy", exact=True).click()
+        inner_frame.get_by_role("button", name="Submit Request", exact=True).click()
+        inner_frame.wait_for_timeout(5_000)
+        assert inner_frame.get_by_text("Error while loading page", exact=False).count() == 0
+        inner_frame.goto(catalog_url, wait_until="domcontentloaded", timeout=120_000)
+        assert inner_frame.get_by_role("button", name="Request Digital Copy", exact=True).is_disabled()
+        print("catalog_request_mutation_persisted=true")
         page.screenshot(path=f"/tmp/instat-browser-proof-{ENGINE}.png", full_page=True)
     except Exception:
         fatal = page.locator("#fatal-message")

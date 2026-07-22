@@ -4,6 +4,7 @@ import test from 'node:test';
 
 import {
     internalPath,
+    livewireRedirectPayload,
     sha256Hex,
     validateManifest,
     verifyPayload,
@@ -37,6 +38,26 @@ test('normalizes public paths into the internal PHP prefix', () => {
     assert.equal(internalPath('/'), '/__php/demo/profiles');
     assert.equal(internalPath('/admin'), '/__php/admin');
     assert.equal(internalPath('/__php/app'), '/__php/app');
+});
+
+test('normalizes CGI redirects into Livewire redirect effects', () => {
+    const snapshot = '{"data":{},"memo":{}}';
+    const payload = livewireRedirectPayload(
+        { components: [{ snapshot }] },
+        '/__php/admin/users/123',
+        'https://demo.example/__php/livewire-release/update',
+    );
+
+    assert.deepEqual(payload, {
+        components: [{
+            snapshot,
+            effects: {
+                redirect: 'https://demo.example/__php/admin/users/123',
+                redirectUsingNavigate: false,
+            },
+        }],
+        assets: [],
+    });
 });
 
 test('verifies payload size and checksum before boot', async () => {
