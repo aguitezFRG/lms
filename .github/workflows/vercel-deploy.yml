@@ -35,7 +35,7 @@ jobs:
           node-version: "22"
 
       - name: Install system tools
-        run: sudo apt-get update && sudo apt-get install --yes zip ripgrep
+        run: sudo apt-get update && sudo apt-get install --yes ghostscript zip ripgrep
 
       - name: Install Laravel dependencies
         working-directory: STAT-LMS
@@ -45,7 +45,9 @@ jobs:
         working-directory: STAT-LMS
         run: |
           cp .env.example .env
+          sed --in-place '/^DEMO_MODE=/d' .env
           php artisan key:generate
+          php artisan app:generate-password-keys --force --no-interaction
 
       - name: Install frontend dependencies
         working-directory: STAT-LMS
