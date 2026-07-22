@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.tsbuildinfo
+public/build/
+public/css/
+public/fonts/
+public/images/
+public/js/
+public/pdfs/
+public/laravel-demo-v1.zip

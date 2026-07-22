@@ -9,6 +9,7 @@
 /.idea
 /.nova
 /.phpunit.cache
+/.vercel
 /.vscode
 /.zed
 /auth.json
@@ -19,6 +20,7 @@
 /storage/*.key
 /storage/pail
 /vendor
+/laravel
 Homestead.json
 Homestead.yaml
 Thumbs.db

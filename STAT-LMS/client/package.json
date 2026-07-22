@@ -1,0 +1,27 @@
+{
+  "name": "instat-laravel-wasm-demo",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "node --test tests/*.test.mjs",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "fflate": "0.8.2",
+    "php-cgi-wasm": "0.1.0",
+    "php-wasm-dom": "0.1.0",
+    "php-wasm-gd": "0.1.0",
+    "php-wasm-intl": "0.1.0",
+    "php-wasm-libxml": "0.1.0",
+    "php-wasm-libzip": "0.1.0",
+    "php-wasm-mbstring": "0.1.0",
+    "php-wasm-openssl": "0.1.0",
+    "php-wasm-sqlite": "0.1.0",
+    "php-wasm-xml": "0.1.0",
+    "php-wasm-zlib": "0.1.0",
+    "vite": "8.1.5"
+  }
+}

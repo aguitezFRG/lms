@@ -1,0 +1,16 @@
+/assets/runtime-worker-*.js
+  Service-Worker-Allowed: /
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/runtime/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/demo-runtime-manifest.json
+  Cache-Control: no-store
+
+/pdfs/*
+  Cache-Control: no-store
+

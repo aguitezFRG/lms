@@ -54,6 +54,7 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
+        "demo:build": "bash scripts/build-browser-demo.sh",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi",

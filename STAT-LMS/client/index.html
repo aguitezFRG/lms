@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#8d1436" />
+    <meta name="description" content="Native Laravel and Filament browser demo for the LMS" />
+    <title>LMS Demo</title>
+  </head>
+  <body>
+    <div id="runtime-shell" class="runtime-shell">
+      <section id="startup" class="startup" aria-live="polite">
+        <div class="mark">INSTAT</div>
+        <h1>Opening the LMS demo</h1>
+        <p id="startup-message">Checking the PHP runtime…</p>
+        <progress id="startup-progress" max="100" value="5"></progress>
+        <details id="fatal" hidden>
+          <summary>Runtime details</summary>
+          <pre id="fatal-message"></pre>
+          <button id="retry" type="button">Retry startup</button>
+        </details>
+      </section>
+      <iframe id="laravel" title="LMS Laravel application" hidden></iframe>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
