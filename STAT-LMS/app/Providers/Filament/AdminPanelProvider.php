@@ -110,7 +110,9 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,
-                fn () => config('demo.enabled') ? view('filament.components.demo-notification-bridge') : '',
+                fn () => config('demo.enabled') && config('demo.runtime') === 'browser'
+                    ? view('filament.components.demo-notification-bridge')
+                    : '',
             )
             ->renderHook(
                 PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,

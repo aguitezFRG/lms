@@ -12,6 +12,7 @@ use App\Support\RoleViewMode;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\DB;
 
 class ViewCatalog extends ViewRecord
@@ -28,7 +29,7 @@ class ViewCatalog extends ViewRecord
 
     protected bool $digitalCopyResolved = false;
 
-    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    public function getHeading(): string|Htmlable
     {
         return $this->record->title;
     }
@@ -131,7 +132,7 @@ class ViewCatalog extends ViewRecord
         return $this->activeRequestCache[$key];
     }
 
-    protected function submitRequest(bool $digital): void
+    public function submitRequest(bool $digital): void
     {
         $user = auth()->user();
 

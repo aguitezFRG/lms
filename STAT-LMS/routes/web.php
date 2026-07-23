@@ -6,6 +6,8 @@ use App\Http\Controllers\DemoProfileController;
 use App\Http\Controllers\MaterialStreamController;
 use App\Http\Controllers\PasswordEncryptionKeyController;
 use App\Http\Controllers\RoleViewModeController;
+use App\Http\Controllers\SharedDemoHealthController;
+use App\Http\Controllers\SharedDemoResetController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
@@ -52,3 +54,12 @@ Route::middleware(['auth', 'throttle:material-stream'])->group(function () {
 Route::post('/admin/role-view-mode', RoleViewModeController::class)
     ->middleware(['auth'])
     ->name('role-view-mode.update');
+
+Route::get('/health/ready', SharedDemoHealthController::class)
+    ->middleware('throttle:10,1')
+    ->name('shared-demo.health');
+
+Route::post('/internal/shared-demo/reset', SharedDemoResetController::class)
+    ->withoutMiddleware(ValidateCsrfToken::class)
+    ->middleware('throttle:2,1')
+    ->name('shared-demo.reset');

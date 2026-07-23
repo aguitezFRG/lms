@@ -38,9 +38,9 @@ class SendDueSoonNotifications extends Command
                 $alreadyNotified = DB::table('notifications')
                     ->where('notifiable_type', get_class($event->user))
                     ->where('notifiable_id', $event->user->id)
-                    ->whereRaw("JSON_EXTRACT(data, '$.type') = 'borrow_due_soon'")
-                    ->whereRaw("JSON_EXTRACT(data, '$.event_id') = ?", [$event->id])
-                    ->whereRaw("JSON_EXTRACT(data, '$.days_until_due') = ?", [$days])
+                    ->where('data->type', 'borrow_due_soon')
+                    ->where('data->event_id', $event->id)
+                    ->where('data->days_until_due', $days)
                     ->whereDate('created_at', today())
                     ->exists();
 

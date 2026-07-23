@@ -6,7 +6,9 @@ use App\Filament\Pages\SystemUsage;
 use App\Models\RrMaterialParents;
 use Carbon\Carbon;
 use Filament\Widgets\Widget;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use LogicException;
 
 class MaterialStatisticsWidget extends Widget
 {
@@ -122,10 +124,7 @@ class MaterialStatisticsWidget extends Widget
         }
 
         $multiFrame = count($this->frames) > 1;
-        $isSqlite = config('database.default') === 'sqlite';
-        $yearExpr = $isSqlite
-            ? "CAST(strftime('%Y', created_at) AS INTEGER)"
-            : 'YEAR(created_at)';
+        $yearExpr = $this->yearExpression();
 
         if ($multiFrame) {
             $labels = ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'];
@@ -233,5 +232,15 @@ class MaterialStatisticsWidget extends Widget
                 ],
             ],
         ];
+    }
+
+    private function yearExpression(): string
+    {
+        return match (DB::getDriverName()) {
+            'sqlite' => "CAST(strftime('%Y', created_at) AS INTEGER)",
+            'pgsql' => 'EXTRACT(YEAR FROM created_at)::integer',
+            'mysql', 'mariadb' => 'YEAR(created_at)',
+            default => throw new LogicException('Unsupported database driver for material statistics grouping.'),
+        };
     }
 }

@@ -4,10 +4,13 @@ namespace App\Filament\Widgets\SystemUsage;
 
 use App\Filament\Pages\SystemUsage;
 use App\Models\MaterialAccessEvents;
+use Carbon\Carbon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use LogicException;
 
 class MonthlyTrendTableWidget extends BaseWidget
 {
@@ -31,9 +34,7 @@ class MonthlyTrendTableWidget extends BaseWidget
 
     public function table(Table $table): Table
     {
-        $dateFormat = config('database.default') === 'sqlite'
-            ? "strftime('%Y-%m', created_at)"
-            : "DATE_FORMAT(created_at, '%Y-%m')";
+        $dateFormat = $this->dateFormatExpression();
 
         return $table
             ->defaultKeySort(false)
@@ -49,7 +50,7 @@ class MonthlyTrendTableWidget extends BaseWidget
                 TextColumn::make('month')
                     ->label('Month')
                     ->sortable()
-                    ->formatStateUsing(fn (string $state): string => \Carbon\Carbon::createFromFormat('Y-m', $state)->format('F Y')),
+                    ->formatStateUsing(fn (string $state): string => Carbon::createFromFormat('Y-m', $state)->format('F Y')),
 
                 TextColumn::make('count')
                     ->label('Requests')
@@ -102,5 +103,15 @@ class MonthlyTrendTableWidget extends BaseWidget
             ->emptyStateIcon('heroicon-o-calendar')
             ->paginated(false)
             ->deferLoading();
+    }
+
+    private function dateFormatExpression(): string
+    {
+        return match (DB::getDriverName()) {
+            'sqlite' => "strftime('%Y-%m', created_at)",
+            'pgsql' => "to_char(created_at, 'YYYY-MM')",
+            'mysql', 'mariadb' => "DATE_FORMAT(created_at, '%Y-%m')",
+            default => throw new LogicException('Unsupported database driver for monthly trend grouping.'),
+        };
     }
 }

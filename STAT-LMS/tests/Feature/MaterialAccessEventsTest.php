@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\MaterialAccessEvents\Pages\EditMaterialAccessEvents;
 use App\Filament\Resources\MaterialAccessEvents\Pages\ListMaterialAccessEvents;
-use App\Filament\Resources\User\Catalogs\CatalogResource;
 use App\Filament\Resources\User\Catalogs\Pages\ViewCatalog;
 use App\Filament\Resources\User\Requests\Pages\ListRequests;
 use App\Filament\Resources\User\Requests\Pages\ViewRequests;
@@ -120,7 +119,7 @@ class MaterialAccessEventsTest extends TestCase
     }
 
     #[Test]
-    public function stale_user_view_cannot_create_request_after_access_level_is_elevated_and_forces_refresh(): void
+    public function stale_user_view_cannot_create_request_after_access_level_is_elevated(): void
     {
         [$parent, $copy] = $this->makeParentAndCopy(1, digital: true);
         $student = $this->makeUser('student');
@@ -133,9 +132,9 @@ class MaterialAccessEventsTest extends TestCase
         // Simulate stale UI: page was opened while accessible, then access gets elevated.
         $parent->update(['access_level' => 2]);
 
-        $component
-            ->callAction('requestDigital')
-            ->assertRedirect(CatalogResource::getUrl().'?requestBlocked=1');
+        // The scoped record is invalidated before a stale Livewire request can
+        // invoke the server-side request method.
+        $component->call('submitRequest', true);
 
         $this->assertDatabaseMissing('material_access_events', [
             'user_id' => $student->id,

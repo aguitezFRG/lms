@@ -7,20 +7,28 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (DB::getDriverName() === 'sqlite') {
-            // SQLite supports partial indexes — simplest and most precise approach.
-            DB::statement('CREATE UNIQUE INDEX rr_materials_one_digital_per_parent
+        match (DB::getDriverName()) {
+            'sqlite' => DB::statement('CREATE UNIQUE INDEX rr_materials_one_digital_per_parent
                 ON rr_materials (material_parent_id)
-                WHERE is_digital = 1 AND deleted_at IS NULL');
-        } else {
-            // MariaDB does not support partial indexes, and MariaDB 10.6 does not allow
-            // indexing virtual generated columns that use IF()/CASE WHEN expressions
-            // (error 1901). Instead we enforce the constraint via BEFORE INSERT and
-            // BEFORE UPDATE triggers.
-            //
-            // The triggers raise SQLSTATE 45000 when a second non-deleted digital copy
-            // would be created for the same material_parent_id.
-            DB::unprepared('
+                WHERE is_digital = 1 AND deleted_at IS NULL'),
+            'pgsql' => DB::statement('CREATE UNIQUE INDEX rr_materials_one_digital_per_parent
+                ON rr_materials (material_parent_id)
+                WHERE is_digital = TRUE AND deleted_at IS NULL'),
+            'mysql', 'mariadb' => $this->createMySqlTriggers(),
+            default => throw new LogicException('Unsupported database driver for digital-copy uniqueness.'),
+        };
+    }
+
+    private function createMySqlTriggers(): void
+    {
+        // MariaDB does not support partial indexes, and MariaDB 10.6 does not allow
+        // indexing virtual generated columns that use IF()/CASE WHEN expressions
+        // (error 1901). Instead we enforce the constraint via BEFORE INSERT and
+        // BEFORE UPDATE triggers.
+        //
+        // The triggers raise SQLSTATE 45000 when a second non-deleted digital copy
+        // would be created for the same material_parent_id.
+        DB::unprepared('
                 CREATE TRIGGER rr_materials_unique_digital_before_insert
                 BEFORE INSERT ON rr_materials
                 FOR EACH ROW
@@ -39,7 +47,7 @@ return new class extends Migration
                 END
             ');
 
-            DB::unprepared('
+        DB::unprepared('
                 CREATE TRIGGER rr_materials_unique_digital_before_update
                 BEFORE UPDATE ON rr_materials
                 FOR EACH ROW
@@ -58,16 +66,20 @@ return new class extends Migration
                     END IF;
                 END
             ');
-        }
     }
 
     public function down(): void
     {
-        if (DB::getDriverName() === 'sqlite') {
-            DB::statement('DROP INDEX IF EXISTS rr_materials_one_digital_per_parent');
-        } else {
-            DB::unprepared('DROP TRIGGER IF EXISTS rr_materials_unique_digital_before_insert');
-            DB::unprepared('DROP TRIGGER IF EXISTS rr_materials_unique_digital_before_update');
-        }
+        match (DB::getDriverName()) {
+            'sqlite', 'pgsql' => DB::statement('DROP INDEX IF EXISTS rr_materials_one_digital_per_parent'),
+            'mysql', 'mariadb' => $this->dropMySqlTriggers(),
+            default => throw new LogicException('Unsupported database driver for digital-copy uniqueness.'),
+        };
+    }
+
+    private function dropMySqlTriggers(): void
+    {
+        DB::unprepared('DROP TRIGGER IF EXISTS rr_materials_unique_digital_before_insert');
+        DB::unprepared('DROP TRIGGER IF EXISTS rr_materials_unique_digital_before_update');
     }
 };

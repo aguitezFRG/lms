@@ -1,0 +1,119 @@
+name: Shared Demo CI
+
+on:
+  push:
+    branches:
+      - demo/render-supabase-vercel
+  pull_request:
+    branches:
+      - demo/render-supabase-vercel
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shared-demo-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: instat_test
+          POSTGRES_USER: instat
+          POSTGRES_PASSWORD: instat
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U instat -d instat_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    defaults:
+      run:
+        working-directory: STAT-LMS
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: curl, dom, fileinfo, gd, intl, mbstring, openssl, pdo_pgsql, pdo_sqlite, simplexml, xml, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            STAT-LMS/package-lock.json
+            STAT-LMS/client/package-lock.json
+
+      - name: Install system tools
+        run: sudo apt-get update && sudo apt-get install --yes ghostscript
+
+      - name: Install dependencies
+        run: |
+          composer install --no-interaction --no-progress --prefer-dist
+          npm ci
+          npm --prefix client ci
+
+      - name: Audit every dependency tree
+        run: |
+          composer audit --locked --no-interaction --format=summary
+          npm audit
+          npm --prefix client audit
+
+      - name: Run SQLite regression suite
+        run: composer test
+
+      - name: Verify a fresh PostgreSQL migration and canonical seed
+        env:
+          APP_ENV: testing
+          APP_KEY: base64:7AUn2bZP9u2BPzEMHf7FL68jvBBRVPcZLvxxUNiJhGY=
+          DEMO_MODE: "true"
+          DEMO_RUNTIME: server
+          DEMO_MATERIAL_DISK: local
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: instat_test
+          DB_USERNAME: instat
+          DB_PASSWORD: instat
+          DB_SCHEMA: public
+          DB_SSLMODE: disable
+          FILESYSTEM_DISK: local
+          SESSION_DRIVER: database
+          CACHE_STORE: database
+          QUEUE_CONNECTION: sync
+          CF_ACCESS_ENFORCED: "false"
+        run: |
+          php artisan migrate:fresh --force
+          php artisan demo:bootstrap-shared --force
+          php artisan demo:health-shared --json
+
+      - name: Check PHP formatting
+        run: ./vendor/bin/pint --test
+
+      - name: Build both frontend variants
+        run: |
+          npm run build
+          npm --prefix client test
+          npm --prefix client run build
+          composer demo:build
+
+      - name: Validate production dependency platform
+        run: composer check-platform-reqs --no-dev
+
+      - name: Build Render container
+        working-directory: .
+        run: docker build --file STAT-LMS/Dockerfile.render --tag instat-shared-demo:test STAT-LMS
