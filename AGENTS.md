@@ -39,4 +39,4 @@ Consult `TASTES.md` before relevant decisions. Record every user-stated preferen
 
 ## Agent Delegation
 
-The primary agent owns planning, orchestration, integration, and decisions. Use no more than two sub-agents for this repository task. Reserve GPT-5.4 for diagnosing and fixing a concrete failure; use GPT-5.4-mini for exploration and straightforward implementation work.
+The primary agent owns planning, orchestration, integration, and decisions. Use no more than two sub-agents at one time. Give every sub-agent a detailed execution plan, keep assignments mutually exclusive, and limit sub-agents to executing the user's approved plan rather than revising scope or making product decisions. Prefer GPT-5.4-mini for plan execution, exploration, and straightforward implementation; GPT-5.4 may be used for focused exploration, diagnosis, debugging, or testing. If those exact model labels are unavailable, use the closest available coding model and disclose the substitution. Interrupt a sub-agent that fails to show concrete progress within five minutes; request its completed-checks/blockers audit before replacing it or finishing the work in the primary agent.
