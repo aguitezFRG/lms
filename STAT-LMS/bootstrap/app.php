@@ -1,8 +1,16 @@
 <?php
 
+use App\Http\Middleware\DecryptLivewirePasswords;
+use App\Http\Middleware\DemoAuthenticate;
+use App\Http\Middleware\EnsureProfileComplete;
+use App\Http\Middleware\SetSecurityHeaders;
+use App\Http\Middleware\TrackRequestTiming;
+use App\Http\Middleware\VerifyCloudflareAccess;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,30 +26,33 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->trustProxies(
             at: $trustedProxies === ['*'] ? '*' : $trustedProxies,
-            headers: \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR |
-                 \Illuminate\Http\Request::HEADER_X_FORWARDED_HOST |
-                 \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT |
-                 \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO
+            headers: Request::HEADER_X_FORWARDED_FOR |
+                 Request::HEADER_X_FORWARDED_HOST |
+                 Request::HEADER_X_FORWARDED_PORT |
+                 Request::HEADER_X_FORWARDED_PROTO
         );
 
         // Decrypt RSA-encrypted password fields from Livewire update payloads
-        $middleware->append(\App\Http\Middleware\SetSecurityHeaders::class);
-        $middleware->append(\App\Http\Middleware\TrackRequestTiming::class);
+        $middleware->append(SetSecurityHeaders::class);
+        $middleware->append(TrackRequestTiming::class);
 
         $middleware->web(
+            prepend: [
+                VerifyCloudflareAccess::class,
+            ],
             append: [
-                \App\Http\Middleware\DecryptLivewirePasswords::class,
-                \App\Http\Middleware\DemoAuthenticate::class,
+                DecryptLivewirePasswords::class,
+                DemoAuthenticate::class,
             ],
         );
         $middleware->prependToPriorityList(
-            \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
-            \App\Http\Middleware\DemoAuthenticate::class,
+            AuthenticatesRequests::class,
+            DemoAuthenticate::class,
         );
         $middleware->redirectGuestsTo('/login');
 
         $middleware->alias([
-            'profile.complete' => \App\Http\Middleware\EnsureProfileComplete::class,
+            'profile.complete' => EnsureProfileComplete::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

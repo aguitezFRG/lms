@@ -409,15 +409,7 @@ class ListCatalogs extends Page
             })
 
             ->when($this->adviserFilter !== '', function ($q) {
-                $driver = config('database.default');
-                if ($driver === 'mysql') {
-                    $q->whereRaw(
-                        'JSON_CONTAINS(adviser, ?)',
-                        [json_encode($this->adviserFilter)]
-                    );
-                } else {
-                    $q->whereRaw('adviser LIKE ?', ['%"'.$this->adviserFilter.'"%']);
-                }
+                $q->whereJsonContains('adviser', $this->adviserFilter);
             })
 
             // ── Publication date range ────────────────────────────────────────
@@ -430,15 +422,7 @@ class ListCatalogs extends Page
             ->when(! empty($this->sdgFilter), function ($q) {
                 $q->where(function ($inner) {
                     foreach ($this->sdgFilter as $sdg) {
-                        $driver = config('database.default');
-                        if ($driver === 'mysql') {
-                            $inner->orWhereRaw(
-                                'JSON_CONTAINS(sdgs, ?)',
-                                [json_encode($sdg)]
-                            );
-                        } else {
-                            $inner->orWhereRaw('sdgs LIKE ?', ['%"'.$sdg.'"%']);
-                        }
+                        $inner->orWhereJsonContains('sdgs', $sdg);
                     }
                 });
             })

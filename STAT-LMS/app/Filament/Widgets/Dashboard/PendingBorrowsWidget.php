@@ -11,6 +11,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class PendingBorrowsWidget extends BaseWidget
@@ -71,14 +72,21 @@ class PendingBorrowsWidget extends BaseWidget
                     ->modalHeading('Approve borrow request?')
                     ->modalSubmitActionLabel('Yes, approve')
                     ->action(function (MaterialAccessEvents $record): void {
-                        $record->update([
-                            'status' => 'approved',
-                            'approver_id' => auth()->id(),
-                            'approved_at' => now(),
-                            'due_at' => now()->addDays(14)->endOfDay(),
-                        ]);
+                        $result = $this->approvePendingBorrow($record);
                         Cache::forget('dashboard.pending_borrows');
-                        Notification::make()->title('Request approved')->success()->send();
+                        match ($result) {
+                            'approved' => Notification::make()->title('Request approved')->success()->send(),
+                            'unavailable' => Notification::make()
+                                ->title('Physical copy is no longer available')
+                                ->body('Another visitor received this copy first. The request remains pending for review.')
+                                ->warning()
+                                ->send(),
+                            default => Notification::make()
+                                ->title('Borrow request already actioned')
+                                ->body('Another visitor changed this request first. The table has been refreshed.')
+                                ->warning()
+                                ->send(),
+                        };
                         $this->dispatch('request-actioned');
                     }),
 
@@ -107,18 +115,79 @@ class PendingBorrowsWidget extends BaseWidget
                             ->hintColor('gray'),
                     ])
                     ->action(function (array $data, MaterialAccessEvents $record): void {
-                        $record->update([
+                        $updated = $this->transitionPendingBorrow($record, [
                             'status' => 'rejected',
                             'approver_id' => auth()->id(),
                             'rejection_reason' => $data['rejection_reason'] ?? null,
                         ]);
                         Cache::forget('dashboard.pending_borrows');
-                        Notification::make()->title('Request rejected')->danger()->send();
+                        $notification = Notification::make()
+                            ->title($updated ? 'Request rejected' : 'Borrow request already actioned');
+
+                        if ($updated) {
+                            $notification->danger()->send();
+                        } else {
+                            $notification
+                                ->body('Another visitor changed this request first. The table has been refreshed.')
+                                ->warning()
+                                ->send();
+                        }
                         $this->dispatch('request-actioned');
                     }),
             ])
             ->emptyStateHeading('No pending borrow requests')
             ->emptyStateIcon('heroicon-o-book-open')
             ->paginated([10, 25]);
+    }
+
+    private function approvePendingBorrow(MaterialAccessEvents $record): string
+    {
+        return DB::transaction(function () use ($record): string {
+            $pending = MaterialAccessEvents::query()
+                ->whereKey($record->getKey())
+                ->where('status', 'pending')
+                ->lockForUpdate()
+                ->first();
+
+            if ($pending === null) {
+                return 'stale';
+            }
+
+            $copy = $pending->material()->lockForUpdate()->first();
+            if ($copy === null || ! $copy->is_available || $copy->trashed()) {
+                return 'unavailable';
+            }
+
+            $pending->update([
+                'status' => 'approved',
+                'approver_id' => auth()->id(),
+                'approved_at' => now(),
+                'due_at' => now()->addDays(14)->endOfDay(),
+            ]);
+
+            return 'approved';
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function transitionPendingBorrow(MaterialAccessEvents $record, array $attributes): bool
+    {
+        return DB::transaction(function () use ($record, $attributes): bool {
+            $pending = MaterialAccessEvents::query()
+                ->whereKey($record->getKey())
+                ->where('status', 'pending')
+                ->lockForUpdate()
+                ->first();
+
+            if ($pending === null) {
+                return false;
+            }
+
+            $pending->update($attributes);
+
+            return true;
+        });
     }
 }

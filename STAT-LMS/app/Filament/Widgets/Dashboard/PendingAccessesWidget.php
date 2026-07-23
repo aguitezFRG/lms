@@ -11,6 +11,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class PendingAccessesWidget extends BaseWidget
@@ -85,14 +86,14 @@ class PendingAccessesWidget extends BaseWidget
                     ->modalDescription('The user will be notified and granted access to the digital material.')
                     ->modalSubmitActionLabel('Yes, approve')
                     ->action(function (MaterialAccessEvents $record): void {
-                        $record->update([
+                        $updated = $this->transitionPendingRequest($record, [
                             'status' => 'approved',
                             'approver_id' => auth()->id(),
                             'approved_at' => now(),
                             'due_at' => now()->addDays(7)->endOfDay(),
                         ]);
                         Cache::forget('dashboard.pending_accesses');
-                        Notification::make()->title('Access request approved')->success()->send();
+                        $this->sendTransitionNotification($updated, 'Access request approved', 'Access request already actioned');
                         $this->dispatch('request-actioned');
                     }),
 
@@ -121,18 +122,57 @@ class PendingAccessesWidget extends BaseWidget
                             ->hintColor('gray'),
                     ])
                     ->action(function (array $data, MaterialAccessEvents $record): void {
-                        $record->update([
+                        $updated = $this->transitionPendingRequest($record, [
                             'status' => 'rejected',
                             'approver_id' => auth()->id(),
                             'rejection_reason' => $data['rejection_reason'] ?? null,
                         ]);
                         Cache::forget('dashboard.pending_accesses');
-                        Notification::make()->title('Access request rejected')->danger()->send();
+                        $this->sendTransitionNotification($updated, 'Access request rejected', 'Access request already actioned', danger: true);
                         $this->dispatch('request-actioned');
                     }),
             ])
             ->emptyStateHeading('No pending access requests')
             ->emptyStateIcon('heroicon-o-paper-airplane')
             ->paginated([10, 25]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function transitionPendingRequest(MaterialAccessEvents $record, array $attributes): bool
+    {
+        return DB::transaction(function () use ($record, $attributes): bool {
+            $pending = MaterialAccessEvents::query()
+                ->whereKey($record->getKey())
+                ->where('status', 'pending')
+                ->lockForUpdate()
+                ->first();
+
+            if ($pending === null) {
+                return false;
+            }
+
+            $pending->update($attributes);
+
+            return true;
+        });
+    }
+
+    private function sendTransitionNotification(
+        bool $updated,
+        string $successTitle,
+        string $staleTitle,
+        bool $danger = false,
+    ): void {
+        $notification = Notification::make()->title($updated ? $successTitle : $staleTitle);
+
+        if (! $updated) {
+            $notification->body('Another visitor changed this request first. The table has been refreshed.')->warning()->send();
+
+            return;
+        }
+
+        ($danger ? $notification->danger() : $notification->success())->send();
     }
 }

@@ -40,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        if (! config('demo.enabled')) {
+        if (! config('demo.enabled') || config('demo.runtime') !== 'browser') {
             return;
         }
 
@@ -67,7 +67,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (config('demo.enabled')) {
+        if (config('demo.enabled') && config('demo.runtime') === 'browser') {
             URL::forceRootUrl(config('app.url'));
 
             // php-cgi-wasm does not expose arbitrary browser headers as CGI
@@ -153,7 +153,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Action::configureUsing(function (Action $action) {
-            if (config('demo.enabled')) {
+            if (config('demo.enabled') && config('demo.runtime') === 'browser') {
                 // Filament's partial modal renderer can emit an empty fragment
                 // in PHP-WASM. Force the full render only while mounting so the
                 // confirmed mutation can dehydrate its newly committed state.

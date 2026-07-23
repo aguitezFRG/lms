@@ -1,0 +1,17 @@
+.env
+.env.*
+.git
+.github
+.phpunit.cache
+.vercel
+bootstrap/cache/*.php
+client/dist
+client/node_modules
+database/database.sqlite
+node_modules
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+tests
+vendor

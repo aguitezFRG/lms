@@ -10,7 +10,7 @@ use App\Notifications\RequestStatusChanged;
 use App\Services\PdfWatermarkService;
 use finfo;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class MaterialStreamController extends Controller
 {
@@ -22,12 +22,10 @@ class MaterialStreamController extends Controller
     {
         $this->authorizeAccess($record);
 
-        if (config('demo.enabled')) {
+        if (config('demo.enabled') && config('demo.runtime') === 'browser') {
             $streamUrl = $this->demoStaticPdfUrl($record);
         } else {
-            $path = $this->resolveMaterialPath($record);
-
-            if ($path === null || ! file_exists($path)) {
+            if ($this->materialObjectKey($record) === null) {
                 abort(404);
             }
 
@@ -57,27 +55,30 @@ class MaterialStreamController extends Controller
     {
         $this->authorizeAccess($record);
 
-        // Packaged PDFs are fetched directly from the static host in demo mode.
-        abort_if(config('demo.enabled'), 404);
+        // Packaged PDFs are fetched directly from the static host in browser demo mode.
+        abort_if(config('demo.enabled') && config('demo.runtime') === 'browser', 404);
 
-        $path = $this->resolveMaterialPath($record);
+        $objectKey = $this->materialObjectKey($record);
 
-        if ($path === null) {
+        if ($objectKey === null) {
             Log::warning('Stream blocked: invalid material file path', [
                 'material_id' => $record->id,
             ]);
             abort(404);
         }
 
-        if (! file_exists($path)) {
+        $disk = Storage::disk((string) config('demo.material_disk', 'local'));
+
+        if (! $disk->exists($objectKey)) {
             Log::error('Stream failed: file not found', [
                 'material_id' => $record->id,
             ]);
             abort(404);
         }
 
+        $original = $disk->get($objectKey);
         $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $detectedMime = $finfo->file($path);
+        $detectedMime = $finfo->buffer($original);
 
         if ($detectedMime !== 'application/pdf') {
             Log::error('Stream blocked: non-PDF file detected', [
@@ -87,9 +88,26 @@ class MaterialStreamController extends Controller
             abort(415, 'The stored file is not a valid PDF.');
         }
 
+        $temporaryPath = null;
+
+        if ((string) config('demo.material_disk', 'local') === 'local') {
+            $watermarkPath = $disk->path($objectKey);
+        } else {
+            $temporaryPath = tempnam(sys_get_temp_dir(), 'stat_lms_stream_');
+
+            if ($temporaryPath === false || file_put_contents($temporaryPath, $original) === false) {
+                Log::error('Stream failed: unable to stage PDF', [
+                    'material_id' => $record->id,
+                ]);
+                abort(503, 'The document could not be prepared for viewing.');
+            }
+
+            $watermarkPath = $temporaryPath;
+        }
+
         try {
             $watermarked = $pdfWatermarkService->watermark(
-                pdfPath: $path,
+                pdfPath: $watermarkPath,
                 user: auth()->user(),
                 materialTitle: $record->parent?->title ?? basename($record->file_name),
                 accessedAt: now()->setTimezone('Asia/Manila'),
@@ -99,8 +117,6 @@ class MaterialStreamController extends Controller
                 'material_id' => $record->id,
                 'error' => $e->getMessage(),
             ]);
-
-            $original = file_get_contents($path);
 
             return response($original, 200, [
                 'Content-Type' => 'application/pdf',
@@ -112,6 +128,10 @@ class MaterialStreamController extends Controller
                 'X-Watermark-Fallback' => 'true',
                 'Content-Length' => (string) strlen($original),
             ]);
+        } finally {
+            if ($temporaryPath !== null) {
+                @unlink($temporaryPath);
+            }
         }
 
         return response($watermarked, 200, [
@@ -198,28 +218,21 @@ class MaterialStreamController extends Controller
         }
     }
 
-    protected function resolveMaterialPath(RrMaterials $record): ?string
+    protected function materialObjectKey(RrMaterials $record): ?string
     {
-        $baseDirectory = storage_path('app/private');
-        $baseRealPath = realpath($baseDirectory);
+        $objectKey = trim(str_replace('\\', '/', (string) $record->file_name), '/');
+        $segments = explode('/', $objectKey);
 
-        if ($baseRealPath === false) {
+        if (
+            $objectKey === ''
+            || str_contains($objectKey, "\0")
+            || in_array('.', $segments, true)
+            || in_array('..', $segments, true)
+        ) {
             return null;
         }
 
-        $relativePath = ltrim((string) $record->file_name, '/\\');
-        $candidatePath = $baseDirectory.DIRECTORY_SEPARATOR.$relativePath;
-        $parentRealPath = realpath(dirname($candidatePath));
-
-        if ($parentRealPath === false) {
-            return null;
-        }
-
-        if (! Str::startsWith($parentRealPath, $baseRealPath)) {
-            return null;
-        }
-
-        return $parentRealPath.DIRECTORY_SEPARATOR.basename($candidatePath);
+        return $objectKey;
     }
 
     private function demoStaticPdfUrl(RrMaterials $record): string

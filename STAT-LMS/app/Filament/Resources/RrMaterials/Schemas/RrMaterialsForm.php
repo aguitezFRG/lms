@@ -124,12 +124,15 @@ class RrMaterialsForm
                         ->hintColor('gray')
                         ->visible(fn (Get $get) => $get('is_digital'))
                         ->required(fn (Get $get) => $get('is_digital'))
-                        ->disk('local')
+                        ->disk(fn (): string => (string) config('demo.material_disk', 'local'))
                         ->directory(function (Get $get) {
                             $parent = RrMaterialParents::find($get('material_parent_id'));
                             $accessLevel = $parent?->access_level ?? 'unclassified';
+                            $prefix = config('demo.enabled') && config('demo.runtime') === 'server'
+                                ? 'uploads/'
+                                : '';
 
-                            return "repository/access_level_{$accessLevel}";
+                            return "{$prefix}repository/access_level_{$accessLevel}";
                         })
                         ->getUploadedFileNameForStorageUsing(function ($file, Get $get) {
                             $parent = RrMaterialParents::find($get('material_parent_id'));

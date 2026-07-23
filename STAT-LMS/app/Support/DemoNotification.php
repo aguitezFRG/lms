@@ -9,7 +9,7 @@ class DemoNotification extends Notification
 {
     public function send(): static
     {
-        if (! config('demo.enabled')) {
+        if (! config('demo.enabled') || config('demo.runtime') !== 'browser') {
             return parent::send();
         }
 

@@ -99,12 +99,16 @@ class RrMaterialsSeeder extends Seeder
         // Create digital copies and copy PDF files to storage
         foreach ($digitalCopies as $copy) {
             $dir = "repository/access_level_{$copy['access_level']}";
-            $targetPath = "{$dir}/{$copy['pdf_file']}";
+            $prefix = config('demo.enabled') && config('demo.runtime') === 'server'
+                ? 'seed/'
+                : '';
+            $targetPath = "{$prefix}{$dir}/{$copy['pdf_file']}";
             $sourcePath = database_path("seeders/.digital_copies/{$copy['pdf_file']}");
 
-            if (! config('demo.enabled')) {
-                Storage::disk('local')->makeDirectory($dir);
-                Storage::disk('local')->put($targetPath, file_get_contents($sourcePath));
+            if (! config('demo.enabled') || config('demo.runtime') === 'server') {
+                $disk = Storage::disk((string) config('demo.material_disk', 'local'));
+                $disk->makeDirectory($prefix.$dir);
+                $disk->put($targetPath, file_get_contents($sourcePath));
             }
 
             // Create the RrMaterials record

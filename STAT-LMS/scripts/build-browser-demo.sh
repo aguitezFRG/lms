@@ -92,6 +92,13 @@ rm -rf -- "$stage_app/public/css" "$stage_app/public/fonts" "$stage_app/public/i
 find "$stage_app/vendor" -type d \( -name .github -o -name docs -o -name doc -o -name test -o -name tests -o -name Tests \) -prune -exec rm -rf -- {} +
 find "$stage_app/vendor" -type f \( -name '*.map' -o -name '*.md' \) -delete
 
+# Supabase's S3 adapter is server-runtime-only. Keep it in the Render image,
+# but do not ship the large AWS SDK inside the pure browser/PHP-WASM payload.
+rm -rf -- \
+    "$stage_app/vendor/aws" \
+    "$stage_app/vendor/league/flysystem-aws-s3-v3" \
+    "$stage_app/vendor/mtdowling"
+
 # The watermark service explicitly uses TCPDF's Helvetica core font. The large
 # Unicode font collection is unnecessary for importing an existing PDF page.
 find "$stage_app/vendor/tecnickcom/tcpdf/fonts" -maxdepth 1 -type f \
