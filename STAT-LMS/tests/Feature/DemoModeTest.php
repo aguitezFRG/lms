@@ -340,7 +340,10 @@ class DemoModeTest extends TestCase
         $this->get('/admin')
             ->assertOk()
             ->assertDontSee('rel="preload" href="/fonts/filament/filament/inter', false)
-            ->assertSee('demo-notification-stack', false)
+            ->assertSee('new window.FilamentNotification()', false)
+            ->assertSee('toast.send()', false)
+            ->assertDontSee('demo-notification-stack', false)
+            ->assertDontSee('demo-notification-title', false)
             ->assertSee("document.addEventListener('x-modal-opened'", false)
             ->assertSee("window.Livewire.hook('morphed'", false)
             ->assertSee('[data-fi-modal-id*="-action-"].fi-modal-open', false);
