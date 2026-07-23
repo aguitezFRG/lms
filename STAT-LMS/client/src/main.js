@@ -1,6 +1,21 @@
 import runtimeWorkerUrl from './runtime-worker.js?worker&url';
 import { internalPath, MANIFEST_PATH, verifyPayload } from './runtime-contract.js';
+import { applyTheme, readStoredTheme, STORAGE_KEY } from './theme.js';
 import './styles.css';
+
+const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+function syncShellTheme() {
+    return applyTheme(readStoredTheme(localStorage), document.documentElement, systemThemeQuery.matches);
+}
+
+syncShellTheme();
+systemThemeQuery.addEventListener('change', () => {
+    if (readStoredTheme(localStorage) === 'system') syncShellTheme();
+});
+addEventListener('storage', (event) => {
+    if (event.key === STORAGE_KEY || event.key === 'theme') syncShellTheme();
+});
 
 const startup = document.querySelector('#startup');
 const message = document.querySelector('#startup-message');
