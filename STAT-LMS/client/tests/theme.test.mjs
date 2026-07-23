@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import {
@@ -24,4 +25,13 @@ test('resolves system and OLED modes for setup styling', () => {
     assert.equal(resolveTheme('system', true), 'dark');
     assert.equal(resolveTheme('system', false), 'light');
     assert.equal(resolveTheme('dark-oled', false), 'dark-oled');
+});
+
+test('uses only solid backgrounds on the LMS demo startup page', () => {
+    const styles = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+
+    assert.doesNotMatch(styles, /(?:linear|radial|conic)-gradient\s*\(/i);
+    assert.match(styles, /\.startup\s*\{[^}]*background:\s*#f4f6f8;/s);
+    assert.match(styles, /html\.dark \.startup\s*\{[^}]*background:\s*#0f172a;/s);
+    assert.match(styles, /html\.oled\.dark \.startup\s*\{\s*background:\s*#000;/s);
 });
