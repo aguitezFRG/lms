@@ -142,6 +142,7 @@ class UserProfile extends Page implements HasInfolists
                 ->label('Change Password')
                 ->icon('heroicon-o-lock-closed')
                 ->color('warning')
+                ->visible(fn (): bool => ! config('demo.enabled'))
                 ->modalHeading('Change Your Password')
                 ->modalDescription('Enter your current password, then choose a new one.')
                 ->modalWidth('md')

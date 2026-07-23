@@ -8,7 +8,9 @@ class StudentFeatureCards extends FeatureCards
 {
     public static function render(): string
     {
-        return self::renderHtml(self::renderCards());
+        return self::renderHtml(self::renderCards(), [
+            'Update your password and personal account information.' => 'Select your name in the profile menu to view personal details and notifications. Password changes are unavailable in this demo.',
+        ]);
     }
 
     private static function renderCards(): string

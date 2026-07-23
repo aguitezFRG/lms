@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Filament\Components\Admin\SuperAdminFeatureCards;
+use App\Filament\Components\User\FacultyFeatureCards;
 use App\Filament\Components\User\StudentFeatureCards;
+use App\Filament\Pages\Auth\AdminProfile;
+use App\Filament\Pages\User\UserProfile;
 use App\Filament\Resources\User\Catalogs\Pages\ViewCatalog;
 use App\Models\MaterialAccessEvents;
 use App\Models\User;
@@ -80,6 +83,54 @@ class DemoModeTest extends TestCase
             ->assertSee('html.oled.dark .demo-profile-page', false);
     }
 
+    public function test_profile_chooser_spinner_has_explicit_contrast_in_every_theme(): void
+    {
+        User::factory()->student()->create();
+
+        $this->get('/demo/profiles')
+            ->assertOk()
+            ->assertSee('.demo-profile-button[aria-busy="true"] > :not(.demo-profile-spinner)', false)
+            ->assertSee('border-top-color: #8d1436;', false)
+            ->assertSee('html.dark .demo-profile-spinner', false)
+            ->assertSee('html.oled.dark .demo-profile-spinner', false)
+            ->assertSee('border-top-color: #f0a7bb;', false);
+    }
+
+    public function test_user_onboarding_cards_describe_demo_profile_behavior_only_in_demo_mode(): void
+    {
+        foreach ([StudentFeatureCards::class, FacultyFeatureCards::class] as $cards) {
+            $demoCards = $cards::render();
+
+            $this->assertStringContainsString(
+                'Select your name in the profile menu to view personal details and notifications.',
+                $demoCards,
+            );
+            $this->assertStringContainsString(
+                'Password changes are unavailable in this demo.',
+                $demoCards,
+            );
+            $this->assertStringNotContainsString(
+                'Update your password and personal account information.',
+                $demoCards,
+            );
+        }
+
+        config()->set('demo.enabled', false);
+
+        foreach ([StudentFeatureCards::class, FacultyFeatureCards::class] as $cards) {
+            $productionCards = $cards::render();
+
+            $this->assertStringContainsString(
+                'Update your password and personal account information.',
+                $productionCards,
+            );
+            $this->assertStringNotContainsString(
+                'Password changes are unavailable in this demo.',
+                $productionCards,
+            );
+        }
+    }
+
     public function test_onboarding_cards_stay_inside_the_php_runtime(): void
     {
         $this->assertStringContainsString(
@@ -120,6 +171,46 @@ class DemoModeTest extends TestCase
         $this->assertSame($sessionId, $response->getCookie($sessionCookie)?->getValue());
 
         $this->get('/app')->assertRedirect();
+    }
+
+    public function test_user_profile_name_menu_item_links_to_the_user_profile_page(): void
+    {
+        $student = User::factory()->student()->create();
+
+        $this->post('/demo/profiles', ['profile_id' => (string) $student->id])
+            ->assertRedirect('/app');
+
+        $this->followingRedirects()
+            ->get('/app')
+            ->assertOk()
+            ->assertSee('href="'.UserProfile::getUrl().'"', false);
+    }
+
+    public function test_admin_profile_name_menu_item_links_to_the_admin_profile_page(): void
+    {
+        $committee = User::factory()->committee()->create();
+
+        $this->post('/demo/profiles', ['profile_id' => (string) $committee->id])
+            ->assertRedirect('/admin');
+
+        $this->followingRedirects()
+            ->get('/admin')
+            ->assertOk()
+            ->assertSee('href="'.AdminProfile::getUrl().'"', false);
+    }
+
+    public function test_demo_profile_pages_hide_change_password_actions(): void
+    {
+        $student = User::factory()->student()->create();
+        $committee = User::factory()->committee()->create();
+
+        $this->actingAs($student);
+        Livewire::test(UserProfile::class)
+            ->assertActionHidden('changePassword');
+
+        $this->actingAs($committee);
+        Livewire::test(AdminProfile::class)
+            ->assertActionHidden('changePassword');
     }
 
     public function test_profile_chooser_locks_after_one_confirmed_submission(): void

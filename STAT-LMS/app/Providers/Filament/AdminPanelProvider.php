@@ -70,11 +70,8 @@ class AdminPanelProvider extends PanelProvider
                 'Logs',
             ])
             ->userMenuItems([
-                MenuItem::make()
-                    ->label('My Profile')
-                    ->url(fn () => AdminProfile::getUrl())
-                    ->icon(Heroicon::OutlinedUser)
-                    ->visible(fn (): bool => ! config('demo.enabled')),
+                'profile' => fn (Action $action): Action => $action
+                    ->url(fn (): string => AdminProfile::getUrl()),
                 MenuItem::make()
                     ->label('Switch demo profile')
                     ->url(fn (): string => route('demo.profiles.index'))

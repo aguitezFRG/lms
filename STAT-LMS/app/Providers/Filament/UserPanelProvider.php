@@ -71,11 +71,8 @@ class UserPanelProvider extends PanelProvider
                 CompleteProfile::class,
             ])
             ->userMenuItems([
-                MenuItem::make()
-                    ->label('My Profile')
-                    ->url(fn () => UserProfile::getUrl())
-                    ->icon(Heroicon::OutlinedUser)
-                    ->visible(fn (): bool => ! config('demo.enabled')),
+                'profile' => fn (Action $action): Action => $action
+                    ->url(fn (): string => UserProfile::getUrl()),
                 MenuItem::make()
                     ->label('Switch demo profile')
                     ->url(fn (): string => route('demo.profiles.index'))

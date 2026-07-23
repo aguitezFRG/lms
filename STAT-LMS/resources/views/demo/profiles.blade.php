@@ -11,11 +11,20 @@
             from { transform: translateY(-50%) rotate(0deg); }
             to { transform: translateY(-50%) rotate(360deg); }
         }
-        .demo-profile-button[aria-busy="true"] { cursor: wait; opacity: 0.72; }
-        .demo-profile-spinner { display: none; }
+        .demo-profile-button[aria-busy="true"] { cursor: wait; }
+        .demo-profile-button[aria-busy="true"] > :not(.demo-profile-spinner) { opacity: 0.55; }
+        .demo-profile-spinner {
+            display: none;
+            border-color: rgb(203 213 225);
+            border-top-color: #8d1436;
+        }
         .demo-profile-button[aria-busy="true"] .demo-profile-spinner {
             display: block;
             animation: demo-profile-spin 0.75s linear infinite;
+        }
+        html.dark .demo-profile-spinner {
+            border-color: rgb(71 85 105);
+            border-top-color: #f0a7bb;
         }
         .demo-profile-dialog {
             position: fixed;
@@ -30,6 +39,10 @@
         html.oled.dark .demo-profile-dialog { background: rgb(3 3 3); border-color: rgb(39 39 42); box-shadow: none; }
         html.oled.dark .demo-profile-dialog::backdrop { background: rgb(0 0 0 / 0.78); }
         html.oled.dark .demo-profile-secondary-action { background: rgb(39 39 42); color: rgb(244 244 245); }
+        html.oled.dark .demo-profile-spinner {
+            border-color: rgb(63 63 70);
+            border-top-color: #f0a7bb;
+        }
     </style>
 </head>
 <body class="demo-profile-page min-h-screen bg-slate-100 text-slate-950 transition-colors dark:bg-slate-950 dark:text-slate-100">
@@ -54,7 +67,7 @@
                             <span class="block text-xs font-semibold uppercase tracking-wider text-[#8d1436]">{{ $profile->role->getLabel() }}</span>
                             <span class="mt-2 block text-lg font-semibold">{{ $profile->name }}</span>
                             <span class="mt-1 block text-sm text-slate-500 dark:text-slate-400">{{ $profile->email }}</span>
-                            <span class="demo-profile-spinner absolute right-5 top-1/2 size-6 -translate-y-1/2 rounded-full border-2 border-slate-200 border-t-[#8d1436] dark:border-slate-700 dark:border-t-[#f0a7bb]" aria-hidden="true"></span>
+                            <span class="demo-profile-spinner absolute right-5 top-1/2 size-6 -translate-y-1/2 rounded-full border-2" aria-hidden="true"></span>
                         </button>
                     </form>
                 @endforeach
