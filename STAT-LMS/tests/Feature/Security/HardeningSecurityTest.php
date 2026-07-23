@@ -6,13 +6,14 @@ use App\Filament\Pages\Auth\UserLogin;
 use App\Filament\Resources\User\Catalogs\Pages\ListCatalogs;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class HardeningSecurityTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function stream_blocks_path_traversal_file_names(): void
     {
         $parent = $this->makeMaterialParent(['access_level' => 1]);
@@ -30,7 +31,7 @@ class HardeningSecurityTest extends TestCase
             ->assertNotFound();
     }
 
-    /** @test */
+    #[Test]
     public function user_policy_blocks_lower_privilege_updates_and_restores(): void
     {
         $committee = $this->makeUser('committee');
@@ -44,7 +45,7 @@ class HardeningSecurityTest extends TestCase
         $this->assertFalse($it->can('forceDelete', $committee));
     }
 
-    /** @test */
+    #[Test]
     public function catalog_sort_parameters_are_normalized_to_allowlisted_values(): void
     {
         $student = $this->makeUser('student');
@@ -57,7 +58,7 @@ class HardeningSecurityTest extends TestCase
             ->assertSet('sortDir', 'desc');
     }
 
-    /** @test */
+    #[Test]
     public function login_messages_are_indistinguishable_for_banned_and_soft_deleted_accounts(): void
     {
         $softDeleted = $this->makeUser('student', ['password' => bcrypt('password'), 'email' => 'deleted@example.com']);
@@ -80,7 +81,7 @@ class HardeningSecurityTest extends TestCase
         $this->assertGuest();
     }
 
-    /** @test */
+    #[Test]
     public function responses_include_security_headers_baseline(): void
     {
         $response = $this->get('/app/login');
@@ -92,7 +93,7 @@ class HardeningSecurityTest extends TestCase
         $response->assertHeader('Content-Security-Policy');
     }
 
-    /** @test */
+    #[Test]
     public function password_encryption_key_endpoint_is_throttled_and_cacheable(): void
     {
         $response = $this->get(route('password.encryption-key'));

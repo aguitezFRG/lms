@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Services\PdfNormalizationService;
 use Illuminate\Support\Facades\File;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class PdfNormalizationServiceTest extends TestCase
@@ -46,7 +47,7 @@ startxref
 PDF;
     }
 
-    /** @test */
+    #[Test]
     public function it_normalizes_a_valid_pdf_to_pdf_1_4(): void
     {
         $service = new PdfNormalizationService;
@@ -66,7 +67,7 @@ PDF;
         }
     }
 
-    /** @test */
+    #[Test]
     public function it_rejects_a_non_pdf_file(): void
     {
         $service = new PdfNormalizationService;
@@ -83,7 +84,7 @@ PDF;
         }
     }
 
-    /** @test */
+    #[Test]
     public function it_rejects_a_missing_file(): void
     {
         $service = new PdfNormalizationService;

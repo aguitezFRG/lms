@@ -6,6 +6,7 @@ use App\Models\RrMaterials;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -40,7 +41,7 @@ class MaterialStreamThrottleTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function material_stream_route_is_throttled_with_material_stream_limiter(): void
     {
         $student = $this->makeUser('student');
@@ -81,7 +82,7 @@ class MaterialStreamThrottleTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function material_viewer_route_is_throttled_with_material_stream_limiter(): void
     {
         $student = $this->makeUser('student');
@@ -119,7 +120,7 @@ class MaterialStreamThrottleTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function rate_limiter_counts_requests_per_authenticated_user(): void
     {
         $student1 = $this->makeUser('student');

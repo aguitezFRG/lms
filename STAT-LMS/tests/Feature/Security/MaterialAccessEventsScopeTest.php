@@ -5,6 +5,7 @@ namespace Tests\Feature\Security;
 use App\Filament\Resources\MaterialAccessEvents\MaterialAccessEventsResource;
 use App\Models\MaterialAccessEvents;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -43,7 +44,7 @@ class MaterialAccessEventsScopeTest extends TestCase
         return [$parent, $copy];
     }
 
-    /** @test */
+    #[Test]
     public function rr_staff_cannot_see_events_for_level3_materials(): void
     {
         $rrStaff = $this->makeUser('staff/custodian');
@@ -69,7 +70,7 @@ class MaterialAccessEventsScopeTest extends TestCase
         $this->assertFalse($results->contains($event));
     }
 
-    /** @test */
+    #[Test]
     public function rr_staff_can_see_events_for_level1_physical_materials(): void
     {
         $rrStaff = $this->makeUser('staff/custodian');
@@ -95,7 +96,7 @@ class MaterialAccessEventsScopeTest extends TestCase
         $this->assertTrue($results->contains($event));
     }
 
-    /** @test */
+    #[Test]
     public function rr_staff_cannot_see_events_for_level1_digital_materials(): void
     {
         $rrStaff = $this->makeUser('staff/custodian');
@@ -121,7 +122,7 @@ class MaterialAccessEventsScopeTest extends TestCase
         $this->assertFalse($results->contains($event));
     }
 
-    /** @test */
+    #[Test]
     public function committee_can_see_all_events(): void
     {
         $committee = $this->makeUser('committee');
@@ -157,7 +158,7 @@ class MaterialAccessEventsScopeTest extends TestCase
         $this->assertTrue($results->contains($event3));
     }
 
-    /** @test */
+    #[Test]
     public function it_admin_can_see_all_events(): void
     {
         $itAdmin = $this->makeUser('it');

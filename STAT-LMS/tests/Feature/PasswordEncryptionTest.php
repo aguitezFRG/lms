@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -84,7 +85,7 @@ class PasswordEncryptionTest extends TestCase
     // PasswordEncryptionService
     // ─────────────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function service_can_decrypt_a_value_encrypted_with_the_public_key(): void
     {
         $service = app(PasswordEncryptionService::class);
@@ -96,7 +97,7 @@ class PasswordEncryptionTest extends TestCase
         $this->assertSame($plaintext, $decrypted);
     }
 
-    /** @test */
+    #[Test]
     public function service_throws_on_invalid_base64(): void
     {
         $this->expectException(\RuntimeException::class);
@@ -104,7 +105,7 @@ class PasswordEncryptionTest extends TestCase
         app(PasswordEncryptionService::class)->decrypt('not-valid-base64!!!');
     }
 
-    /** @test */
+    #[Test]
     public function service_throws_on_corrupted_ciphertext(): void
     {
         $this->expectException(\RuntimeException::class);
@@ -113,7 +114,7 @@ class PasswordEncryptionTest extends TestCase
         app(PasswordEncryptionService::class)->decrypt(base64_encode('this is garbage'));
     }
 
-    /** @test */
+    #[Test]
     public function service_returns_valid_pem_public_key(): void
     {
         $pem = app(PasswordEncryptionService::class)->publicKeyPem();
@@ -126,7 +127,7 @@ class PasswordEncryptionTest extends TestCase
     // DecryptLivewirePasswords middleware
     // ─────────────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function middleware_decrypts_enc_prefixed_password_field(): void
     {
         $enc = 'ENC:'.$this->encryptWithPublicKey('secret123');
@@ -135,7 +136,7 @@ class PasswordEncryptionTest extends TestCase
         $this->assertSame('secret123', $payload['components'][0]['updates']['data.password']);
     }
 
-    /** @test */
+    #[Test]
     public function middleware_decrypts_enc_prefixed_current_password_field(): void
     {
         $enc = 'ENC:'.$this->encryptWithPublicKey('oldPass!1');
@@ -144,7 +145,7 @@ class PasswordEncryptionTest extends TestCase
         $this->assertSame('oldPass!1', $payload['components'][0]['updates']['data.current_password']);
     }
 
-    /** @test */
+    #[Test]
     public function middleware_leaves_non_enc_prefixed_values_unchanged(): void
     {
         // A plaintext password (shouldn't happen in prod, but middleware must not corrupt it)
@@ -153,7 +154,7 @@ class PasswordEncryptionTest extends TestCase
         $this->assertSame('plaintext', $payload['components'][0]['updates']['data.password']);
     }
 
-    /** @test */
+    #[Test]
     public function middleware_does_not_touch_non_password_keys_even_if_enc_prefixed(): void
     {
         $payload = $this->runMiddleware($this->makeLivewirePayload(['data.email' => 'ENC:something']));
@@ -161,7 +162,7 @@ class PasswordEncryptionTest extends TestCase
         $this->assertSame('ENC:something', $payload['components'][0]['updates']['data.email']);
     }
 
-    /** @test */
+    #[Test]
     public function middleware_leaves_value_as_is_when_decryption_fails(): void
     {
         // ENC: prefix but garbage ciphertext — should not throw, just leave it
@@ -171,7 +172,7 @@ class PasswordEncryptionTest extends TestCase
         $this->assertSame($raw, $payload['components'][0]['updates']['data.password']);
     }
 
-    /** @test */
+    #[Test]
     public function middleware_is_no_op_for_non_livewire_routes(): void
     {
         $body = json_encode(['components' => [['updates' => ['data.password' => 'ENC:foo']]]]);
@@ -192,7 +193,7 @@ class PasswordEncryptionTest extends TestCase
         $this->assertSame('ENC:foo', $captured['components'][0]['updates']['data.password']);
     }
 
-    /** @test */
+    #[Test]
     public function middleware_handles_component_with_no_updates_key(): void
     {
         $body = json_encode(['components' => [['snapshot' => '{}', 'calls' => []]]]);
@@ -202,7 +203,7 @@ class PasswordEncryptionTest extends TestCase
         $this->assertArrayNotHasKey('updates', $payload['components'][0]);
     }
 
-    /** @test */
+    #[Test]
     public function middleware_decrypts_enc_prefixed_password_in_calls_params(): void
     {
         $enc = 'ENC:'.$this->encryptWithPublicKey('secret123');
@@ -230,7 +231,7 @@ class PasswordEncryptionTest extends TestCase
         $this->assertSame('secret123', $params['new_password']);
     }
 
-    /** @test */
+    #[Test]
     public function middleware_leaves_non_password_keys_in_calls_unchanged(): void
     {
         $body = json_encode([
@@ -256,7 +257,7 @@ class PasswordEncryptionTest extends TestCase
         $this->assertSame('ENC:should_stay', $params['email']);
     }
 
-    /** @test */
+    #[Test]
     public function middleware_survives_bad_ciphertext_in_calls(): void
     {
         $raw = 'ENC:'.base64_encode('not-real-ciphertext');
@@ -287,7 +288,7 @@ class PasswordEncryptionTest extends TestCase
     // AdminProfile::submitEncryptedPasswordChange
     // ─────────────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function admin_can_change_password_with_correct_encrypted_credentials(): void
     {
         $admin = $this->makeUser('committee', ['password' => Hash::make('OldPass!1')]);
@@ -305,7 +306,7 @@ class PasswordEncryptionTest extends TestCase
         $this->assertTrue(Hash::check('NewPass!2', $admin->fresh()->password));
     }
 
-    /** @test */
+    #[Test]
     public function admin_change_password_fails_with_wrong_current_password(): void
     {
         $admin = $this->makeUser('committee', ['password' => Hash::make('CorrectPass!1')]);
@@ -323,7 +324,7 @@ class PasswordEncryptionTest extends TestCase
         $this->assertTrue(Hash::check('CorrectPass!1', $admin->fresh()->password));
     }
 
-    /** @test */
+    #[Test]
     public function admin_change_password_fails_gracefully_with_bad_ciphertext(): void
     {
         $admin = $this->makeUser('committee', ['password' => Hash::make('OldPass!1')]);
@@ -344,7 +345,7 @@ class PasswordEncryptionTest extends TestCase
     // UserProfile::submitEncryptedPasswordChange
     // ─────────────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function user_can_change_password_with_correct_encrypted_credentials(): void
     {
         $student = $this->makeUser('student', ['password' => Hash::make('OldPass!1')]);
@@ -362,7 +363,7 @@ class PasswordEncryptionTest extends TestCase
         $this->assertTrue(Hash::check('NewPass!2', $student->fresh()->password));
     }
 
-    /** @test */
+    #[Test]
     public function user_change_password_fails_with_wrong_current_password(): void
     {
         $student = $this->makeUser('student', ['password' => Hash::make('CorrectPass!1')]);
@@ -379,7 +380,7 @@ class PasswordEncryptionTest extends TestCase
         $this->assertTrue(Hash::check('CorrectPass!1', $student->fresh()->password));
     }
 
-    /** @test */
+    #[Test]
     public function user_change_password_fails_gracefully_with_bad_ciphertext(): void
     {
         $student = $this->makeUser('student', ['password' => Hash::make('OldPass!1')]);

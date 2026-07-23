@@ -5,19 +5,20 @@ namespace Tests\Feature;
 use App\Filament\Pages\Onboarding\CompleteProfile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class SsoOnboardingTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function onboarding_page_requires_auth(): void
     {
         $this->get('/app/onboarding')->assertRedirect('/app/login');
     }
 
-    /** @test */
+    #[Test]
     public function incomplete_user_can_access_onboarding(): void
     {
         $user = $this->makeUser('student', ['is_profile_complete' => false]);
@@ -26,7 +27,7 @@ class SsoOnboardingTest extends TestCase
         $this->get('/app/onboarding')->assertOk();
     }
 
-    /** @test */
+    #[Test]
     public function complete_user_redirected_from_onboarding(): void
     {
         $user = $this->makeUser('student', ['is_profile_complete' => true]);
@@ -35,7 +36,7 @@ class SsoOnboardingTest extends TestCase
         $this->get('/app/onboarding')->assertRedirect('/app');
     }
 
-    /** @test */
+    #[Test]
     public function step_one_validates_required_name_fields(): void
     {
         $user = $this->makeUser('student', ['is_profile_complete' => false]);
@@ -57,7 +58,7 @@ class SsoOnboardingTest extends TestCase
             ->assertSet('step', 2);
     }
 
-    /** @test */
+    #[Test]
     public function step_two_validates_student_number_format(): void
     {
         $existingUser = $this->makeUser('student', ['std_number' => '2020-12345']);
@@ -87,7 +88,7 @@ class SsoOnboardingTest extends TestCase
             ->assertHasErrors(['data.std_number']);
     }
 
-    /** @test */
+    #[Test]
     public function step_two_allows_null_student_number(): void
     {
         $user = $this->makeUser('student', [
@@ -109,7 +110,7 @@ class SsoOnboardingTest extends TestCase
         $this->assertNull($user->std_number);
     }
 
-    /** @test */
+    #[Test]
     public function form_submission_sets_profile_complete(): void
     {
         $user = $this->makeUser('student', [
@@ -140,7 +141,7 @@ class SsoOnboardingTest extends TestCase
         $this->assertEquals('2022-11111', $user->std_number);
     }
 
-    /** @test */
+    #[Test]
     public function name_parsed_from_google_data(): void
     {
         // User with f_name/l_name from Google — pre-filled directly
@@ -174,7 +175,7 @@ class SsoOnboardingTest extends TestCase
             ->assertSet('data.l_name', 'Doe');
     }
 
-    /** @test */
+    #[Test]
     public function logout_button_works(): void
     {
         $user = $this->makeUser('student', ['is_profile_complete' => false]);

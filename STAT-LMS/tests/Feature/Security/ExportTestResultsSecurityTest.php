@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Security;
 
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -53,25 +54,25 @@ class ExportTestResultsSecurityTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function rejects_path_traversal_outside_public(): void
     {
         $this->assertFalse($this->validatePath('../../etc/passwd'));
     }
 
-    /** @test */
+    #[Test]
     public function rejects_path_with_deeply_nested_traversal(): void
     {
         $this->assertFalse($this->validatePath('../../../../../../../etc/passwd'));
     }
 
-    /** @test */
+    #[Test]
     public function rejects_symlink_escape_attempts(): void
     {
         $this->assertFalse($this->validatePath('../../etc/shadow'));
     }
 
-    /** @test */
+    #[Test]
     public function rejects_deeply_nested_dot_dot_outside_public(): void
     {
         $this->assertFalse($this->validatePath('../../newdir1/newdir2/x.pdf'));
@@ -81,28 +82,27 @@ class ExportTestResultsSecurityTest extends TestCase
      * Absolute paths are safely neutralised: public_path('/tmp/evil.pdf')
      * resolves to …/public/tmp/evil.pdf which is inside public/, so no
      * filesystem escape is possible via this input.
-     *
-     * @test
      */
+    #[Test]
     public function absolute_path_is_contained_inside_public(): void
     {
         // public_path('/tmp/evil.pdf') → …/public/tmp/evil.pdf — inside public/
         $this->assertTrue($this->validatePath('/tmp/evil.pdf'));
     }
 
-    /** @test */
+    #[Test]
     public function accepts_simple_filename_in_public_directory(): void
     {
         $this->assertTrue($this->validatePath('reports/test-results.pdf'));
     }
 
-    /** @test */
+    #[Test]
     public function accepts_nested_path_in_public_directory(): void
     {
         $this->assertTrue($this->validatePath('exports/pdfs/monthly-report.pdf'));
     }
 
-    /** @test */
+    #[Test]
     public function accepts_root_level_filename(): void
     {
         $this->assertTrue($this->validatePath('test-export.pdf'));

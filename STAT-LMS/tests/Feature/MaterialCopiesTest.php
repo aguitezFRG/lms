@@ -10,6 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -57,11 +58,10 @@ class MaterialCopiesTest extends TestCase
     // ── Create ────────────────────────────────────────────────────────────────
 
     /**
-     * @test
-     *
      * The `file_name` field is only required when `is_digital` is true.
      * Setting is_digital to false skips that validation entirely.
      */
+    #[Test]
     public function committee_member_can_create_a_physical_copy(): void
     {
         Storage::fake('local');
@@ -85,7 +85,7 @@ class MaterialCopiesTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function creating_digital_copy_requires_a_pdf_file(): void
     {
         $parent = $this->makeParent();
@@ -103,7 +103,7 @@ class MaterialCopiesTest extends TestCase
             ->assertHasFormErrors(['file_name']);
     }
 
-    /** @test */
+    #[Test]
     public function non_pdf_file_upload_is_rejected(): void
     {
         Storage::fake('local');
@@ -125,8 +125,6 @@ class MaterialCopiesTest extends TestCase
     }
 
     /**
-     * @test
-     *
      * Filament's FileUpload `maxSize` constraint (in KB) is enforced during
      * the Livewire upload step, not during form submission. When bypassing
      * the upload widget via fillForm in tests, the size constraint may not
@@ -134,6 +132,7 @@ class MaterialCopiesTest extends TestCase
      *   (a) a validation error is present on file_name, OR
      *   (b) no rr_materials record was persisted for this parent.
      */
+    #[Test]
     public function pdf_file_larger_than_10mb_is_rejected(): void
     {
         Storage::fake('local');
@@ -163,7 +162,7 @@ class MaterialCopiesTest extends TestCase
 
     // ── Listing & Filtering ───────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function listing_shows_copies_of_accessible_parents_only(): void
     {
         $publicParent = $this->makeParent(1);
@@ -181,7 +180,7 @@ class MaterialCopiesTest extends TestCase
             ->assertDontSee($confidentialParent->title);
     }
 
-    /** @test */
+    #[Test]
     public function digital_format_filter_returns_only_digital_copies(): void
     {
         $parent = $this->makeParent();
@@ -198,7 +197,7 @@ class MaterialCopiesTest extends TestCase
             ->assertDontSee($physical->id);
     }
 
-    /** @test */
+    #[Test]
     public function availability_filter_returns_only_available_copies(): void
     {
         $parent = $this->makeParent();
@@ -217,7 +216,7 @@ class MaterialCopiesTest extends TestCase
 
     // ── Request / Borrow Action ───────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function student_can_submit_a_borrow_request_for_physical_copy(): void
     {
         $parent = $this->makeParent(1);
@@ -236,7 +235,7 @@ class MaterialCopiesTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function student_can_submit_a_request_for_digital_copy(): void
     {
         $parent = $this->makeParent(1);
@@ -257,7 +256,7 @@ class MaterialCopiesTest extends TestCase
 
     // ── Soft Delete & Restore ─────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function committee_member_can_soft_delete_a_copy(): void
     {
         $parent = $this->makeParent();
@@ -271,7 +270,7 @@ class MaterialCopiesTest extends TestCase
         $this->assertSoftDeleted('rr_materials', ['id' => $copy->id]);
     }
 
-    /** @test */
+    #[Test]
     public function committee_member_can_restore_a_soft_deleted_copy(): void
     {
         $parent = $this->makeParent();
@@ -288,7 +287,7 @@ class MaterialCopiesTest extends TestCase
         $this->assertNotSoftDeleted('rr_materials', ['id' => $copy->id]);
     }
 
-    /** @test */
+    #[Test]
     public function soft_deleting_a_copy_sets_is_available_to_false(): void
     {
         // Use raw factories to preserve booted() hooks (make* helpers flush event listeners)
@@ -304,7 +303,7 @@ class MaterialCopiesTest extends TestCase
         $this->assertDatabaseHas('rr_materials', ['id' => $copy->id, 'is_available' => false]);
     }
 
-    /** @test */
+    #[Test]
     public function restoring_a_deleted_copy_sets_is_available_to_true(): void
     {
         $parent = RrMaterialParents::factory()->create();
@@ -323,13 +322,12 @@ class MaterialCopiesTest extends TestCase
     // ── Document Stream Route ─────────────────────────────────────────────────
 
     /**
-     * @test
-     *
      * The stream controller uses storage_path('app/private/...') which is
      * the private local disk. Storage::fake() replaces the disk but the
      * controller still resolves via file_exists() on the real path.
      * We verify the route is accessible (not 403/500) for an authorised user.
      */
+    #[Test]
     public function student_can_stream_public_digital_copy_with_approved_request(): void
     {
         Storage::fake('local');
@@ -363,7 +361,7 @@ class MaterialCopiesTest extends TestCase
             'Stream route must not throw a server error.');
     }
 
-    /** @test */
+    #[Test]
     public function student_cannot_stream_restricted_material(): void
     {
         $parent = $this->makeParent(2); // Restricted — faculty/above only
@@ -377,13 +375,12 @@ class MaterialCopiesTest extends TestCase
     }
 
     /**
-     * @test
-     *
      * NOTE: MaterialStreamController has a bug — `if (! user)` should be
      * `if (! $user)`. Until fixed, unauthenticated requests produce a 500.
      * This test asserts the security intent: unauthenticated users must NOT
      * receive a successful 200 response, regardless of the specific error code.
      */
+    #[Test]
     public function unauthenticated_user_cannot_stream_any_material(): void
     {
         $parent = $this->makeParent(1);
@@ -395,7 +392,7 @@ class MaterialCopiesTest extends TestCase
             'Unauthenticated users must not receive a 200 from the stream route.');
     }
 
-    /** @test */
+    #[Test]
     public function stream_returns_404_when_file_is_missing_from_disk(): void
     {
         Storage::fake('local'); // empty disk — file does not exist

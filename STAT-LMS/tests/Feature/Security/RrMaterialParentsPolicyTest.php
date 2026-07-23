@@ -5,6 +5,7 @@ namespace Tests\Feature\Security;
 use App\Models\RrMaterialParents;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -25,7 +26,7 @@ class RrMaterialParentsPolicyTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function faculty_cannot_create_material_parent(): void
     {
         $faculty = $this->makeUser('faculty');
@@ -35,7 +36,7 @@ class RrMaterialParentsPolicyTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function rr_staff_cannot_create_material_parent(): void
     {
         $rr = $this->makeUser('staff/custodian');
@@ -45,7 +46,7 @@ class RrMaterialParentsPolicyTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function student_cannot_create_material_parent(): void
     {
         $student = $this->makeUser('student');
@@ -55,7 +56,7 @@ class RrMaterialParentsPolicyTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function committee_can_create_material_parent(): void
     {
         $committee = $this->makeUser('committee');
@@ -65,7 +66,7 @@ class RrMaterialParentsPolicyTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function it_admin_can_create_material_parent(): void
     {
         $it = $this->makeUser('it');
@@ -75,7 +76,7 @@ class RrMaterialParentsPolicyTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function super_admin_can_create_material_parent(): void
     {
         $superAdmin = $this->makeUser('super_admin');
@@ -85,7 +86,7 @@ class RrMaterialParentsPolicyTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function staff_custodian_cannot_create_material_parent(): void
     {
         $staff = $this->makeUser('staff/custodian');
@@ -96,7 +97,7 @@ class RrMaterialParentsPolicyTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function faculty_cannot_update_material_parent(): void
     {
         $faculty = $this->makeUser('faculty');
@@ -115,7 +116,7 @@ class RrMaterialParentsPolicyTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function committee_can_update_material_parent(): void
     {
         $committee = $this->makeUser('committee');
@@ -134,7 +135,7 @@ class RrMaterialParentsPolicyTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function faculty_cannot_delete_material_parent(): void
     {
         $faculty = $this->makeUser('faculty');
@@ -153,7 +154,7 @@ class RrMaterialParentsPolicyTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function committee_can_delete_material_parent(): void
     {
         $committee = $this->makeUser('committee');

@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -53,7 +54,7 @@ class RepositoryChangeLogsTest extends TestCase
 
     // ── Auto-Logging: RrMaterialParents ───────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function creating_a_material_parent_generates_a_create_log(): void
     {
         $committee = $this->makeUser('committee');
@@ -79,7 +80,7 @@ class RepositoryChangeLogsTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function updating_a_material_parent_generates_an_update_log(): void
     {
         $committee = $this->makeUser('committee');
@@ -95,7 +96,7 @@ class RepositoryChangeLogsTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function soft_deleting_a_material_parent_generates_a_delete_log(): void
     {
         $committee = $this->makeUser('committee');
@@ -122,7 +123,7 @@ class RepositoryChangeLogsTest extends TestCase
         $this->assertArrayNotHasKey('deleted_at', $log->change_made);
     }
 
-    /** @test */
+    #[Test]
     public function restoring_a_material_parent_generates_a_restore_log(): void
     {
         $committee = $this->makeUser('committee');
@@ -150,7 +151,7 @@ class RepositoryChangeLogsTest extends TestCase
 
     // ── Auto-Logging: RrMaterials ─────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function creating_a_material_copy_generates_a_create_log_with_material_id(): void
     {
         $committee = $this->makeUser('committee');
@@ -176,7 +177,7 @@ class RepositoryChangeLogsTest extends TestCase
 
     // ── Auto-Logging: Users ───────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function editing_a_user_sets_target_user_id_in_log(): void
     {
         $committee = $this->makeUser('committee');
@@ -193,7 +194,7 @@ class RepositoryChangeLogsTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function creating_a_user_generates_a_log_with_target_user_id(): void
     {
         $committee = $this->makeUser('committee');
@@ -211,7 +212,7 @@ class RepositoryChangeLogsTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function successful_login_event_creates_a_user_login_change_log(): void
     {
         $user = $this->makeUser('student');
@@ -239,7 +240,7 @@ class RepositoryChangeLogsTest extends TestCase
 
     // ── Auto-Logging: MaterialAccessEvents ────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function creating_an_access_event_generates_a_log(): void
     {
         $committee = $this->makeUser('committee');
@@ -268,7 +269,7 @@ class RepositoryChangeLogsTest extends TestCase
 
     // ── Policy: Read-Only ─────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function nobody_can_delete_a_change_log_entry(): void
     {
         $committee = $this->makeUser('committee');
@@ -284,7 +285,7 @@ class RepositoryChangeLogsTest extends TestCase
         $this->assertFalse($committee->can('deleteAny', RepositoryChangeLogs::class));
     }
 
-    /** @test */
+    #[Test]
     public function nobody_can_force_delete_a_change_log(): void
     {
         $committee = $this->makeUser('committee');
@@ -300,7 +301,7 @@ class RepositoryChangeLogsTest extends TestCase
 
     // ── Panel Visibility ──────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function committee_member_can_view_the_change_log_listing(): void
     {
         $committee = $this->makeUser('committee');
@@ -310,7 +311,7 @@ class RepositoryChangeLogsTest extends TestCase
             ->assertSuccessful();
     }
 
-    /** @test */
+    #[Test]
     public function it_admin_can_view_the_change_log_listing(): void
     {
         $it = $this->makeUser('it');
@@ -320,7 +321,7 @@ class RepositoryChangeLogsTest extends TestCase
             ->assertSuccessful();
     }
 
-    /** @test */
+    #[Test]
     public function staff_custodian_is_forbidden_from_change_log_listing(): void
     {
         $staff = $this->makeUser('staff/custodian');
@@ -330,7 +331,7 @@ class RepositoryChangeLogsTest extends TestCase
             ->assertForbidden();
     }
 
-    /** @test */
+    #[Test]
     public function student_is_forbidden_from_change_log_listing(): void
     {
         $student = $this->makeUser('student');
@@ -342,7 +343,7 @@ class RepositoryChangeLogsTest extends TestCase
 
     // ── Table Filters ─────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function change_type_filter_narrows_results(): void
     {
         $committee = $this->makeUser('committee');
@@ -368,7 +369,7 @@ class RepositoryChangeLogsTest extends TestCase
             ->assertCanNotSeeTableRecords([$deleteLog]);
     }
 
-    /** @test */
+    #[Test]
     public function table_changed_filter_narrows_results_by_table(): void
     {
         $committee = $this->makeUser('committee');
@@ -394,7 +395,7 @@ class RepositoryChangeLogsTest extends TestCase
             ->assertCanNotSeeTableRecords([$materialsLog]);
     }
 
-    /** @test */
+    #[Test]
     public function view_page_renders_native_detail_rows_for_change_types(): void
     {
         $committee = $this->makeUser('committee');

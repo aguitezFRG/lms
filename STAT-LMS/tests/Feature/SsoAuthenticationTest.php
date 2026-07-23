@@ -7,13 +7,14 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Socialite\Facades\Socialite;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class SsoAuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function redirect_route_returns_socialite_redirect(): void
     {
         $provider = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
@@ -25,7 +26,7 @@ class SsoAuthenticationTest extends TestCase
             ->assertRedirect('https://accounts.google.com/oauth');
     }
 
-    /** @test */
+    #[Test]
     public function callback_creates_new_student_user(): void
     {
         $googleUser = Mockery::mock(\Laravel\Socialite\Contracts\User::class);
@@ -56,7 +57,7 @@ class SsoAuthenticationTest extends TestCase
         $this->assertEquals($user->id, auth()->id());
     }
 
-    /** @test */
+    #[Test]
     public function callback_links_existing_user_by_email(): void
     {
         $user = $this->makeUser('faculty', [
@@ -85,7 +86,7 @@ class SsoAuthenticationTest extends TestCase
         $this->assertEquals($user->id, auth()->id());
     }
 
-    /** @test */
+    #[Test]
     public function callback_rejects_soft_deleted_user(): void
     {
         $user = $this->makeUser('student', [
@@ -112,7 +113,7 @@ class SsoAuthenticationTest extends TestCase
         $this->assertGuest('web');
     }
 
-    /** @test */
+    #[Test]
     public function callback_handles_oauth_failure(): void
     {
         $provider = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
@@ -127,7 +128,7 @@ class SsoAuthenticationTest extends TestCase
         $this->assertGuest('web');
     }
 
-    /** @test */
+    #[Test]
     public function sso_button_present_on_user_login_page(): void
     {
         $this->get('/app/login')
@@ -135,7 +136,7 @@ class SsoAuthenticationTest extends TestCase
             ->assertSee('Sign in with Google');
     }
 
-    /** @test */
+    #[Test]
     public function sso_button_present_on_admin_login_page(): void
     {
         $this->get('/admin/login')
@@ -143,7 +144,7 @@ class SsoAuthenticationTest extends TestCase
             ->assertSee('Sign in with Google');
     }
 
-    /** @test */
+    #[Test]
     public function new_sso_user_redirected_to_onboarding(): void
     {
         $googleUser = Mockery::mock(\Laravel\Socialite\Contracts\User::class);
@@ -161,7 +162,7 @@ class SsoAuthenticationTest extends TestCase
             ->assertRedirect(route('filament.user.pages.onboarding'));
     }
 
-    /** @test */
+    #[Test]
     public function existing_complete_user_redirected_to_app(): void
     {
         $user = $this->makeUser('student', [
@@ -185,7 +186,7 @@ class SsoAuthenticationTest extends TestCase
             ->assertRedirect('/app');
     }
 
-    /** @test */
+    #[Test]
     public function existing_admin_user_redirected_to_admin(): void
     {
         $user = $this->makeUser('committee', [

@@ -6,6 +6,7 @@ use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -25,25 +26,25 @@ class AuthenticationTest extends TestCase
 
     // ── Unauthenticated Access ────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function unauthenticated_user_is_redirected_to_admin_login_from_admin_panel(): void
     {
         $this->get('/admin')->assertRedirect('/admin/login');
     }
 
-    /** @test */
+    #[Test]
     public function unauthenticated_user_is_redirected_to_user_login_from_user_panel(): void
     {
         $this->get('/app')->assertRedirect('/app/login');
     }
 
-    /** @test */
+    #[Test]
     public function admin_login_page_is_accessible(): void
     {
         $this->get('/admin/login')->assertOk();
     }
 
-    /** @test */
+    #[Test]
     public function user_login_page_is_accessible(): void
     {
         $this->get('/app/login')->assertOk();
@@ -51,7 +52,7 @@ class AuthenticationTest extends TestCase
 
     // ── Canonical Login ───────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function root_redirects_to_user_login_for_guests(): void
     {
         $this->get('/')->assertRedirect('/app/login');
@@ -59,7 +60,7 @@ class AuthenticationTest extends TestCase
 
     // ── Google SSO Button ─────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function user_login_page_contains_google_sso_button(): void
     {
         $this->get('/app/login')
@@ -67,7 +68,7 @@ class AuthenticationTest extends TestCase
             ->assertSee('Sign in with Google');
     }
 
-    /** @test */
+    #[Test]
     public function admin_login_page_contains_google_sso_button(): void
     {
         $this->get('/admin/login')
@@ -77,7 +78,7 @@ class AuthenticationTest extends TestCase
 
     // ── Committee Role ────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function committee_user_can_access_admin_panel(): void
     {
         $user = $this->makeUser('committee');
@@ -87,7 +88,7 @@ class AuthenticationTest extends TestCase
             ->assertOk();
     }
 
-    /** @test */
+    #[Test]
     public function committee_user_is_denied_from_user_panel(): void
     {
         $user = $this->makeUser('committee');
@@ -99,7 +100,7 @@ class AuthenticationTest extends TestCase
 
     // ── Super Admin Role ──────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function super_admin_can_access_admin_panel(): void
     {
         $user = $this->makeUser('super_admin');
@@ -109,7 +110,7 @@ class AuthenticationTest extends TestCase
             ->assertOk();
     }
 
-    /** @test */
+    #[Test]
     public function super_admin_is_denied_from_user_panel(): void
     {
         $user = $this->makeUser('super_admin');
@@ -121,7 +122,7 @@ class AuthenticationTest extends TestCase
 
     // ── IT Role ───────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function it_user_can_access_admin_panel(): void
     {
         $user = $this->makeUser('it');
@@ -131,7 +132,7 @@ class AuthenticationTest extends TestCase
             ->assertOk();
     }
 
-    /** @test */
+    #[Test]
     public function it_user_is_denied_from_user_panel(): void
     {
         $user = $this->makeUser('it');
@@ -143,7 +144,7 @@ class AuthenticationTest extends TestCase
 
     // ── Staff/Custodian Role ──────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function staff_custodian_can_access_admin_panel(): void
     {
         $user = $this->makeUser('staff/custodian');
@@ -153,7 +154,7 @@ class AuthenticationTest extends TestCase
             ->assertOk();
     }
 
-    /** @test */
+    #[Test]
     public function staff_custodian_is_denied_from_user_panel(): void
     {
         $user = $this->makeUser('staff/custodian');
@@ -165,7 +166,7 @@ class AuthenticationTest extends TestCase
 
     // ── Faculty Role ──────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function faculty_user_can_access_user_panel(): void
     {
         $user = $this->makeUser('faculty');
@@ -175,7 +176,7 @@ class AuthenticationTest extends TestCase
             ->assertRedirect();
     }
 
-    /** @test */
+    #[Test]
     public function faculty_user_is_denied_from_admin_panel(): void
     {
         $user = $this->makeUser('faculty');
@@ -187,7 +188,7 @@ class AuthenticationTest extends TestCase
 
     // ── Student Role ──────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function student_user_can_access_user_panel(): void
     {
         $user = $this->makeUser('student');
@@ -197,7 +198,7 @@ class AuthenticationTest extends TestCase
             ->assertRedirect();
     }
 
-    /** @test */
+    #[Test]
     public function student_user_is_denied_from_admin_panel(): void
     {
         $user = $this->makeUser('student');
@@ -209,7 +210,7 @@ class AuthenticationTest extends TestCase
 
     // ── Soft Deleted Users ────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function soft_deleted_user_cannot_access_admin_panel(): void
     {
         $user = $this->makeUser('committee');
@@ -220,7 +221,7 @@ class AuthenticationTest extends TestCase
             ->assertForbidden();
     }
 
-    /** @test */
+    #[Test]
     public function soft_deleted_user_cannot_access_user_panel(): void
     {
         $user = $this->makeUser('student');
@@ -234,11 +235,10 @@ class AuthenticationTest extends TestCase
     // ── Login Credential Validation ───────────────────────────────────────────
 
     /**
-     * @test
-     *
      * Filament v5 login is handled via Livewire, not a plain POST route.
      * We verify panel access using actingAs() which confirms the auth layer.
      */
+    #[Test]
     public function correct_credentials_log_in_admin_user_and_redirect_to_admin_panel(): void
     {
         $user = $this->makeUser('committee');
@@ -252,11 +252,10 @@ class AuthenticationTest extends TestCase
     }
 
     /**
-     * @test
-     *
      * Filament v5 redirects are handled internally; assertRedirect() confirms
      * a redirect occurred without requiring a specific URL.
      */
+    #[Test]
     public function correct_credentials_log_in_user_panel_user_and_redirect_to_user_panel(): void
     {
         $user = $this->makeUser('student', ['password' => bcrypt('password')]);
@@ -272,11 +271,10 @@ class AuthenticationTest extends TestCase
     }
 
     /**
-     * @test
-     *
      * Filament login is Livewire-based; wrong-password validation is tested
      * at the canAccessPanel level — committee users cannot access the user panel.
      */
+    #[Test]
     public function wrong_password_returns_validation_error_on_admin_login(): void
     {
         $user = $this->makeUser('committee');
@@ -288,11 +286,10 @@ class AuthenticationTest extends TestCase
     }
 
     /**
-     * @test
-     *
      * A committee member cannot access the user panel regardless of which
      * login page they use — canAccessPanel('user') returns false for their role.
      */
+    #[Test]
     public function admin_panel_user_logging_into_user_panel_is_denied(): void
     {
         $user = $this->makeUser('committee');
@@ -304,7 +301,7 @@ class AuthenticationTest extends TestCase
 
     // ── Logout ────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function authenticated_admin_user_can_logout(): void
     {
         $user = $this->makeUser('it');

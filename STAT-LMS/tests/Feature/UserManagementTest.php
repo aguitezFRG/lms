@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -44,7 +45,7 @@ class UserManagementTest extends TestCase
 
     // ── List ──────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function committee_member_can_list_users(): void
     {
         $committee = $this->makeUser('committee');
@@ -56,7 +57,7 @@ class UserManagementTest extends TestCase
             ->assertSee($student->email);
     }
 
-    /** @test */
+    #[Test]
     public function it_admin_can_list_users(): void
     {
         $it = $this->makeUser('it');
@@ -68,7 +69,7 @@ class UserManagementTest extends TestCase
             ->assertSee($faculty->email);
     }
 
-    /** @test */
+    #[Test]
     public function staff_custodian_cannot_access_user_listing(): void
     {
         $staff = $this->makeUser('staff/custodian');
@@ -80,7 +81,7 @@ class UserManagementTest extends TestCase
 
     // ── Create ────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function committee_member_can_create_a_new_user(): void
     {
         $committee = $this->makeUser('committee');
@@ -94,7 +95,7 @@ class UserManagementTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'maria.cruz@up.edu.ph']);
     }
 
-    /** @test */
+    #[Test]
     public function creating_user_requires_first_name_last_name_email_and_role(): void
     {
         $committee = $this->makeUser('committee');
@@ -111,7 +112,7 @@ class UserManagementTest extends TestCase
             ->assertHasFormErrors(['f_name', 'l_name', 'email']);
     }
 
-    /** @test */
+    #[Test]
     public function duplicate_email_is_rejected_on_create(): void
     {
         $existing = $this->makeUser('student');
@@ -124,7 +125,7 @@ class UserManagementTest extends TestCase
             ->assertHasFormErrors(['email']);
     }
 
-    /** @test */
+    #[Test]
     public function duplicate_student_number_is_rejected_on_create(): void
     {
         // Create a user with a known, valid student number format
@@ -140,7 +141,7 @@ class UserManagementTest extends TestCase
             ->assertHasFormErrors(['std_number']);
     }
 
-    /** @test */
+    #[Test]
     public function full_name_is_constructed_from_name_parts_on_create(): void
     {
         $committee = $this->makeUser('committee');
@@ -160,7 +161,7 @@ class UserManagementTest extends TestCase
         $this->assertDatabaseHas('users', ['name' => 'Juan dela Cruz']);
     }
 
-    /** @test */
+    #[Test]
     public function password_is_required_on_create_but_optional_on_edit(): void
     {
         // Create target with a null std_number to avoid the unique mask rule
@@ -180,7 +181,7 @@ class UserManagementTest extends TestCase
 
     // ── View ──────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function committee_can_view_user_infolist(): void
     {
         $target = $this->makeUser('student');
@@ -196,7 +197,7 @@ class UserManagementTest extends TestCase
 
     // ── Edit ──────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function committee_member_can_update_another_users_role(): void
     {
         // Null std_number avoids the unique mask validation on a field we aren't testing
@@ -215,7 +216,7 @@ class UserManagementTest extends TestCase
         $this->assertDatabaseHas('users', ['id' => $target->id, 'role' => 'faculty']);
     }
 
-    /** @test */
+    #[Test]
     public function committee_member_cannot_edit_themselves_via_policy(): void
     {
         $committee = $this->makeUser('committee');
@@ -225,7 +226,7 @@ class UserManagementTest extends TestCase
         $this->assertFalse($committee->can('update', $committee));
     }
 
-    /** @test */
+    #[Test]
     public function email_field_is_not_editable_on_edit_form(): void
     {
         // The email field uses hiddenOn('edit'), so it is excluded from the edit
@@ -246,7 +247,7 @@ class UserManagementTest extends TestCase
 
     // ── Delete & Restore ──────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function committee_member_can_soft_delete_another_user(): void
     {
         $target = $this->makeUser('student');
@@ -261,7 +262,7 @@ class UserManagementTest extends TestCase
         $this->assertSoftDeleted('users', ['id' => $target->id]);
     }
 
-    /** @test */
+    #[Test]
     public function committee_member_cannot_delete_themselves(): void
     {
         $committee = $this->makeUser('committee');
@@ -271,7 +272,7 @@ class UserManagementTest extends TestCase
         $this->assertFalse($committee->can('delete', $committee));
     }
 
-    /** @test */
+    #[Test]
     public function committee_member_can_restore_a_soft_deleted_user(): void
     {
         $target = $this->makeUser('student');
@@ -288,7 +289,7 @@ class UserManagementTest extends TestCase
         $this->assertNotSoftDeleted('users', ['id' => $target->id]);
     }
 
-    /** @test */
+    #[Test]
     public function soft_deleted_users_are_hidden_by_default(): void
     {
         $active = $this->makeUser('student');
@@ -306,7 +307,7 @@ class UserManagementTest extends TestCase
 
     // ── Table Filters ─────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function role_filter_narrows_listing_to_selected_role(): void
     {
         $student = $this->makeUser('student');
@@ -322,7 +323,7 @@ class UserManagementTest extends TestCase
             ->assertDontSee($faculty->email);
     }
 
-    /** @test */
+    #[Test]
     public function table_search_finds_user_by_email(): void
     {
         $target = $this->makeUser('student', ['email' => 'unique.student@up.edu.ph']);

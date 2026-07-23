@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Notification;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class MaterialStreamWatermarkSecurityTest extends TestCase
@@ -94,7 +95,7 @@ PDF;
         );
     }
 
-    /** @test */
+    #[Test]
     public function authorized_stream_returns_watermarked_pdf_payload_from_service_with_pdf_headers(): void
     {
         $student = $this->makeUser('student');
@@ -144,7 +145,7 @@ PDF;
         $this->assertStringContainsString('WATERMARK_SENTINEL', (string) $response->getContent());
     }
 
-    /** @test */
+    #[Test]
     public function normal_viewer_keeps_the_authenticated_material_stream_url(): void
     {
         $student = $this->makeUser('student');
@@ -161,7 +162,7 @@ PDF;
             ->assertSee(json_encode($streamUrl), false);
     }
 
-    /** @test */
+    #[Test]
     public function expired_digital_access_is_revoked_and_cannot_stream_material(): void
     {
         Notification::fake();
@@ -193,7 +194,7 @@ PDF;
         Notification::assertSentTo($student, RequestStatusChanged::class);
     }
 
-    /** @test */
+    #[Test]
     public function watermark_service_failure_returns_original_pdf_with_fallback_header(): void
     {
         $student = $this->makeUser('student');
@@ -230,7 +231,7 @@ PDF;
         $this->assertSame($cleanContent, (string) $response->getContent());
     }
 
-    /** @test */
+    #[Test]
     public function watermark_service_generates_a_readable_pdf_with_actual_pdf_stack(): void
     {
         $sourcePath = tempnam(sys_get_temp_dir(), 'watermark-source-').'.pdf';
@@ -267,7 +268,7 @@ PDF;
         }
     }
 
-    /** @test */
+    #[Test]
     public function qr_payload_uses_student_number_when_present(): void
     {
         $student = $this->makeUser('student', [
@@ -277,7 +278,7 @@ PDF;
         $this->assertSame('S|2026-00001|260507-14:32', $this->qrPayloadFor($student));
     }
 
-    /** @test */
+    #[Test]
     public function qr_payload_uses_name_code_when_student_number_is_missing(): void
     {
         $student = $this->makeUser('faculty', [
@@ -291,7 +292,7 @@ PDF;
         $this->assertSame('S|MSantos|260507-14:32', $this->qrPayloadFor($student));
     }
 
-    /** @test */
+    #[Test]
     public function qr_payload_adds_numeric_suffix_for_duplicate_name_codes(): void
     {
         $first = $this->makeUser('faculty', [

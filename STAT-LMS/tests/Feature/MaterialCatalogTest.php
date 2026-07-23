@@ -14,6 +14,7 @@ use App\Models\RrMaterials;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -50,7 +51,7 @@ class MaterialCatalogTest extends TestCase
 
     // ── Access-Level Visibility ───────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function student_sees_only_public_materials(): void
     {
         $public = $this->makeMaterial(1, ['title' => 'Public Paper']);
@@ -67,7 +68,7 @@ class MaterialCatalogTest extends TestCase
             ->assertDontSee('Confidential Paper');
     }
 
-    /** @test */
+    #[Test]
     public function faculty_sees_public_and_restricted_materials(): void
     {
         $public = $this->makeMaterial(1, ['title' => 'Public Paper']);
@@ -84,7 +85,7 @@ class MaterialCatalogTest extends TestCase
             ->assertDontSee('Confidential Paper');
     }
 
-    /** @test */
+    #[Test]
     public function committee_member_sees_all_access_levels(): void
     {
         $this->makeMaterial(1, ['title' => 'Public Paper']);
@@ -101,7 +102,7 @@ class MaterialCatalogTest extends TestCase
             ->assertSee('Confidential Paper');
     }
 
-    /** @test */
+    #[Test]
     public function staff_custodian_sees_public_and_restricted_in_admin_panel(): void
     {
         $this->makeMaterial(1, ['title' => 'Public Paper']);
@@ -121,13 +122,12 @@ class MaterialCatalogTest extends TestCase
     // ── Create ────────────────────────────────────────────────────────────────
 
     /**
-     * @test
-     *
      * TagsInput fields (adviser, keywords, sdgs) must be provided as plain
      * PHP arrays in fillForm — Filament internally serialises them to JSON.
      * Passing a JSON string or a nested array with 'value' keys will fail
      * validation because the field expects an array of strings.
      */
+    #[Test]
     public function committee_member_can_create_material(): void
     {
         $committee = $this->makeUser('committee');
@@ -153,7 +153,7 @@ class MaterialCatalogTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function student_cannot_access_create_material_page(): void
     {
         $student = $this->makeUser('student');
@@ -163,7 +163,7 @@ class MaterialCatalogTest extends TestCase
             ->assertForbidden();
     }
 
-    /** @test */
+    #[Test]
     public function creating_material_requires_title_and_author(): void
     {
         $committee = $this->makeUser('committee');
@@ -182,7 +182,7 @@ class MaterialCatalogTest extends TestCase
 
     // ── View ──────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function committee_can_view_material_infolist(): void
     {
         $material = $this->makeMaterial(1, ['title' => 'Viewable Material']);
@@ -196,7 +196,7 @@ class MaterialCatalogTest extends TestCase
             ->assertSee('Viewable Material');
     }
 
-    /** @test */
+    #[Test]
     public function admin_material_infolist_metadata_is_not_linked_to_user_catalog(): void
     {
         $material = $this->makeMaterial(1, [
@@ -223,7 +223,7 @@ class MaterialCatalogTest extends TestCase
             ->assertDontSeeHtml('searchScope=');
     }
 
-    /** @test */
+    #[Test]
     public function user_catalog_infolist_metadata_links_to_catalog_filters(): void
     {
         $material = $this->makeMaterial(1, [
@@ -252,7 +252,7 @@ class MaterialCatalogTest extends TestCase
             ->assertSeeHtml(e(CatalogResource::getUrl('index', ['sdgFilter' => ['Quality Education']])));
     }
 
-    /** @test */
+    #[Test]
     public function student_cannot_view_confidential_material(): void
     {
         $material = $this->makeMaterial(3, ['title' => 'Secret Thesis']);
@@ -266,13 +266,12 @@ class MaterialCatalogTest extends TestCase
     // ── Edit ──────────────────────────────────────────────────────────────────
 
     /**
-     * @test
-     *
      * TagsInput fields carry their current values on load. When we only want
      * to update the title, we must also supply the required TagsInput fields
      * (adviser, keywords, sdgs) so they pass validation; omitting them causes
      * Filament to treat them as empty/null and fail the `required` rule.
      */
+    #[Test]
     public function it_admin_can_edit_material_title(): void
     {
         $material = $this->makeMaterial(1, [
@@ -300,7 +299,7 @@ class MaterialCatalogTest extends TestCase
         $this->assertDatabaseHas('rr_material_parents', ['title' => 'Updated Title']);
     }
 
-    /** @test */
+    #[Test]
     public function faculty_user_cannot_edit_another_authors_material(): void
     {
         $material = $this->makeMaterial(2, ['title' => 'Faculty Material']);
@@ -314,7 +313,7 @@ class MaterialCatalogTest extends TestCase
 
     // ── Soft Delete & Restore ─────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function committee_member_can_soft_delete_material(): void
     {
         $material = $this->makeMaterial(1, ['title' => 'Deletable Material']);
@@ -330,7 +329,7 @@ class MaterialCatalogTest extends TestCase
         $this->assertSoftDeleted('rr_material_parents', ['id' => $material->id]);
     }
 
-    /** @test */
+    #[Test]
     public function committee_member_can_restore_soft_deleted_material(): void
     {
         $material = $this->makeMaterial(1);
@@ -349,7 +348,7 @@ class MaterialCatalogTest extends TestCase
         $this->assertNotSoftDeleted('rr_material_parents', ['id' => $material->id]);
     }
 
-    /** @test */
+    #[Test]
     public function soft_deleting_a_parent_sets_all_copies_is_available_to_false(): void
     {
         // Use raw factories to preserve booted() hooks (make* helpers flush event listeners)
@@ -363,7 +362,7 @@ class MaterialCatalogTest extends TestCase
         $this->assertDatabaseHas('rr_materials', ['id' => $copyB->id, 'is_available' => false]);
     }
 
-    /** @test */
+    #[Test]
     public function restoring_parent_respects_individual_copy_deletion_precedence(): void
     {
         $parent = RrMaterialParents::factory()->create();
@@ -384,7 +383,7 @@ class MaterialCatalogTest extends TestCase
         $this->assertDatabaseHas('rr_materials', ['id' => $copyB->id, 'is_available' => false]);
     }
 
-    /** @test */
+    #[Test]
     public function soft_deleted_materials_are_hidden_by_default_in_listing(): void
     {
         $active = $this->makeMaterial(1, ['title' => 'Active Material']);
@@ -400,7 +399,7 @@ class MaterialCatalogTest extends TestCase
             ->assertDontSee('Deleted Material');
     }
 
-    /** @test */
+    #[Test]
     public function trashed_filter_reveals_soft_deleted_materials(): void
     {
         $deleted = $this->makeMaterial(1, ['title' => 'Deleted Material']);
@@ -417,7 +416,7 @@ class MaterialCatalogTest extends TestCase
 
     // ── Table Filters & Search ────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function material_type_filter_narrows_results(): void
     {
         $this->makeMaterial(1, ['title' => 'Book Title',   'material_type' => 1]);
@@ -433,7 +432,7 @@ class MaterialCatalogTest extends TestCase
             ->assertDontSee('Thesis Title');
     }
 
-    /** @test */
+    #[Test]
     public function table_search_finds_material_by_title(): void
     {
         $this->makeMaterial(1, ['title' => 'Unique Bayesian Study']);
@@ -451,7 +450,7 @@ class MaterialCatalogTest extends TestCase
 
     // ── Publication Date Range Guards ─────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function draft_pub_date_from_auto_clears_when_to_is_set_earlier(): void
     {
         $this->makeMaterial(1, ['title' => 'Dated Material']);
@@ -470,7 +469,7 @@ class MaterialCatalogTest extends TestCase
             ->assertSet('draftPubDateTo', '2024-01-01');
     }
 
-    /** @test */
+    #[Test]
     public function draft_pub_date_to_auto_clears_when_from_is_set_later(): void
     {
         $this->makeMaterial(1, ['title' => 'Dated Material']);
@@ -489,7 +488,7 @@ class MaterialCatalogTest extends TestCase
             ->assertSet('draftPubDateTo', '');
     }
 
-    /** @test */
+    #[Test]
     public function apply_filters_applies_single_date_bound_after_guard_clears_conflict(): void
     {
         $this->makeMaterial(1, ['title' => 'Dated Material']);
@@ -515,7 +514,7 @@ class MaterialCatalogTest extends TestCase
             ->assertSet('filterPanelOpen', false);
     }
 
-    /** @test */
+    #[Test]
     public function catalog_controls_toggle_filter_panel_and_sort_direction(): void
     {
         $this->makeMaterial(1, ['title' => 'Interactive Catalog']);
@@ -531,7 +530,7 @@ class MaterialCatalogTest extends TestCase
             ->assertSet('sortDir', 'asc');
     }
 
-    /** @test */
+    #[Test]
     public function user_catalog_adviser_filter_from_query_string_filters_results_in_sqlite(): void
     {
         $this->makeMaterial(1, ['title' => 'With Reyes', 'adviser' => ['Dr. Reyes']]);
@@ -549,7 +548,7 @@ class MaterialCatalogTest extends TestCase
             ->assertDontSee('With Cruz');
     }
 
-    /** @test */
+    #[Test]
     public function user_catalog_sdg_filter_matches_json_values_in_sqlite(): void
     {
         $this->makeMaterial(1, ['title' => 'SDG Health', 'sdgs' => ['Good Health and Well-being']]);

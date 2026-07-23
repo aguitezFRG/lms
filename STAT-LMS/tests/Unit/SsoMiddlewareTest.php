@@ -5,13 +5,14 @@ namespace Tests\Unit;
 use App\Http\Middleware\EnsureProfileComplete;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class SsoMiddlewareTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function incomplete_user_redirected_to_onboarding(): void
     {
         Route::middleware(['auth', EnsureProfileComplete::class])
@@ -25,7 +26,7 @@ class SsoMiddlewareTest extends TestCase
             ->assertRedirect(route('filament.user.pages.onboarding'));
     }
 
-    /** @test */
+    #[Test]
     public function complete_user_passes_through(): void
     {
         Route::middleware(['auth', EnsureProfileComplete::class])
@@ -40,7 +41,7 @@ class SsoMiddlewareTest extends TestCase
             ->assertSee('ok');
     }
 
-    /** @test */
+    #[Test]
     public function auth_google_routes_exempted(): void
     {
         Route::middleware([EnsureProfileComplete::class])
@@ -55,7 +56,7 @@ class SsoMiddlewareTest extends TestCase
             ->assertSee('ok');
     }
 
-    /** @test */
+    #[Test]
     public function onboarding_route_exempted(): void
     {
         $user = $this->makeUser('student', ['is_profile_complete' => false]);
@@ -64,7 +65,7 @@ class SsoMiddlewareTest extends TestCase
         $this->get('/app/onboarding')->assertOk();
     }
 
-    /** @test */
+    #[Test]
     public function guest_user_passes_through(): void
     {
         Route::middleware([EnsureProfileComplete::class])
