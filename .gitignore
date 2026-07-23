@@ -34,3 +34,6 @@ auth.json
 
 # Local deployment runbook
 /VERCEL_DEPLOYMENT.md
+
+# Local agent preferences
+/TASTES.md

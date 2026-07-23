@@ -33,10 +33,6 @@ Use concise conventional-style subjects visible in project history: `feat: add c
 
 Never commit `.env`, credentials, OAuth secrets, or private repository files. Preserve authorization checks and audit-log behavior when changing access workflows. Review storage, streamed PDF, and role-policy changes with particular care.
 
-## Project Preferences
-
-Consult `TASTES.md` before relevant decisions. Record every user-stated preference, decision, and approved action immediately.
-
 ## Agent Delegation
 
 The primary agent owns planning, orchestration, integration, and decisions. Use no more than two sub-agents at one time. Give every sub-agent a detailed execution plan, keep assignments mutually exclusive, and limit sub-agents to executing the user's approved plan rather than revising scope or making product decisions. Prefer GPT-5.4-mini for plan execution, exploration, and straightforward implementation; GPT-5.4 may be used for focused exploration, diagnosis, debugging, or testing. If those exact model labels are unavailable, use the closest available coding model and disclose the substitution. Interrupt a sub-agent that fails to show concrete progress within five minutes; request its completed-checks/blockers audit before replacing it or finishing the work in the primary agent.
