@@ -75,6 +75,9 @@ jobs:
           npm audit
           npm --prefix client audit
 
+      - name: Build application assets
+        run: npm run build
+
       - name: Run SQLite regression suite
         run: composer test
 
@@ -105,9 +108,8 @@ jobs:
       - name: Check PHP formatting
         run: ./vendor/bin/pint --test
 
-      - name: Build both frontend variants
+      - name: Build browser-only frontend variant
         run: |
-          npm run build
           npm --prefix client test
           npm --prefix client run build
           composer demo:build
