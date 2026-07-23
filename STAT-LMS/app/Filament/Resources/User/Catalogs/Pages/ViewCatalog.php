@@ -232,6 +232,10 @@ class ViewCatalog extends ViewRecord
             ->body('Your request is pending approval from the reading room staff.')
             ->success()
             ->send();
+
+        $this->availableCopyCache = [];
+        $this->activeRequestCache = [];
+        $this->approvedAccessCache = [];
     }
 
     protected function forcePageRefresh(): void

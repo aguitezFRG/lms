@@ -22,14 +22,16 @@ class MaterialStreamController extends Controller
     {
         $this->authorizeAccess($record);
 
-        $path = $this->resolveMaterialPath($record);
+        if (config('demo.enabled')) {
+            $streamUrl = $this->demoStaticPdfUrl($record);
+        } else {
+            $path = $this->resolveMaterialPath($record);
 
-        if ($path === null && ! config('demo.enabled')) {
-            abort(404);
-        }
+            if ($path === null || ! file_exists($path)) {
+                abort(404);
+            }
 
-        if (! config('demo.enabled') && ! file_exists($path)) {
-            abort(404);
+            $streamUrl = route('materials.stream', ['record' => $record->id]);
         }
 
         $metadata = $pdfWatermarkService->watermarkMetadata(
@@ -39,7 +41,7 @@ class MaterialStreamController extends Controller
 
         return view('filament.pdf.viewer', [
             'record' => $record,
-            'streamUrl' => route('materials.stream', ['record' => $record->id]),
+            'streamUrl' => $streamUrl,
             'user' => auth()->user(),
             'title' => $record->parent?->title ?? basename($record->file_name),
             'qrDataUrl' => $metadata['qrDataUrl'],
@@ -55,17 +57,10 @@ class MaterialStreamController extends Controller
     {
         $this->authorizeAccess($record);
 
+        // Packaged PDFs are fetched directly from the static host in demo mode.
+        abort_if(config('demo.enabled'), 404);
+
         $path = $this->resolveMaterialPath($record);
-
-        if (config('demo.enabled') && ($path === null || ! file_exists($path))) {
-            $baseUrl = config('demo.static_asset_url');
-
-            abort_if(blank($baseUrl), 404);
-
-            return redirect()->away($baseUrl.'/pdfs/'.rawurlencode(basename((string) $record->file_name)), 302, [
-                'Cache-Control' => 'no-store, no-cache, must-revalidate',
-            ]);
-        }
 
         if ($path === null) {
             Log::warning('Stream blocked: invalid material file path', [
@@ -225,5 +220,27 @@ class MaterialStreamController extends Controller
         }
 
         return $parentRealPath.DIRECTORY_SEPARATOR.basename($candidatePath);
+    }
+
+    private function demoStaticPdfUrl(RrMaterials $record): string
+    {
+        $baseUrl = rtrim((string) config('demo.static_asset_url'), '/');
+        $parts = parse_url($baseUrl);
+        $rawFilename = trim(str_replace('\\', '/', (string) $record->file_name));
+        $filename = basename($rawFilename);
+
+        $validOrigin = filter_var($baseUrl, FILTER_VALIDATE_URL)
+            && is_array($parts)
+            && in_array($parts['scheme'] ?? null, ['http', 'https'], true)
+            && filled($parts['host'] ?? null)
+            && blank($parts['user'] ?? null)
+            && blank($parts['pass'] ?? null)
+            && blank($parts['query'] ?? null)
+            && blank($parts['fragment'] ?? null)
+            && in_array($parts['path'] ?? '', ['', '/'], true);
+
+        abort_if(! $validOrigin || blank($filename) || in_array($filename, ['.', '..'], true), 404);
+
+        return $baseUrl.'/pdfs/'.rawurlencode($filename);
     }
 }

@@ -176,16 +176,24 @@ class PdfWatermarkService
 
     public function watermarkMetadata(User $user, Carbon $accessedAt): array
     {
+        $infoLine = $this->buildInfoLine($user, $accessedAt);
+
+        // BaconQrCode requires iconv, which is not available in the packaged
+        // PHP-WASM runtime. The viewer still applies its text watermark there.
+        if (! function_exists('iconv')) {
+            return ['qrDataUrl' => null, 'infoLine' => $infoLine];
+        }
+
         $tempBase = tempnam(sys_get_temp_dir(), 'stat_lms_qr_');
         if ($tempBase === false) {
-            return ['qrDataUrl' => null, 'infoLine' => $this->buildInfoLine($user, $accessedAt)];
+            return ['qrDataUrl' => null, 'infoLine' => $infoLine];
         }
 
         $qrPngPath = $tempBase.'.png';
         if (! @rename($tempBase, $qrPngPath)) {
             @unlink($tempBase);
 
-            return ['qrDataUrl' => null, 'infoLine' => $this->buildInfoLine($user, $accessedAt)];
+            return ['qrDataUrl' => null, 'infoLine' => $infoLine];
         }
 
         try {
@@ -195,7 +203,7 @@ class PdfWatermarkService
 
             return [
                 'qrDataUrl' => $qrDataUrl,
-                'infoLine' => $this->buildInfoLine($user, $accessedAt),
+                'infoLine' => $infoLine,
             ];
         } finally {
             if (is_file($qrPngPath)) {

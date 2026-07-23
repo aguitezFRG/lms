@@ -516,6 +516,22 @@ class MaterialCatalogTest extends TestCase
     }
 
     /** @test */
+    public function catalog_controls_toggle_filter_panel_and_sort_direction(): void
+    {
+        $this->makeMaterial(1, ['title' => 'Interactive Catalog']);
+        $student = $this->makeUser('student');
+        $this->actingAs($student);
+
+        Livewire::test(ListCatalogs::class)
+            ->assertSet('filterPanelOpen', false)
+            ->assertSet('sortDir', 'desc')
+            ->call('toggleFilterPanel')
+            ->assertSet('filterPanelOpen', true)
+            ->call('toggleSortDir')
+            ->assertSet('sortDir', 'asc');
+    }
+
+    /** @test */
     public function user_catalog_adviser_filter_from_query_string_filters_results_in_sqlite(): void
     {
         $this->makeMaterial(1, ['title' => 'With Reyes', 'adviser' => ['Dr. Reyes']]);

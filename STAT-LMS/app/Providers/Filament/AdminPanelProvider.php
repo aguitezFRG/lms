@@ -38,6 +38,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->homeUrl(fn () => AdminOnboarding::getUrl())
             ->viteTheme('resources/css/filament/admin/theme.css')
+            ->font(null, preload: [])
             ->brandLogoHeight('2.5rem')
             ->brandLogo(new HtmlString('
                 <div style="display: flex; align-items: center; gap: 16px; padding: 4px 0;">
@@ -109,6 +110,10 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn () => config('demo.enabled') ? '' : view('filament.components.password-encryption-script'),
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn () => config('demo.enabled') ? view('filament.components.demo-notification-bridge') : '',
             )
             ->renderHook(
                 PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,

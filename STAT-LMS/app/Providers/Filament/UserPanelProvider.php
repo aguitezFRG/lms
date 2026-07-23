@@ -36,6 +36,7 @@ class UserPanelProvider extends PanelProvider
             ->id('user')
             ->path('app')
             ->viteTheme('resources/css/filament/user/theme.css')
+            ->font(null, preload: [])
             ->brandLogoHeight('2.5rem')
             ->brandLogo(new HtmlString('
                 <div style="display: flex; align-items: center; gap: 16px; padding: 4px 0;">
@@ -102,6 +103,10 @@ class UserPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn () => config('demo.enabled') ? '' : view('filament.components.password-encryption-script'),
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn () => config('demo.enabled') ? view('filament.components.demo-notification-bridge') : '',
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,

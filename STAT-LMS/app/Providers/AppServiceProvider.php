@@ -16,7 +16,9 @@ use App\Observers\RepositoryChangeLogsObserver;
 use App\Observers\UserObserver;
 use App\Policies\DashboardPolicy;
 use App\Policies\SystemUsagePolicy;
+use App\Support\DemoNotification;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
 use Filament\Support\Facades\FilamentIcon;
 use Filament\View\PanelsIconAlias;
@@ -56,6 +58,8 @@ class AppServiceProvider extends ServiceProvider
             'session.driver' => 'cookie',
             'session.expire_on_close' => true,
         ]);
+
+        $this->app->bind(Notification::class, DemoNotification::class);
     }
 
     /**
@@ -65,6 +69,17 @@ class AppServiceProvider extends ServiceProvider
     {
         if (config('demo.enabled')) {
             URL::forceRootUrl(config('app.url'));
+
+            // php-cgi-wasm does not expose arbitrary browser headers as CGI
+            // variables. Restore Livewire's request marker for the demo's
+            // tokenized endpoints before Filament and Livewire dehydrate.
+            if (app()->bound('request')) {
+                $request = app('request');
+
+                if (preg_match('#(?:^|/)livewire-[^/]+/(?:update|upload-file)$#', $request->path())) {
+                    $request->headers->set('X-Livewire', 'true');
+                }
+            }
         }
 
         Blade::componentNamespace('App\\Filament\\Components', 'onboarding');
@@ -139,22 +154,16 @@ class AppServiceProvider extends ServiceProvider
 
         Action::configureUsing(function (Action $action) {
             if (config('demo.enabled')) {
-                // Filament's partial action-modal renderer can emit an empty
-                // fragment in PHP-WASM. A full render keeps all action mounts
-                // and mutations on the stable Livewire rendering path.
-                $action
-                    ->mountUsing(static function (?Schema $schema, Component $livewire): void {
-                        $schema?->fill();
+                // Filament's partial modal renderer can emit an empty fragment
+                // in PHP-WASM. Force the full render only while mounting so the
+                // confirmed mutation can dehydrate its newly committed state.
+                $action->mountUsing(static function (?Schema $schema, Component $livewire): void {
+                    $schema?->fill();
 
-                        if (method_exists($livewire, 'forceRender')) {
-                            $livewire->forceRender();
-                        }
-                    })
-                    ->before(static function (Component $livewire): void {
-                        if (method_exists($livewire, 'forceRender')) {
-                            $livewire->forceRender();
-                        }
-                    });
+                    if (method_exists($livewire, 'forceRender')) {
+                        $livewire->forceRender();
+                    }
+                });
             }
 
             // Log::info('Configuring action: ' . $action->getName());

@@ -4,8 +4,11 @@ namespace Tests\Feature;
 
 use App\Filament\Components\Admin\SuperAdminFeatureCards;
 use App\Filament\Components\User\StudentFeatureCards;
+use App\Filament\Resources\User\Catalogs\Pages\ViewCatalog;
+use App\Models\MaterialAccessEvents;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class DemoModeTest extends TestCase
@@ -61,6 +64,22 @@ class DemoModeTest extends TestCase
             ->assertSee('margin: auto;', false);
     }
 
+    public function test_profile_chooser_uses_the_saved_panel_theme(): void
+    {
+        User::factory()->student()->create();
+
+        $this->assertStringContainsString(
+            '@custom-variant dark (&:where(.dark, .dark *));',
+            file_get_contents(resource_path('css/app.css')),
+        );
+
+        $this->get('/demo/profiles')
+            ->assertOk()
+            ->assertSee("const storageKey = 'stat-lms-theme';", false)
+            ->assertSee('dark:bg-slate-950', false)
+            ->assertSee('html.oled.dark .demo-profile-page', false);
+    }
+
     public function test_onboarding_cards_stay_inside_the_php_runtime(): void
     {
         $this->assertStringContainsString(
@@ -83,12 +102,141 @@ class DemoModeTest extends TestCase
     public function test_selecting_student_profile_redirects_to_user_panel_and_authenticates_following_requests(): void
     {
         $student = User::factory()->student()->create();
+        $sessionCookie = config('session.cookie');
+        $chooserResponse = $this->get('/demo/profiles');
+        $cookies = collect($chooserResponse->headers->getCookies())
+            ->mapWithKeys(fn ($cookie): array => [
+                $cookie->getName() => $chooserResponse->getCookie($cookie->getName())?->getValue(),
+            ])
+            ->all();
+        $sessionId = $cookies[$sessionCookie] ?? null;
 
-        $this->post('/demo/profiles', ['profile_id' => (string) $student->id])
+        $response = $this->withCookies($cookies)
+            ->post('/demo/profiles', ['profile_id' => (string) $student->id])
             ->assertRedirect('/app')
             ->assertSessionHas(config('demo.profile_session_key'), $student->id);
 
+        $this->assertNotNull($sessionId);
+        $this->assertSame($sessionId, $response->getCookie($sessionCookie)?->getValue());
+
         $this->get('/app')->assertRedirect();
+    }
+
+    public function test_profile_chooser_locks_after_one_confirmed_submission(): void
+    {
+        User::factory()->student()->create();
+
+        $this->get('/demo/profiles')
+            ->assertOk()
+            ->assertSee('let submissionLocked = false;', false)
+            ->assertSee('if (submissionLocked) return;', false)
+            ->assertSee("button?.setAttribute('disabled', '');", false)
+            ->assertSee('form.submit();', false);
+    }
+
+    public function test_demo_request_dispatches_one_immediate_notification_and_disables_the_action(): void
+    {
+        $parent = $this->makeMaterialParent(['access_level' => 1]);
+        $copy = $this->makeMaterialCopy([
+            'material_parent_id' => $parent->id,
+            'is_digital' => true,
+            'is_available' => true,
+            'file_name' => 'repo/demo-request.pdf',
+        ]);
+        $student = $this->makeUser('student');
+        $this->actingAs($student);
+
+        $component = Livewire::test(ViewCatalog::class, ['record' => $parent->id])
+            ->callAction('requestDigital')
+            ->assertActionDisabled('requestDigital');
+
+        $dispatches = collect(data_get($component->effects, 'dispatches'))
+            ->where('name', 'demo-notification')
+            ->values();
+
+        $this->assertCount(1, $dispatches);
+        $this->assertSame([
+            'title',
+            'body',
+            'status',
+            'duration',
+            'icon',
+            'identifier',
+        ], array_keys($dispatches->first()['params']['notification']));
+        $this->assertSame('Digital request submitted!', $dispatches->first()['params']['notification']['title']);
+        $this->assertSame('success', $dispatches->first()['params']['notification']['status']);
+        $this->assertFalse(session()->has('filament.notifications'));
+        $this->assertSame(1, MaterialAccessEvents::where([
+            'user_id' => $student->id,
+            'rr_material_id' => $copy->id,
+        ])->count());
+    }
+
+    public function test_demo_viewer_uses_an_encoded_packaged_pdf_url(): void
+    {
+        config()->set('demo.static_asset_url', 'https://demo.example');
+        $committee = $this->makeUser('committee');
+        $parent = $this->makeMaterialParent([
+            'access_level' => 3,
+            'title' => 'Packaged PDF',
+        ]);
+        $copy = $this->makeMaterialCopy([
+            'material_parent_id' => $parent->id,
+            'is_digital' => true,
+            'file_name' => 'nested/Research Paper #1.pdf',
+        ]);
+
+        $streamUrl = 'https://demo.example/pdfs/Research%20Paper%20%231.pdf';
+
+        $this->actingAs($committee)
+            ->get(route('materials.viewer', ['record' => $copy->id]))
+            ->assertOk()
+            ->assertSee(json_encode($streamUrl), false)
+            ->assertDontSee(route('materials.stream', ['record' => $copy->id]), false);
+
+        $this->actingAs($committee)
+            ->get(route('materials.stream', ['record' => $copy->id]))
+            ->assertNotFound();
+    }
+
+    public function test_demo_profile_session_authenticates_the_protected_viewer_route(): void
+    {
+        config()->set('demo.static_asset_url', 'https://demo.example');
+        $committee = $this->makeUser('committee');
+        $parent = $this->makeMaterialParent(['access_level' => 3]);
+        $copy = $this->makeMaterialCopy([
+            'material_parent_id' => $parent->id,
+            'is_digital' => true,
+            'file_name' => 'protected.pdf',
+        ]);
+
+        $this->post('/demo/profiles', ['profile_id' => (string) $committee->id])
+            ->assertRedirect('/admin');
+
+        $this->get(route('materials.viewer', ['record' => $copy->id]))
+            ->assertOk()
+            ->assertSee(json_encode('https://demo.example/pdfs/protected.pdf'), false);
+    }
+
+    public function test_demo_viewer_rejects_missing_filename_or_invalid_static_origin(): void
+    {
+        $committee = $this->makeUser('committee');
+        $parent = $this->makeMaterialParent(['access_level' => 1]);
+        $copy = $this->makeMaterialCopy([
+            'material_parent_id' => $parent->id,
+            'is_digital' => true,
+            'file_name' => null,
+        ]);
+
+        config()->set('demo.static_asset_url', 'not-an-origin');
+        $this->actingAs($committee)
+            ->get(route('materials.viewer', ['record' => $copy->id]))
+            ->assertNotFound();
+
+        $copy->update(['file_name' => 'valid.pdf']);
+        $this->actingAs($committee)
+            ->get(route('materials.viewer', ['record' => $copy->id]))
+            ->assertNotFound();
     }
 
     public function test_selecting_admin_profile_redirects_to_admin_panel(): void
@@ -98,7 +246,13 @@ class DemoModeTest extends TestCase
         $this->post('/demo/profiles', ['profile_id' => (string) $committee->id])
             ->assertRedirect('/admin');
 
-        $this->get('/admin')->assertOk();
+        $this->get('/admin')
+            ->assertOk()
+            ->assertDontSee('rel="preload" href="/fonts/filament/filament/inter', false)
+            ->assertSee('demo-notification-stack', false)
+            ->assertSee("document.addEventListener('x-modal-opened'", false)
+            ->assertSee("window.Livewire.hook('morphed'", false)
+            ->assertSee('[data-fi-modal-id*="-action-"].fi-modal-open', false);
     }
 
     public function test_super_admin_profile_hides_the_role_view_selector(): void

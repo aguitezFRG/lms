@@ -145,6 +145,23 @@ PDF;
     }
 
     /** @test */
+    public function normal_viewer_keeps_the_authenticated_material_stream_url(): void
+    {
+        $student = $this->makeUser('student');
+        $material = $this->makeApprovedDigitalMaterialForUser($student->id);
+        $storagePath = storage_path('app/private/repo');
+        File::ensureDirectoryExists($storagePath);
+        File::put($storagePath.'/watermark-test.pdf', $this->minimalValidPdfContent());
+
+        $streamUrl = route('materials.stream', ['record' => $material->id]);
+
+        $this->actingAs($student)
+            ->get(route('materials.viewer', ['record' => $material->id]))
+            ->assertOk()
+            ->assertSee(json_encode($streamUrl), false);
+    }
+
+    /** @test */
     public function expired_digital_access_is_revoked_and_cannot_stream_material(): void
     {
         Notification::fake();

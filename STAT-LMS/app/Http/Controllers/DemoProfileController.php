@@ -46,7 +46,6 @@ class DemoProfileController extends Controller
             ->where('is_banned', false)
             ->firstOrFail();
 
-        $request->session()->regenerate();
         RoleViewMode::clear();
         $request->session()->put(config('demo.profile_session_key'), $user->getKey());
 

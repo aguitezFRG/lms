@@ -85,7 +85,10 @@ class MaterialAccessEventsTest extends TestCase
 
         Livewire::test(ViewCatalog::class, [
             'record' => $parent->id,
-        ])->callAction('requestDigital');
+        ])
+            ->callAction('requestDigital')
+            ->assertNotified('Digital request submitted!')
+            ->assertActionDisabled('requestDigital');
 
         $this->assertDatabaseHas('material_access_events', [
             'user_id' => $student->id,
@@ -104,7 +107,10 @@ class MaterialAccessEventsTest extends TestCase
 
         Livewire::test(ViewCatalog::class, [
             'record' => $parent->id,
-        ])->callAction('borrowPhysical');
+        ])
+            ->callAction('borrowPhysical')
+            ->assertNotified('Borrow request submitted!')
+            ->assertActionDisabled('borrowPhysical');
 
         $this->assertDatabaseHas('material_access_events', [
             'user_id' => $student->id,
