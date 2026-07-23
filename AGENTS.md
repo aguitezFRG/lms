@@ -33,10 +33,6 @@ Use concise conventional-style subjects visible in project history: `feat: add c
 
 Never commit `.env`, credentials, OAuth secrets, or private repository files. Preserve authorization checks and audit-log behavior when changing access workflows. Review storage, streamed PDF, and role-policy changes with particular care.
 
-## Project Preferences
-
-Consult `TASTES.md` before relevant decisions. Record every user-stated preference, decision, and approved action immediately.
-
 ## Agent Delegation
 
 The primary agent owns planning, orchestration, integration, and decisions. Use no more than two sub-agents for this repository task. Reserve GPT-5.4 for diagnosing and fixing a concrete failure; use GPT-5.4-mini for exploration and straightforward implementation work.

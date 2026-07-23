@@ -31,3 +31,6 @@ auth.json
 
 *.txt
 *report.pdf
+
+# Local agent preferences
+/TASTES.md
