@@ -18,6 +18,8 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    env:
+      APP_KEY: base64:7AUn2bZP9u2BPzEMHf7FL68jvBBRVPcZLvxxUNiJhGY=
     services:
       postgres:
         image: postgres:17
@@ -39,7 +41,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -50,7 +52,7 @@ jobs:
           tools: composer:v2
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: npm
@@ -79,7 +81,6 @@ jobs:
       - name: Verify a fresh PostgreSQL migration and canonical seed
         env:
           APP_ENV: testing
-          APP_KEY: base64:7AUn2bZP9u2BPzEMHf7FL68jvBBRVPcZLvxxUNiJhGY=
           DEMO_MODE: "true"
           DEMO_RUNTIME: server
           DEMO_MATERIAL_DISK: local
