@@ -148,6 +148,23 @@ class SharedDemoLifecycleTest extends TestCase
     }
 
     #[Test]
+    public function canonical_pdf_seed_does_not_run_the_user_upload_normalizer(): void
+    {
+        $this->enableServerRuntime();
+
+        $normalizer = $this->mock(PdfNormalizationService::class);
+        $normalizer->shouldNotReceive('normalize');
+
+        $this->assertSame(
+            Command::SUCCESS,
+            Artisan::call('demo:bootstrap-shared', ['--force' => true]),
+        );
+
+        $this->assertCount(6, Storage::disk(self::MATERIAL_DISK)->allFiles('seed'));
+        $this->assertSame(6, RrMaterials::query()->where('is_digital', true)->count());
+    }
+
+    #[Test]
     public function health_command_reports_a_degraded_runtime_as_unhealthy(): void
     {
         $this->enableServerRuntime();

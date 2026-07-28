@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\RrMaterials;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 class RrMaterialsSeeder extends Seeder
 {
@@ -108,10 +109,14 @@ class RrMaterialsSeeder extends Seeder
             if (! config('demo.enabled') || config('demo.runtime') === 'server') {
                 $disk = Storage::disk((string) config('demo.material_disk', 'local'));
                 $disk->makeDirectory($prefix.$dir);
-                $disk->put($targetPath, file_get_contents($sourcePath));
+
+                if (! $disk->put($targetPath, $this->validatedPdfContents($sourcePath))) {
+                    throw new RuntimeException("Unable to seed the packaged PDF: {$copy['pdf_file']}");
+                }
             }
 
-            // Create the RrMaterials record
+            // Packaged seed PDFs are validated before upload. Saving quietly avoids
+            // downloading and rewriting the same trusted S3 object during bootstrap.
             $material = new RrMaterials;
             $material->forceFill([
                 'id' => $copy['copy_id'],
@@ -119,7 +124,7 @@ class RrMaterialsSeeder extends Seeder
                 'is_digital' => true,
                 'is_available' => true,
                 'file_name' => $targetPath,
-            ])->save();
+            ])->saveQuietly();
         }
 
         // Create physical copies (includes physical-only and additional copies of digital parents)
@@ -166,5 +171,22 @@ class RrMaterialsSeeder extends Seeder
                 'file_name' => null,
             ])->save();
         }
+    }
+
+    private function validatedPdfContents(string $sourcePath): string
+    {
+        $contents = file_get_contents($sourcePath);
+
+        if ($contents === false) {
+            throw new RuntimeException("Unable to read the packaged PDF: {$sourcePath}");
+        }
+
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+
+        if ($finfo->buffer($contents) !== 'application/pdf') {
+            throw new RuntimeException("Packaged seed file is not a valid PDF: {$sourcePath}");
+        }
+
+        return $contents;
     }
 }
