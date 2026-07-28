@@ -17,7 +17,7 @@ services:
       - key: APP_KEY
         sync: false
       - key: APP_URL
-        value: https://render-demo-lms-staging.cntest.uk
+        value: https://lms-demo.cntest.uk
       - key: APP_FORCE_HTTPS
         value: "true"
       - key: TRUSTED_PROXIES
@@ -67,7 +67,7 @@ services:
       - key: TURNSTILE_SECRET_KEY
         sync: false
       - key: TURNSTILE_HOSTNAME
-        value: render-demo-lms-staging.cntest.uk
+        value: lms-demo.cntest.uk
       - key: TURNSTILE_SESSION_LIFETIME
         value: "7200"
       - key: DEMO_RESET_HMAC_SECRET
@@ -77,4 +77,4 @@ services:
       - key: OAUTH_CLIENT_SECRET
         sync: false
       - key: GOOGLE_REDIRECT_URI
-        value: https://render-demo-lms-staging.cntest.uk/auth/google/callback
+        value: https://lms-demo.cntest.uk/auth/google/callback

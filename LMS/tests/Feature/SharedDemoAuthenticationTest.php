@@ -19,15 +19,15 @@ class SharedDemoAuthenticationTest extends TestCase
 
     protected function setUp(): void
     {
-        putenv('ASSET_URL=https://render-demo-lms-staging.cntest.uk');
+        putenv('ASSET_URL=https://lms-demo.cntest.uk');
         putenv('APP_FORCE_HTTPS=true');
         putenv('DEMO_MODE=true');
         putenv('DEMO_RUNTIME=server');
-        $_ENV['ASSET_URL'] = 'https://render-demo-lms-staging.cntest.uk';
+        $_ENV['ASSET_URL'] = 'https://lms-demo.cntest.uk';
         $_ENV['APP_FORCE_HTTPS'] = 'true';
         $_ENV['DEMO_MODE'] = 'true';
         $_ENV['DEMO_RUNTIME'] = 'server';
-        $_SERVER['ASSET_URL'] = 'https://render-demo-lms-staging.cntest.uk';
+        $_SERVER['ASSET_URL'] = 'https://lms-demo.cntest.uk';
         $_SERVER['APP_FORCE_HTTPS'] = 'true';
         $_SERVER['DEMO_MODE'] = 'true';
         $_SERVER['DEMO_RUNTIME'] = 'server';
@@ -157,7 +157,7 @@ class SharedDemoAuthenticationTest extends TestCase
             ->assertSee('alt="LMS logo"', false)
             ->assertSee('href="/lms_favicon.png"', false)
             ->assertDontSee('http://localhost/images/lms.png', false)
-            ->assertDontSee('https://render-demo-lms-staging.cntest.uk/build/assets/', false);
+            ->assertDontSee('https://lms-demo.cntest.uk/build/assets/', false);
     }
 
     #[Test]
