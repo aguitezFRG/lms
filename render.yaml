@@ -57,11 +57,7 @@ services:
       - key: SUPABASE_S3_SECRET_ACCESS_KEY
         sync: false
       - key: CF_ACCESS_ENFORCED
-        value: "true"
-      - key: CF_ACCESS_TEAM_DOMAIN
-        sync: false
-      - key: CF_ACCESS_AUD
-        sync: false
+        value: "false"
       - key: DEMO_RESET_HMAC_SECRET
         sync: false
       - key: OAUTH_CLIENT_ID

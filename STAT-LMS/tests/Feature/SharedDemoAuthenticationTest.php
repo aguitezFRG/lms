@@ -20,25 +20,26 @@ class SharedDemoAuthenticationTest extends TestCase
     protected function setUp(): void
     {
         putenv('ASSET_URL=https://render-demo-lms-staging.cntest.uk');
+        putenv('APP_FORCE_HTTPS=true');
         putenv('DEMO_MODE=true');
         putenv('DEMO_RUNTIME=server');
         $_ENV['ASSET_URL'] = 'https://render-demo-lms-staging.cntest.uk';
+        $_ENV['APP_FORCE_HTTPS'] = 'true';
         $_ENV['DEMO_MODE'] = 'true';
         $_ENV['DEMO_RUNTIME'] = 'server';
         $_SERVER['ASSET_URL'] = 'https://render-demo-lms-staging.cntest.uk';
+        $_SERVER['APP_FORCE_HTTPS'] = 'true';
         $_SERVER['DEMO_MODE'] = 'true';
         $_SERVER['DEMO_RUNTIME'] = 'server';
 
         parent::setUp();
-
-        config()->set('demo.access_enforced', false);
     }
 
     protected function tearDown(): void
     {
         parent::tearDown();
 
-        foreach (['ASSET_URL', 'DEMO_MODE', 'DEMO_RUNTIME'] as $variable) {
+        foreach (['APP_FORCE_HTTPS', 'ASSET_URL', 'DEMO_MODE', 'DEMO_RUNTIME'] as $variable) {
             putenv($variable);
             unset($_ENV[$variable], $_SERVER[$variable]);
         }
@@ -47,6 +48,8 @@ class SharedDemoAuthenticationTest extends TestCase
     #[Test]
     public function server_demo_uses_user_login_and_google_oauth_instead_of_the_profile_chooser(): void
     {
+        $this->assertFalse(config('demo.access_enforced'));
+
         $this->get('/')->assertRedirect('/app/login');
         $this->get('/demo/profiles')->assertNotFound();
 
@@ -98,7 +101,7 @@ class SharedDemoAuthenticationTest extends TestCase
     {
         $this->get('/app/login')
             ->assertOk()
-            ->assertSee('http://localhost/build/assets/', false)
+            ->assertSee('https://localhost/build/assets/', false)
             ->assertDontSee('https://render-demo-lms-staging.cntest.uk/build/assets/', false);
     }
 

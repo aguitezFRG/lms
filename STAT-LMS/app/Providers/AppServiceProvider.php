@@ -102,7 +102,9 @@ class AppServiceProvider extends ServiceProvider
             PanelsIconAlias::SIDEBAR_EXPAND_BUTTON_RTL => 'heroicon-o-bars-3',
         ]);
 
-        if ((bool) config('app.force_https', false)) {
+        $forceHttps = (bool) config('app.force_https', false);
+
+        if ($forceHttps) {
             URL::forceScheme('https');
         }
 
@@ -113,7 +115,10 @@ class AppServiceProvider extends ServiceProvider
             $req = app('request');
             if ($req->hasHeader('X-Forwarded-Proto')) {
                 URL::forceRootUrl(null);
-                URL::forceScheme($req->header('X-Forwarded-Proto', 'https'));
+
+                if (! $forceHttps) {
+                    URL::forceScheme($req->header('X-Forwarded-Proto', 'https'));
+                }
             }
         }
 

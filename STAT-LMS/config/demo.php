@@ -16,7 +16,7 @@ return [
     'max_storage_bytes' => 100 * 1024 * 1024,
     'max_shared_upload_bytes' => (int) env('DEMO_MAX_SHARED_UPLOAD_BYTES', 250 * 1024 * 1024),
     'shared_upload_warning_bytes' => (int) env('DEMO_SHARED_UPLOAD_WARNING_BYTES', 200 * 1024 * 1024),
-    'access_enforced' => (bool) env('CF_ACCESS_ENFORCED', true),
+    'access_enforced' => (bool) env('CF_ACCESS_ENFORCED', false),
     'access_team_domain' => rtrim((string) env('CF_ACCESS_TEAM_DOMAIN', ''), '/'),
     'access_audience' => (string) env('CF_ACCESS_AUD', ''),
     'reset_hmac_secret' => (string) env('DEMO_RESET_HMAC_SECRET', ''),

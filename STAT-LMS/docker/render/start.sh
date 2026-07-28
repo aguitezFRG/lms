@@ -5,8 +5,6 @@ set -euo pipefail
 required_variables=(
     APP_KEY
     APP_URL
-    CF_ACCESS_AUD
-    CF_ACCESS_TEAM_DOMAIN
     DB_URL
     DEMO_RESET_HMAC_SECRET
     SUPABASE_S3_ACCESS_KEY_ID
