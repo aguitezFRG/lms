@@ -136,11 +136,18 @@ class SharedDemoAuthenticationTest extends TestCase
     #[Test]
     public function server_demo_assets_use_the_current_request_origin(): void
     {
+        $this->assertSame('/favicon.ico', Filament::getPanel('admin')->getFavicon());
+        $this->assertSame('/favicon.ico', Filament::getPanel('user')->getFavicon());
+        $this->assertFileExists(public_path('favicon.ico'));
+        $this->assertFileExists(public_path('images/lms.png'));
+
         $this->get('/app/login')
             ->assertOk()
             ->assertSee('https://localhost/build/assets/', false)
-            ->assertSee('src="/images/up-seal.png"', false)
-            ->assertDontSee('http://localhost/images/up-seal.png', false)
+            ->assertSee('src="/images/lms.png"', false)
+            ->assertSee('href="/favicon.ico"', false)
+            ->assertDontSee('up-seal', false)
+            ->assertDontSee('http://localhost/images/lms.png', false)
             ->assertDontSee('https://render-demo-lms-staging.cntest.uk/build/assets/', false);
     }
 

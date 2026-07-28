@@ -24,7 +24,11 @@ class SsoOnboardingTest extends TestCase
         $user = $this->makeUser('student', ['is_profile_complete' => false]);
         $this->actingAs($user);
 
-        $this->get('/app/onboarding')->assertOk();
+        $this->get('/app/onboarding')
+            ->assertOk()
+            ->assertSee('images/lms.png', false)
+            ->assertDontSee('images/lms.webp', false)
+            ->assertDontSee('up-seal', false);
     }
 
     #[Test]

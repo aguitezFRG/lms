@@ -3,16 +3,13 @@
     {{-- Brand header --}}
     <div class="mb-6 flex flex-col items-center gap-1 text-center">
         <div class="mb-3 flex items-center gap-2">
-            <picture>
-                <source srcset="{{ asset('images/up-seal.webp') }}" type="image/webp">
-                <img
-                    src="{{ asset('images/up-seal.png') }}"
-                    alt="UP Seal"
-                    class="h-8 w-auto"
-                    decoding="async"
-                    fetchpriority="high"
-                >
-            </picture>
+            <img
+                src="{{ asset('images/lms.png') }}"
+                alt="INSTAT LMS logo"
+                class="h-8 w-auto"
+                decoding="async"
+                fetchpriority="high"
+            >
             <span class="text-sm font-semibold text-gray-950 dark:text-white">
                 INSTAT-RR-SPRIS
             </span>
