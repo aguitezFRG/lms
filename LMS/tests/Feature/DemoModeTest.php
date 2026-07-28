@@ -21,10 +21,13 @@ class DemoModeTest extends TestCase
     protected function setUp(): void
     {
         putenv('DEMO_MODE=true');
+        putenv('DEMO_RUNTIME=browser');
         putenv('DEMO_DATABASE_PATH=:memory:');
         $_ENV['DEMO_MODE'] = 'true';
+        $_ENV['DEMO_RUNTIME'] = 'browser';
         $_ENV['DEMO_DATABASE_PATH'] = ':memory:';
         $_SERVER['DEMO_MODE'] = 'true';
+        $_SERVER['DEMO_RUNTIME'] = 'browser';
         $_SERVER['DEMO_DATABASE_PATH'] = ':memory:';
 
         parent::setUp();
@@ -35,11 +38,14 @@ class DemoModeTest extends TestCase
         parent::tearDown();
 
         putenv('DEMO_MODE');
+        putenv('DEMO_RUNTIME');
         putenv('DEMO_DATABASE_PATH');
         unset(
             $_ENV['DEMO_MODE'],
+            $_ENV['DEMO_RUNTIME'],
             $_ENV['DEMO_DATABASE_PATH'],
             $_SERVER['DEMO_MODE'],
+            $_SERVER['DEMO_RUNTIME'],
             $_SERVER['DEMO_DATABASE_PATH'],
         );
     }
@@ -131,22 +137,17 @@ class DemoModeTest extends TestCase
         }
     }
 
-    public function test_onboarding_cards_stay_inside_the_php_runtime(): void
+    public function test_server_demo_onboarding_cards_use_same_origin_application_routes(): void
     {
-        $this->assertStringContainsString(
-            'href="/__php/admin/users"',
-            SuperAdminFeatureCards::render(),
-        );
-        $this->assertStringContainsString(
-            'href="/__php/app/user/catalogs"',
-            StudentFeatureCards::render(),
-        );
-
-        config()->set('demo.enabled', false);
+        config()->set('demo.runtime', 'server');
 
         $this->assertStringContainsString(
             'href="/admin/users"',
             SuperAdminFeatureCards::render(),
+        );
+        $this->assertStringContainsString(
+            'href="/app/user/catalogs"',
+            StudentFeatureCards::render(),
         );
     }
 

@@ -2,17 +2,16 @@
 
 return [
     'enabled' => (bool) env('DEMO_MODE', false),
-    'runtime' => env('DEMO_RUNTIME', 'browser'),
+    'runtime' => env('DEMO_RUNTIME', 'server'),
     'polling_enabled' => (bool) env(
         'DEMO_POLLING_ENABLED',
-        ! ((bool) env('DEMO_MODE', false) && env('DEMO_RUNTIME', 'browser') === 'server')
+        ! ((bool) env('DEMO_MODE', false) && env('DEMO_RUNTIME', 'server') === 'server')
     ),
     'profile_session_key' => 'demo_profile_id',
     'database_path' => env('DEMO_DATABASE_PATH', '/persist/database/demo.sqlite'),
     'storage_path' => env('DEMO_STORAGE_PATH', '/persist/storage/app/private'),
     'material_disk' => env('DEMO_MATERIAL_DISK', env('FILESYSTEM_DISK', 'local')),
     'static_asset_url' => rtrim((string) env('DEMO_STATIC_ASSET_URL', ''), '/'),
-    'internal_prefix' => '/__php',
     'max_storage_bytes' => 100 * 1024 * 1024,
     'max_shared_upload_bytes' => (int) env('DEMO_MAX_SHARED_UPLOAD_BYTES', 250 * 1024 * 1024),
     'shared_upload_warning_bytes' => (int) env('DEMO_SHARED_UPLOAD_WARNING_BYTES', 200 * 1024 * 1024),

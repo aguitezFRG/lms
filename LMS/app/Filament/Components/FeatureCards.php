@@ -17,13 +17,6 @@ abstract class FeatureCards
                 array_values($demoReplacements),
                 $html,
             );
-
-            $prefix = rtrim((string) config('demo.internal_prefix', '/__php'), '/');
-            $html = preg_replace(
-                '/href="\/(?!__php(?:\/|"))/',
-                'href="'.$prefix.'/',
-                $html,
-            ) ?? $html;
         }
 
         return Blade::render($html);

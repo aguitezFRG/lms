@@ -77,21 +77,6 @@ class AppServiceProvider extends ServiceProvider
             URL::useAssetOrigin(null);
         }
 
-        if (config('demo.enabled') && config('demo.runtime') === 'browser') {
-            URL::forceRootUrl(config('app.url'));
-
-            // php-cgi-wasm does not expose arbitrary browser headers as CGI
-            // variables. Restore Livewire's request marker for the demo's
-            // tokenized endpoints before Filament and Livewire dehydrate.
-            if (app()->bound('request')) {
-                $request = app('request');
-
-                if (preg_match('#(?:^|/)livewire-[^/]+/(?:update|upload-file)$#', $request->path())) {
-                    $request->headers->set('X-Livewire', 'true');
-                }
-            }
-        }
-
         Blade::componentNamespace('App\\Filament\\Components', 'onboarding');
         FilamentIcon::register([
             PanelsIconAlias::TOPBAR_OPEN_SIDEBAR_BUTTON => 'heroicon-o-bars-3',
