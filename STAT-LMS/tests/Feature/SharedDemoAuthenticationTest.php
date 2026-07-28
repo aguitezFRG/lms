@@ -114,6 +114,7 @@ class SharedDemoAuthenticationTest extends TestCase
         $this->get('/app/login')
             ->assertOk()
             ->assertSee('https://localhost/build/assets/', false)
+            ->assertSee('src="/images/up-seal.png"', false)
             ->assertDontSee('http://localhost/images/up-seal.png', false)
             ->assertDontSee('https://render-demo-lms-staging.cntest.uk/build/assets/', false);
     }
