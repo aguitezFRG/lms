@@ -46,6 +46,8 @@ services:
         value: sync
       - key: FILESYSTEM_DISK
         value: supabase
+      - key: LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK
+        value: local
       - key: SUPABASE_S3_ENDPOINT
         sync: false
       - key: SUPABASE_S3_REGION

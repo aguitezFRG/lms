@@ -74,10 +74,10 @@ class AdminOnboarding extends Page
         };
 
         $bannerHtml = match ($roleValue) {
-            'committee' => '<p class="mt-4 text-sm text-warning-800 dark:text-warning-200">As a Reading Room Committee member, you oversee institutional policy and material curation. You have full access to all system features.</p>',
-            'it' => '<p class="mt-4 text-sm text-danger-800 dark:text-danger-200">As an IT Administrator, you support system integrity and user access. You share operational permissions with committee members.</p>',
-            'staff/custodian' => '<p class="mt-4 text-sm text-success-800 dark:text-success-200">As Reading Room Staff, you handle day-to-day material access operations and borrow request processing.</p>',
-            'super_admin' => '<p class="mt-4 text-sm text-purple-800 dark:text-purple-200">As a Super Administrator, you have unrestricted access to all system features, including full catalog control, user management at every privilege level, audit logs, analytics, and the ability to manage or override any record in the system.</p>',
+            'committee' => '<p class="mt-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300">As a Reading Room Committee member, you oversee institutional policy and material curation. You have full access to all system features.</p>',
+            'it' => '<p class="mt-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300">As an IT Administrator, you support system integrity and user access. You share operational permissions with committee members.</p>',
+            'staff/custodian' => '<p class="mt-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300">As Reading Room Staff, you handle day-to-day material access operations and borrow request processing.</p>',
+            'super_admin' => '<p class="mt-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300">As a Super Administrator, you have unrestricted access to all system features, including full catalog control, user management at every privilege level, audit logs, analytics, and the ability to manage or override any record in the system.</p>',
             default => '',
         };
 

@@ -234,6 +234,22 @@ class RoleViewModeTest extends TestCase
         $this->assertFalse(RepositoryChangeLogsResource::shouldRegisterNavigation());
     }
 
+    public function test_admin_role_descriptions_use_the_same_readable_body_color(): void
+    {
+        $admin = $this->makeUser('super_admin');
+
+        foreach (['committee', 'it', 'staff/custodian', 'super_admin'] as $role) {
+            $this->actingAs($admin)
+                ->withSession([RoleViewMode::SESSION_KEY => $role])
+                ->get('/admin/admin-onboarding')
+                ->assertOk()
+                ->assertSee(
+                    '<p class="mt-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300">',
+                    false,
+                );
+        }
+    }
+
     public function test_student_preview_filters_catalog_listing_to_student_level(): void
     {
         $admin = $this->makeUser('super_admin');

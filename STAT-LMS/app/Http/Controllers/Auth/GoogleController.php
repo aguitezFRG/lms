@@ -9,11 +9,22 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class GoogleController extends Controller
 {
-    public function redirect()
+    public function redirect(): RedirectResponse
     {
+        if (
+            blank(config('services.google.client_id'))
+            || blank(config('services.google.client_secret'))
+        ) {
+            Log::error('Google OAuth is not configured.');
+
+            return redirect('/app/login')
+                ->with('error', 'Google sign-in is temporarily unavailable.');
+        }
+
         return Socialite::driver('google')->redirect();
     }
 

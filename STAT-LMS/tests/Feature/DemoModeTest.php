@@ -150,6 +150,19 @@ class DemoModeTest extends TestCase
         );
     }
 
+    public function test_faculty_onboarding_icons_keep_the_primary_palette_in_oled_mode(): void
+    {
+        $cards = FacultyFeatureCards::render();
+        $oledCss = file_get_contents(resource_path('css/filament/oled.css'));
+
+        $this->assertSame(1, substr_count($cards, 'rr-onboarding-faculty-cards'));
+        $this->assertIsString($oledCss);
+        $this->assertStringContainsString(
+            'html.oled.dark .rr-onboarding-faculty-cards .rr-onboarding-card-icon.bg-primary-50',
+            $oledCss,
+        );
+    }
+
     public function test_selecting_student_profile_redirects_to_user_panel_and_authenticates_following_requests(): void
     {
         $student = User::factory()->student()->create();

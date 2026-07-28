@@ -711,6 +711,11 @@ html.oled.dark .rr-onboarding-card-icon.bg-primary-50 {
     color: rgb(250 204 21) !important;
     border-color: rgb(250 204 21 / 0.38) !important;
 }
+html.oled.dark .rr-onboarding-faculty-cards .rr-onboarding-card-icon.bg-primary-50 {
+    background-color: rgb(31 8 15) !important;
+    color: rgb(240 167 187) !important;
+    border-color: rgb(240 167 187 / 0.38) !important;
+}
 html.oled.dark .rr-onboarding-card-icon.bg-blue-50 {
     background-color: rgb(8 16 30) !important;
     color: rgb(96 165 250) !important;

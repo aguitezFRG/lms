@@ -18,6 +18,11 @@ class SsoAuthenticationTest extends TestCase
     #[Test]
     public function redirect_route_returns_socialite_redirect(): void
     {
+        config([
+            'services.google.client_id' => 'test-client-id',
+            'services.google.client_secret' => 'test-client-secret',
+        ]);
+
         $provider = Mockery::mock(Provider::class);
         $provider->shouldReceive('redirect')->andReturn(redirect('https://accounts.google.com/oauth'));
 

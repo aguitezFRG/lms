@@ -65,6 +65,31 @@ class SharedDemoAuthenticationTest extends TestCase
     }
 
     #[Test]
+    public function server_demo_stages_livewire_uploads_locally_before_supabase_persistence(): void
+    {
+        config(['demo.material_disk' => 'supabase']);
+
+        $this->assertSame('local', config('livewire.temporary_file_upload.disk'));
+        $this->assertNotSame(
+            config('demo.material_disk'),
+            config('livewire.temporary_file_upload.disk'),
+        );
+    }
+
+    #[Test]
+    public function google_redirect_fails_cleanly_when_oauth_credentials_are_missing(): void
+    {
+        config([
+            'services.google.client_id' => null,
+            'services.google.client_secret' => null,
+        ]);
+
+        $this->get('/auth/google/redirect')
+            ->assertRedirect('/app/login')
+            ->assertSessionHas('error', 'Google sign-in is temporarily unavailable.');
+    }
+
+    #[Test]
     public function stale_cloudflare_access_environment_cannot_block_shared_demo_web_routes(): void
     {
         config([

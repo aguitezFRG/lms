@@ -16,7 +16,7 @@ class FacultyFeatureCards extends FeatureCards
     private static function renderCards(): string
     {
         return '
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="rr-onboarding-faculty-cards grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <a href="/app/user/catalogs" class="block">
                     <div class="rr-onboarding-card flex gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:hover:bg-gray-800 cursor-pointer transition">
                         <div class="rr-onboarding-card-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-950 dark:text-primary-400">
