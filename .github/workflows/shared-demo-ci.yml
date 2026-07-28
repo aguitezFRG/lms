@@ -150,4 +150,4 @@ jobs:
             --env QUEUE_CONNECTION=sync \
             --env SESSION_DRIVER=array \
             instat-shared-demo:test \
-            -c 'php artisan --version && gs --version && composer check-platform-reqs --no-dev && php artisan migrate:fresh --force && php artisan demo:bootstrap-shared --force && php artisan demo:health-shared --json'
+            -c 'php artisan --version && gs --version && composer check-platform-reqs --no-dev && test -s storage/app/keys/password_private.pem && test -s storage/app/keys/password_public.pem && php artisan migrate:fresh --force && php artisan demo:bootstrap-shared --force && php artisan demo:health-shared --json'

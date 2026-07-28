@@ -47,7 +47,7 @@ class UserPanelProvider extends PanelProvider
                 </div>
             '))
             ->brandName('INSTAT-RR-SPRIS')
-            ->login(config('demo.enabled') ? null : UserLogin::class)
+            ->login(config('demo.enabled') && config('demo.runtime') === 'browser' ? null : UserLogin::class)
             ->homeUrl(fn () => UserOnboarding::getUrl())
             ->colors([
                 'primary' => Color::hex('#8D1436'), // UP Maroon (PANTONE 1955C)
@@ -77,8 +77,10 @@ class UserPanelProvider extends PanelProvider
                     ->label('Switch demo profile')
                     ->url(fn (): string => route('demo.profiles.index'))
                     ->icon(Heroicon::OutlinedArrowPath)
-                    ->visible(fn (): bool => config('demo.enabled')),
-                'logout' => fn (Action $action): Action => $action->visible(fn (): bool => ! config('demo.enabled')),
+                    ->visible(fn (): bool => config('demo.enabled') && config('demo.runtime') === 'browser'),
+                'logout' => fn (Action $action): Action => $action->visible(
+                    fn (): bool => ! config('demo.enabled') || config('demo.runtime') === 'server'
+                ),
             ])
             ->sidebarCollapsibleOnDesktop()
             ->globalSearch(false)
@@ -99,7 +101,9 @@ class UserPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,
-                fn () => config('demo.enabled') ? '' : view('filament.components.password-encryption-script'),
+                fn () => config('demo.enabled') && config('demo.runtime') === 'browser'
+                    ? ''
+                    : view('filament.components.password-encryption-script'),
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,
@@ -117,7 +121,15 @@ class UserPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
-                fn () => config('demo.enabled') ? '' : view('filament.components.google-sso-button'),
+                fn () => config('demo.enabled') && config('demo.runtime') === 'browser'
+                    ? ''
+                    : view('filament.components.google-sso-button'),
+            )
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,
+                fn () => config('demo.enabled') && config('demo.runtime') === 'server'
+                    ? view('filament.components.shared-demo-credentials', ['panel' => 'user'])
+                    : '',
             )
             ->renderHook(
                 PanelsRenderHook::USER_MENU_BEFORE,

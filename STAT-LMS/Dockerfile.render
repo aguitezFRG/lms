@@ -37,6 +37,7 @@ RUN composer install \
 
 COPY . .
 RUN composer dump-autoload --no-dev --no-interaction --optimize \
+    && php artisan app:generate-password-keys --force --no-interaction \
     && mkdir -p \
         storage/framework/cache \
         storage/framework/sessions \

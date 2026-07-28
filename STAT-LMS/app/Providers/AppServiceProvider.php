@@ -67,6 +67,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (
+            config('demo.enabled')
+            && config('demo.runtime') === 'server'
+            && app()->bound('request')
+        ) {
+            // Application assets are served by the same Render origin. Do not
+            // strand them on a stale custom-domain ASSET_URL during DNS setup.
+            URL::useAssetOrigin(null);
+        }
+
         if (config('demo.enabled') && config('demo.runtime') === 'browser') {
             URL::forceRootUrl(config('app.url'));
 

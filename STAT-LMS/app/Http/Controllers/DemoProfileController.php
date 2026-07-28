@@ -13,7 +13,7 @@ class DemoProfileController extends Controller
 {
     public function index(): View
     {
-        abort_unless(config('demo.enabled'), 404);
+        abort_unless(config('demo.enabled') && config('demo.runtime') === 'browser', 404);
 
         $selectedProfileId = session(config('demo.profile_session_key'));
 
@@ -35,7 +35,7 @@ class DemoProfileController extends Controller
 
     public function select(Request $request): RedirectResponse
     {
-        abort_unless(config('demo.enabled'), 404);
+        abort_unless(config('demo.enabled') && config('demo.runtime') === 'browser', 404);
 
         $validated = $request->validate([
             'profile_id' => ['required', 'uuid'],

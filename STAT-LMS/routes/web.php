@@ -11,6 +11,8 @@ use App\Http\Controllers\SharedDemoResetController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
+$usesBrowserProfiles = config('demo.enabled') && config('demo.runtime') === 'browser';
+
 Route::get('/', function () {
     if (auth()->check()) {
         $role = auth()->user()->role;
@@ -20,7 +22,7 @@ Route::get('/', function () {
             : redirect('/app');
     }
 
-    return config('demo.enabled')
+    return config('demo.enabled') && config('demo.runtime') === 'browser'
         ? redirect()->route('demo.profiles.index')
         : redirect('/app/login');
 });
@@ -31,7 +33,7 @@ Route::post('/demo/profiles', [DemoProfileController::class, 'select'])
     ->name('demo.profiles.select');
 
 // Public key for client-side password encryption — no auth required, no sensitive data
-if (! config('demo.enabled')) {
+if (! $usesBrowserProfiles) {
     Route::get('/password-encryption-key', PasswordEncryptionKeyController::class)
         ->middleware('throttle:60,1')
         ->name('password.encryption-key');

@@ -10,7 +10,11 @@ class FilamentAuthenticate extends Authenticate
 {
     protected function authenticate($request, array $guards): void
     {
-        if (config('demo.enabled') && ! Filament::auth()->check()) {
+        if (
+            config('demo.enabled')
+            && config('demo.runtime') === 'browser'
+            && ! Filament::auth()->check()
+        ) {
             $userId = $request->session()->get(config('demo.profile_session_key'));
 
             if (is_string($userId)) {
@@ -32,7 +36,7 @@ class FilamentAuthenticate extends Authenticate
 
     protected function redirectTo($request): ?string
     {
-        if (config('demo.enabled')) {
+        if (config('demo.enabled') && config('demo.runtime') === 'browser') {
             return route('demo.profiles.index');
         }
 

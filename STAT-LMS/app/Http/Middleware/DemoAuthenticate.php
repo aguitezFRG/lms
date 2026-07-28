@@ -12,7 +12,11 @@ class DemoAuthenticate
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! config('demo.enabled') || Auth::check()) {
+        if (
+            ! config('demo.enabled')
+            || config('demo.runtime') !== 'browser'
+            || Auth::check()
+        ) {
             return $next($request);
         }
 
