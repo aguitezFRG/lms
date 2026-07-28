@@ -5,7 +5,6 @@ use App\Http\Middleware\DemoAuthenticate;
 use App\Http\Middleware\EnsureProfileComplete;
 use App\Http\Middleware\SetSecurityHeaders;
 use App\Http\Middleware\TrackRequestTiming;
-use App\Http\Middleware\VerifyCloudflareAccess;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -36,15 +35,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(SetSecurityHeaders::class);
         $middleware->append(TrackRequestTiming::class);
 
-        $middleware->web(
-            prepend: [
-                VerifyCloudflareAccess::class,
-            ],
-            append: [
-                DecryptLivewirePasswords::class,
-                DemoAuthenticate::class,
-            ],
-        );
+        $middleware->web(append: [
+            DecryptLivewirePasswords::class,
+            DemoAuthenticate::class,
+        ]);
         $middleware->prependToPriorityList(
             AuthenticatesRequests::class,
             DemoAuthenticate::class,

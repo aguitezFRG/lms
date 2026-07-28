@@ -65,6 +65,18 @@ class SharedDemoAuthenticationTest extends TestCase
     }
 
     #[Test]
+    public function stale_cloudflare_access_environment_cannot_block_shared_demo_web_routes(): void
+    {
+        config([
+            'demo.access_enforced' => true,
+            'demo.access_team_domain' => 'stale.cloudflareaccess.test',
+            'demo.access_audience' => 'stale-audience',
+        ]);
+
+        $this->get('/')->assertRedirect('/app/login');
+    }
+
+    #[Test]
     public function server_demo_exposes_predefined_admin_credentials(): void
     {
         $this->get('/admin/login')
@@ -102,6 +114,7 @@ class SharedDemoAuthenticationTest extends TestCase
         $this->get('/app/login')
             ->assertOk()
             ->assertSee('https://localhost/build/assets/', false)
+            ->assertDontSee('http://localhost/images/up-seal.png', false)
             ->assertDontSee('https://render-demo-lms-staging.cntest.uk/build/assets/', false);
     }
 
