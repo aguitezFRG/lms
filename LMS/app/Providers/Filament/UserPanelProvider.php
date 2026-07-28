@@ -37,7 +37,7 @@ class UserPanelProvider extends PanelProvider
             ->path('app')
             ->viteTheme('resources/css/filament/user/theme.css')
             ->font(null, preload: [])
-            ->favicon('/favicon.svg')
+            ->favicon('/lms_favicon.png')
             ->brandLogoHeight('2.5rem')
             ->brandLogo(new HtmlString('
                 <div style="display: flex; align-items: center; gap: 16px; padding: 4px 0;">

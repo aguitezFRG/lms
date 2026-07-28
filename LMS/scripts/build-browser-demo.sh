@@ -17,7 +17,7 @@ cleanup() {
         "$client_root/public/images" \
         "$client_root/public/js" \
         "$client_root/public/pdfs"
-    rm -f -- "$client_root/public/favicon.svg" "$client_root/public/laravel-demo-v1.zip"
+    rm -f -- "$client_root/public/lms_favicon.png" "$client_root/public/laravel-demo-v1.zip"
 }
 trap cleanup EXIT
 
@@ -121,7 +121,7 @@ done
 rm -rf -- "$client_root/public/build" "$client_root/public/css" "$client_root/public/fonts" "$client_root/public/images" "$client_root/public/js" "$client_root/public/pdfs"
 mkdir -p "$client_root/public/build" "$client_root/public/css" "$client_root/public/fonts" "$client_root/public/images" "$client_root/public/js" "$client_root/public/pdfs"
 cp -a public/build/. "$client_root/public/build/"
-cp public/favicon.svg "$client_root/public/favicon.svg"
+cp public/lms_favicon.png "$client_root/public/lms_favicon.png"
 for static_dir in css fonts images js; do
     if [[ -d "public/$static_dir" ]]; then
         cp -a "public/$static_dir/." "$client_root/public/$static_dir/"

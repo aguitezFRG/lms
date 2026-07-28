@@ -136,11 +136,18 @@ class SharedDemoAuthenticationTest extends TestCase
     #[Test]
     public function server_demo_assets_use_the_current_request_origin(): void
     {
-        $this->assertSame('/favicon.svg', Filament::getPanel('admin')->getFavicon());
-        $this->assertSame('/favicon.svg', Filament::getPanel('user')->getFavicon());
-        $this->assertFileExists(public_path('favicon.svg'));
-        $this->assertStringContainsString('<svg', file_get_contents(public_path('favicon.svg')));
-        $this->assertStringNotContainsString('<image', file_get_contents(public_path('favicon.svg')));
+        $this->assertSame('/lms_favicon.png', Filament::getPanel('admin')->getFavicon());
+        $this->assertSame('/lms_favicon.png', Filament::getPanel('user')->getFavicon());
+        $this->assertFileExists(public_path('lms_favicon.png'));
+        $this->assertStringStartsWith("\x89PNG\r\n\x1a\n", file_get_contents(public_path('lms_favicon.png')));
+
+        $favicon = imagecreatefrompng(public_path('lms_favicon.png'));
+        $this->assertNotFalse($favicon);
+        $this->assertSame(512, imagesx($favicon));
+        $this->assertSame(512, imagesy($favicon));
+        $corner = imagecolorsforindex($favicon, imagecolorat($favicon, 0, 0));
+        $this->assertSame(127, $corner['alpha']);
+        imagedestroy($favicon);
         $this->assertFileExists(public_path('images/lms.png'));
 
         $this->get('/app/login')
@@ -148,7 +155,7 @@ class SharedDemoAuthenticationTest extends TestCase
             ->assertSee('https://localhost/build/assets/', false)
             ->assertSee('src="/images/lms.png"', false)
             ->assertSee('alt="LMS logo"', false)
-            ->assertSee('href="/favicon.svg"', false)
+            ->assertSee('href="/lms_favicon.png"', false)
             ->assertDontSee('http://localhost/images/lms.png', false)
             ->assertDontSee('https://render-demo-lms-staging.cntest.uk/build/assets/', false);
     }
