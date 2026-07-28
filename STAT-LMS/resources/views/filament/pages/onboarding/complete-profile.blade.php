@@ -5,7 +5,7 @@
         <div class="mb-3 flex items-center gap-2">
             <img
                 src="{{ asset('images/lms.png') }}"
-                alt="INSTAT LMS logo"
+                alt="LMS logo"
                 class="h-8 w-auto"
                 decoding="async"
                 fetchpriority="high"

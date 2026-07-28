@@ -37,11 +37,11 @@ class UserPanelProvider extends PanelProvider
             ->path('app')
             ->viteTheme('resources/css/filament/user/theme.css')
             ->font(null, preload: [])
-            ->favicon('/favicon.ico')
+            ->favicon('/favicon.svg')
             ->brandLogoHeight('2.5rem')
             ->brandLogo(new HtmlString('
                 <div style="display: flex; align-items: center; gap: 16px; padding: 4px 0;">
-                    <img src="/images/lms.png" alt="INSTAT LMS logo" style="height: 2.5rem; width: auto; flex-shrink: 0;" />
+                    <img src="/images/lms.png" alt="LMS logo" style="height: 2.5rem; width: auto; flex-shrink: 0;" />
                     <span style="font-family: ui-sans-serif, system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, Ubuntu, Cantarell, &quot;Noto Sans&quot;, sans-serif, BlinkMacSystemFont, &quot;Helvetica Neue&quot;, Arial, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;, &quot;Noto Color Emoji&quot;; font-size: 1.1rem; font-weight: 600; white-space: nowrap; letter-spacing: 0.01em;">
                         INSTAT-RR-SPRIS
                     </span>

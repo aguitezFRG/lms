@@ -16,6 +16,10 @@ use setasign\Fpdi\Tcpdf\Fpdi;
 
 class PdfWatermarkService
 {
+    private const DOCUMENT_BRAND = 'LMS';
+
+    private const PRIMARY_WATERMARK_TEXT = 'SAMPLE WATERMARK';
+
     public function watermark(string $pdfPath, User $user, string $materialTitle, Carbon $accessedAt): string
     {
         if (! is_file($pdfPath) || ! is_readable($pdfPath)) {
@@ -42,8 +46,8 @@ class PdfWatermarkService
             $pdf->setPrintFooter(false);
             $pdf->SetAutoPageBreak(false, 0);
             $pdf->SetMargins(0, 0, 0);
-            $pdf->SetCreator('STAT-LMS');
-            $pdf->SetAuthor('INSTAT');
+            $pdf->SetCreator(self::DOCUMENT_BRAND);
+            $pdf->SetAuthor(self::DOCUMENT_BRAND);
             $pdf->SetTitle($materialTitle);
 
             $pageCount = $pdf->setSourceFile($pdfPath);
@@ -94,7 +98,7 @@ class PdfWatermarkService
 
     private function drawTiledDiagonalText(Fpdi $pdf, float $pageWidth, float $pageHeight): void
     {
-        $tileText = 'INSTAT-RR-SPRIS';
+        $tileText = self::DOCUMENT_BRAND;
 
         $pdf->SetAlpha(0.1);
         $pdf->SetTextColor(130, 130, 130);
@@ -136,7 +140,7 @@ class PdfWatermarkService
         $pdf->SetTextColor(190, 0, 0);
         $pdf->SetFont('helvetica', 'B', 46);
 
-        $propertyText = 'PROPERTY OF INSTAT';
+        $propertyText = self::PRIMARY_WATERMARK_TEXT;
         $propertyWidth = $pdf->GetStringWidth($propertyText);
 
         $pdf->StartTransform();

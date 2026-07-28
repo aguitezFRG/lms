@@ -136,16 +136,20 @@ class SharedDemoAuthenticationTest extends TestCase
     #[Test]
     public function server_demo_assets_use_the_current_request_origin(): void
     {
-        $this->assertSame('/favicon.ico', Filament::getPanel('admin')->getFavicon());
-        $this->assertSame('/favicon.ico', Filament::getPanel('user')->getFavicon());
-        $this->assertFileExists(public_path('favicon.ico'));
+        $this->assertSame('/favicon.svg', Filament::getPanel('admin')->getFavicon());
+        $this->assertSame('/favicon.svg', Filament::getPanel('user')->getFavicon());
+        $this->assertFileExists(public_path('favicon.svg'));
+        $this->assertStringContainsString('<svg', file_get_contents(public_path('favicon.svg')));
+        $this->assertStringNotContainsString('<image', file_get_contents(public_path('favicon.svg')));
         $this->assertFileExists(public_path('images/lms.png'));
 
         $this->get('/app/login')
             ->assertOk()
             ->assertSee('https://localhost/build/assets/', false)
             ->assertSee('src="/images/lms.png"', false)
-            ->assertSee('href="/favicon.ico"', false)
+            ->assertSee('alt="LMS logo"', false)
+            ->assertSee('href="/favicon.svg"', false)
+            ->assertDontSee('INSTAT LMS logo', false)
             ->assertDontSee('up-seal', false)
             ->assertDontSee('http://localhost/images/lms.png', false)
             ->assertDontSee('https://render-demo-lms-staging.cntest.uk/build/assets/', false);

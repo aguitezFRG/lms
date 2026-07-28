@@ -20,6 +20,15 @@ class MaterialStreamWatermarkSecurityTest extends TestCase
 {
     use RefreshDatabase;
 
+    #[Test]
+    public function watermark_copy_and_document_brand_use_generic_lms_labels(): void
+    {
+        $service = new \ReflectionClass(PdfWatermarkService::class);
+
+        $this->assertSame('LMS', $service->getConstant('DOCUMENT_BRAND'));
+        $this->assertSame('SAMPLE WATERMARK', $service->getConstant('PRIMARY_WATERMARK_TEXT'));
+    }
+
     private function minimalValidPdfContent(): string
     {
         return <<<'PDF'
