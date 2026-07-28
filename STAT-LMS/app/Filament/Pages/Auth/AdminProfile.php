@@ -13,6 +13,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
@@ -37,7 +38,7 @@ class AdminProfile extends Page implements HasInfolists
         array $parameters = [],
         bool $isAbsolute = true,
         ?string $panel = null,
-        ?\Illuminate\Database\Eloquent\Model $tenant = null,
+        ?Model $tenant = null,
         bool $shouldGuessMissingParameters = false,
         ?string $configuration = null,
     ): string {

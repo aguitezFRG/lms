@@ -2,6 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\Users\Pages\CreateUser;
+use App\Filament\Resources\Users\Pages\EditUser;
+use App\Filament\Resources\Users\Pages\ListUsers;
+use App\Filament\Resources\Users\Pages\ViewUser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -52,7 +56,7 @@ class UserManagementTest extends TestCase
         $student = $this->makeUser('student');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\Users\Pages\ListUsers::class)
+        Livewire::test(ListUsers::class)
             ->call('loadTable')
             ->assertSee($student->email);
     }
@@ -64,7 +68,7 @@ class UserManagementTest extends TestCase
         $faculty = $this->makeUser('faculty');
         $this->actingAs($it);
 
-        Livewire::test(\App\Filament\Resources\Users\Pages\ListUsers::class)
+        Livewire::test(ListUsers::class)
             ->call('loadTable')
             ->assertSee($faculty->email);
     }
@@ -87,7 +91,7 @@ class UserManagementTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\Users\Pages\CreateUser::class)
+        Livewire::test(CreateUser::class)
             ->fillForm($this->validUserPayload())
             ->call('create')
             ->assertHasNoFormErrors();
@@ -101,7 +105,7 @@ class UserManagementTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\Users\Pages\CreateUser::class)
+        Livewire::test(CreateUser::class)
             ->fillForm([
                 'f_name' => '',
                 'l_name' => '',
@@ -119,7 +123,7 @@ class UserManagementTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\Users\Pages\CreateUser::class)
+        Livewire::test(CreateUser::class)
             ->fillForm($this->validUserPayload(['email' => $existing->email]))
             ->call('create')
             ->assertHasFormErrors(['email']);
@@ -135,7 +139,7 @@ class UserManagementTest extends TestCase
 
         // The std_number field uses a mask pattern (9999-99999) and a unique rule.
         // We submit the same number to trigger the duplicate error.
-        Livewire::test(\App\Filament\Resources\Users\Pages\CreateUser::class)
+        Livewire::test(CreateUser::class)
             ->fillForm($this->validUserPayload(['std_number' => '2020-12345']))
             ->call('create')
             ->assertHasFormErrors(['std_number']);
@@ -147,7 +151,7 @@ class UserManagementTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\Users\Pages\CreateUser::class)
+        Livewire::test(CreateUser::class)
             ->fillForm($this->validUserPayload([
                 'f_name' => 'Juan',
                 'm_name' => 'dela',
@@ -171,7 +175,7 @@ class UserManagementTest extends TestCase
 
         // Edit without providing a new password — should succeed
         Livewire::test(
-            \App\Filament\Resources\Users\Pages\EditUser::class,
+            EditUser::class,
             ['record' => $target->id]
         )
             ->fillForm(['f_name' => 'UpdatedName', 'password' => ''])
@@ -189,7 +193,7 @@ class UserManagementTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(
-            \App\Filament\Resources\Users\Pages\ViewUser::class,
+            ViewUser::class,
             ['record' => $target->id]
         )
             ->assertSee($target->email);
@@ -206,7 +210,7 @@ class UserManagementTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(
-            \App\Filament\Resources\Users\Pages\EditUser::class,
+            EditUser::class,
             ['record' => $target->id]
         )
             ->fillForm(['role' => 'faculty'])
@@ -238,7 +242,7 @@ class UserManagementTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(
-            \App\Filament\Resources\Users\Pages\EditUser::class,
+            EditUser::class,
             ['record' => $target->id]
         )
             ->call('save')
@@ -255,7 +259,7 @@ class UserManagementTest extends TestCase
         $this->actingAs($committee);
 
         Livewire::test(
-            \App\Filament\Resources\Users\Pages\EditUser::class,
+            EditUser::class,
             ['record' => $target->id]
         )->callAction('delete');
 
@@ -282,7 +286,7 @@ class UserManagementTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\Users\Pages\ListUsers::class)
+        Livewire::test(ListUsers::class)
             ->filterTable('trashed', 'only')
             ->callTableAction('restore', $target);
 
@@ -299,7 +303,7 @@ class UserManagementTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\Users\Pages\ListUsers::class)
+        Livewire::test(ListUsers::class)
             ->call('loadTable')
             ->assertSee($active->email)
             ->assertDontSee($deleted->email);
@@ -316,7 +320,7 @@ class UserManagementTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\Users\Pages\ListUsers::class)
+        Livewire::test(ListUsers::class)
             ->call('loadTable')
             ->filterTable('role', ['student'])
             ->assertSee($student->email)
@@ -332,7 +336,7 @@ class UserManagementTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\Users\Pages\ListUsers::class)
+        Livewire::test(ListUsers::class)
             ->searchTable('unique.student@up.edu.ph')
             ->assertSee('unique.student@up.edu.ph')
             ->assertDontSee($other->email);

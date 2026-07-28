@@ -10,12 +10,14 @@ use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Facades\FilamentView;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Contracts\View\View;
 
 class ViewRrMaterials extends ViewRecord
 {
     protected static string $resource = RrMaterialsResource::class;
 
-    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    public function getHeading(): string|Htmlable
     {
         return $this->record->parent->title;
     }
@@ -24,7 +26,7 @@ class ViewRrMaterials extends ViewRecord
     {
         FilamentView::registerRenderHook(
             'panels::content.start',
-            fn (): \Illuminate\Contracts\View\View => view('filament.hooks.log-view-after-delay', [
+            fn (): View => view('filament.hooks.log-view-after-delay', [
                 'wireId' => $this->getId(),
             ]),
         );

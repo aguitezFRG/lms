@@ -19,12 +19,12 @@ class MaterialAccessEventsPolicy
         }
 
         return in_array($user->role, [
-            \App\Enums\UserRole::SUPER_ADMIN,
-            \App\Enums\UserRole::COMMITTEE,
-            \App\Enums\UserRole::IT,
-            \App\Enums\UserRole::RR,
-            \App\Enums\UserRole::FACULTY,
-            \App\Enums\UserRole::STUDENT,
+            UserRole::SUPER_ADMIN,
+            UserRole::COMMITTEE,
+            UserRole::IT,
+            UserRole::RR,
+            UserRole::FACULTY,
+            UserRole::STUDENT,
         ]);
     }
 

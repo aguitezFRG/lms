@@ -2,12 +2,14 @@
 
 namespace App\Filament\Pages\User;
 
+use App\Enums\UserRole;
 use App\Filament\Components\User\FacultyFeatureCards;
 use App\Filament\Components\User\StudentFeatureCards;
 use App\Support\RoleViewMode;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Blade;
 
 class UserOnboarding extends Page
@@ -31,8 +33,8 @@ class UserOnboarding extends Page
     public static function canAccess(): bool
     {
         return auth()->check() && in_array(RoleViewMode::effectiveRole(), [
-            \App\Enums\UserRole::FACULTY,
-            \App\Enums\UserRole::STUDENT,
+            UserRole::FACULTY,
+            UserRole::STUDENT,
         ]);
     }
 
@@ -40,7 +42,7 @@ class UserOnboarding extends Page
         array $parameters = [],
         bool $isAbsolute = true,
         ?string $panel = null,
-        ?\Illuminate\Database\Eloquent\Model $tenant = null,
+        ?Model $tenant = null,
         bool $shouldGuessMissingParameters = false,
         ?string $configuration = null,
     ): string {

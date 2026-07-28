@@ -2,6 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\Auth\AdminProfile;
+use App\Filament\Pages\User\UserProfile;
+use App\Filament\Resources\User\Requests\Pages\ListRequests;
+use App\Livewire\NotificationBell;
 use App\Models\MaterialAccessEvents;
 use App\Models\RrMaterials;
 use App\Models\User;
@@ -68,7 +72,7 @@ class ProfilePagesTest extends TestCase
         $committee = $this->makeUser('committee', ['f_name' => 'Test', 'l_name' => 'User']);
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Pages\Auth\AdminProfile::class)
+        Livewire::test(AdminProfile::class)
             ->assertSuccessful();
     }
 
@@ -88,7 +92,7 @@ class ProfilePagesTest extends TestCase
         $student = $this->makeUser('student', ['f_name' => 'Test', 'l_name' => 'User']);
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Pages\User\UserProfile::class)
+        Livewire::test(UserProfile::class)
             ->assertSuccessful();
     }
 
@@ -112,7 +116,7 @@ class ProfilePagesTest extends TestCase
 
         // The profile header now renders a heroicon avatar (not text initials).
         // Assert the user's name appears in the welcome title instead.
-        Livewire::test(\App\Filament\Pages\User\UserProfile::class)
+        Livewire::test(UserProfile::class)
             ->assertSee('Maria'); // f_name appears in the page title "Welcome, Maria!"
     }
 
@@ -129,7 +133,7 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Resources\User\Requests\Pages\ListRequests::class)
+        Livewire::test(ListRequests::class)
             ->set('activeTab', 'pending')
             ->assertSee($pending->id)
             ->assertDontSee($approved->id);
@@ -146,7 +150,7 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Resources\User\Requests\Pages\ListRequests::class)
+        Livewire::test(ListRequests::class)
             ->set('activeTab', 'approved')
             ->assertSee($approved->id)
             ->assertDontSee($pending->id);
@@ -164,7 +168,7 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Resources\User\Requests\Pages\ListRequests::class)
+        Livewire::test(ListRequests::class)
             ->set('activeTab', 'closed')
             ->assertSee($rejected->id)
             ->assertSee($cancelled->id)
@@ -184,7 +188,7 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        Livewire::test(\App\Livewire\NotificationBell::class)
+        Livewire::test(NotificationBell::class)
             ->assertSee('approved', false); // notification message contains "approved"
     }
 
@@ -199,7 +203,7 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        Livewire::test(\App\Livewire\NotificationBell::class)
+        Livewire::test(NotificationBell::class)
             ->call('pollForNewNotifications')
             ->assertNotDispatched('request-status-toast');
 
@@ -216,7 +220,7 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        $component = Livewire::test(\App\Livewire\NotificationBell::class);
+        $component = Livewire::test(NotificationBell::class);
 
         $event->update(['status' => 'approved']);
 
@@ -241,7 +245,7 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        $component = Livewire::test(\App\Livewire\NotificationBell::class);
+        $component = Livewire::test(NotificationBell::class);
 
         $event->update(['status' => 'rejected']);
 
@@ -266,7 +270,7 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        $component = Livewire::test(\App\Livewire\NotificationBell::class);
+        $component = Livewire::test(NotificationBell::class);
 
         $event->update(['status' => 'revoked']);
 
@@ -294,7 +298,7 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        Livewire::test(\App\Livewire\NotificationBell::class)
+        Livewire::test(NotificationBell::class)
             ->call('markAllAsRead');
 
         $this->assertEquals(0, $student->fresh()->unreadNotifications()->count());
@@ -316,7 +320,7 @@ class ProfilePagesTest extends TestCase
         $this->assertGreaterThanOrEqual(1, $unreadCount);
 
         // Verify the badge count appears in the rendered component
-        Livewire::test(\App\Livewire\NotificationBell::class)
+        Livewire::test(NotificationBell::class)
             ->assertSee((string) $unreadCount);
     }
 
@@ -340,7 +344,7 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        Livewire::test(\App\Livewire\NotificationBell::class)
+        Livewire::test(NotificationBell::class)
             ->assertSee('1')
             ->assertSee('Old unread request notification');
     }
@@ -358,7 +362,7 @@ class ProfilePagesTest extends TestCase
 
         $this->actingAs($student);
 
-        Livewire::test(\App\Livewire\NotificationBell::class)
+        Livewire::test(NotificationBell::class)
             ->assertSee('9+');
     }
 }

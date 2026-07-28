@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Onboarding;
 
+use App\Enums\UserRole;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -28,8 +29,8 @@ class CompleteProfile extends Page implements HasForms
     public static function canAccess(): bool
     {
         return auth()->check() && in_array(auth()->user()->role, [
-            \App\Enums\UserRole::FACULTY,
-            \App\Enums\UserRole::STUDENT,
+            UserRole::FACULTY,
+            UserRole::STUDENT,
         ]);
     }
 

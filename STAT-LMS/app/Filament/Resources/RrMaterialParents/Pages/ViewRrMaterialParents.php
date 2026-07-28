@@ -6,12 +6,13 @@ use App\Filament\Resources\RrMaterialParents\RrMaterialParentsResource;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Contracts\Support\Htmlable;
 
 class ViewRrMaterialParents extends ViewRecord
 {
     protected static string $resource = RrMaterialParentsResource::class;
 
-    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    public function getHeading(): string|Htmlable
     {
         return $this->record->title;
     }

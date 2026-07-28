@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Security;
 
+use App\Models\MaterialAccessEvents;
 use App\Models\RrMaterials;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\RateLimiter;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -49,11 +51,11 @@ class MaterialStreamThrottleTest extends TestCase
 
         // Create the file on disk so the controller passes file existence check
         $storagePath = storage_path('app/private/repo');
-        \Illuminate\Support\Facades\File::ensureDirectoryExists($storagePath);
-        \Illuminate\Support\Facades\File::put($storagePath.'/file.pdf', '%PDF-1.4 mock content');
+        File::ensureDirectoryExists($storagePath);
+        File::put($storagePath.'/file.pdf', '%PDF-1.4 mock content');
 
         // Approve a request so the student can access
-        \App\Models\MaterialAccessEvents::create([
+        MaterialAccessEvents::create([
             'user_id' => $student->id,
             'rr_material_id' => $material->id,
             'event_type' => 'request',
@@ -90,11 +92,11 @@ class MaterialStreamThrottleTest extends TestCase
 
         // Create the file on disk so the controller passes file existence check
         $storagePath = storage_path('app/private/repo');
-        \Illuminate\Support\Facades\File::ensureDirectoryExists($storagePath);
-        \Illuminate\Support\Facades\File::put($storagePath.'/file.pdf', '%PDF-1.4 mock content');
+        File::ensureDirectoryExists($storagePath);
+        File::put($storagePath.'/file.pdf', '%PDF-1.4 mock content');
 
         // Approve a request so the student can access
-        \App\Models\MaterialAccessEvents::create([
+        MaterialAccessEvents::create([
             'user_id' => $student->id,
             'rr_material_id' => $material->id,
             'event_type' => 'request',

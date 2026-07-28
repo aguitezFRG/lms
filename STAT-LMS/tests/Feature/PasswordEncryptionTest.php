@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\Auth\AdminProfile;
+use App\Filament\Pages\User\UserProfile;
 use App\Http\Middleware\DecryptLivewirePasswords;
 use App\Services\PasswordEncryptionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -294,7 +296,7 @@ class PasswordEncryptionTest extends TestCase
         $admin = $this->makeUser('committee', ['password' => Hash::make('OldPass!1')]);
         $this->actingAs($admin);
 
-        Livewire::test(\App\Filament\Pages\Auth\AdminProfile::class)
+        Livewire::test(AdminProfile::class)
             ->call(
                 'submitEncryptedPasswordChange',
                 'ENC:'.$this->encryptWithPublicKey('OldPass!1'),
@@ -312,7 +314,7 @@ class PasswordEncryptionTest extends TestCase
         $admin = $this->makeUser('committee', ['password' => Hash::make('CorrectPass!1')]);
         $this->actingAs($admin);
 
-        Livewire::test(\App\Filament\Pages\Auth\AdminProfile::class)
+        Livewire::test(AdminProfile::class)
             ->call(
                 'submitEncryptedPasswordChange',
                 'ENC:'.$this->encryptWithPublicKey('WrongPass!1'),
@@ -330,7 +332,7 @@ class PasswordEncryptionTest extends TestCase
         $admin = $this->makeUser('committee', ['password' => Hash::make('OldPass!1')]);
         $this->actingAs($admin);
 
-        Livewire::test(\App\Filament\Pages\Auth\AdminProfile::class)
+        Livewire::test(AdminProfile::class)
             ->call(
                 'submitEncryptedPasswordChange',
                 'ENC:'.base64_encode('garbage'),
@@ -351,7 +353,7 @@ class PasswordEncryptionTest extends TestCase
         $student = $this->makeUser('student', ['password' => Hash::make('OldPass!1')]);
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Pages\User\UserProfile::class)
+        Livewire::test(UserProfile::class)
             ->call(
                 'submitEncryptedPasswordChange',
                 'ENC:'.$this->encryptWithPublicKey('OldPass!1'),
@@ -369,7 +371,7 @@ class PasswordEncryptionTest extends TestCase
         $student = $this->makeUser('student', ['password' => Hash::make('CorrectPass!1')]);
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Pages\User\UserProfile::class)
+        Livewire::test(UserProfile::class)
             ->call(
                 'submitEncryptedPasswordChange',
                 'ENC:'.$this->encryptWithPublicKey('WrongPass!1'),
@@ -386,7 +388,7 @@ class PasswordEncryptionTest extends TestCase
         $student = $this->makeUser('student', ['password' => Hash::make('OldPass!1')]);
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Pages\User\UserProfile::class)
+        Livewire::test(UserProfile::class)
             ->call(
                 'submitEncryptedPasswordChange',
                 'ENC:'.base64_encode('garbage'),

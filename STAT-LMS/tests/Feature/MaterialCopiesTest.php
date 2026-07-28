@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\RrMaterials\Pages\CreateRrMaterials;
+use App\Filament\Resources\RrMaterials\Pages\ListRrMaterials;
 use App\Models\MaterialAccessEvents;
 use App\Models\RrMaterialParents;
 use App\Models\RrMaterials;
@@ -69,7 +71,7 @@ class MaterialCopiesTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\RrMaterials\Pages\CreateRrMaterials::class)
+        Livewire::test(CreateRrMaterials::class)
             ->fillForm([
                 'material_parent_id' => $parent->id,
                 'is_digital' => false,
@@ -92,7 +94,7 @@ class MaterialCopiesTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\RrMaterials\Pages\CreateRrMaterials::class)
+        Livewire::test(CreateRrMaterials::class)
             ->fillForm([
                 'material_parent_id' => $parent->id,
                 'is_digital' => true,
@@ -113,7 +115,7 @@ class MaterialCopiesTest extends TestCase
 
         $wordFile = UploadedFile::fake()->create('document.docx', 100, 'application/msword');
 
-        Livewire::test(\App\Filament\Resources\RrMaterials\Pages\CreateRrMaterials::class)
+        Livewire::test(CreateRrMaterials::class)
             ->fillForm([
                 'material_parent_id' => $parent->id,
                 'is_digital' => true,
@@ -142,7 +144,7 @@ class MaterialCopiesTest extends TestCase
 
         $hugeFile = UploadedFile::fake()->create('big.pdf', 11_000, 'application/pdf');
 
-        $component = Livewire::test(\App\Filament\Resources\RrMaterials\Pages\CreateRrMaterials::class)
+        $component = Livewire::test(CreateRrMaterials::class)
             ->fillForm([
                 'material_parent_id' => $parent->id,
                 'is_digital' => true,
@@ -174,7 +176,7 @@ class MaterialCopiesTest extends TestCase
         $student = $this->makeUser('student');
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Resources\RrMaterials\Pages\ListRrMaterials::class)
+        Livewire::test(ListRrMaterials::class)
             ->call('loadTable')
             ->assertSee($publicParent->title)
             ->assertDontSee($confidentialParent->title);
@@ -190,7 +192,7 @@ class MaterialCopiesTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\RrMaterials\Pages\ListRrMaterials::class)
+        Livewire::test(ListRrMaterials::class)
             ->call('loadTable')
             ->filterTable('is_digital', true)
             ->assertSee($digital->id)
@@ -207,7 +209,7 @@ class MaterialCopiesTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\RrMaterials\Pages\ListRrMaterials::class)
+        Livewire::test(ListRrMaterials::class)
             ->call('loadTable')
             ->filterTable('is_available', true)
             ->assertSee($available->id)
@@ -224,7 +226,7 @@ class MaterialCopiesTest extends TestCase
         $student = $this->makeUser('student');
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Resources\RrMaterials\Pages\ListRrMaterials::class)
+        Livewire::test(ListRrMaterials::class)
             ->callTableAction('requestCopy', $copy);
 
         $this->assertDatabaseHas('material_access_events', [
@@ -243,7 +245,7 @@ class MaterialCopiesTest extends TestCase
         $student = $this->makeUser('student');
         $this->actingAs($student);
 
-        Livewire::test(\App\Filament\Resources\RrMaterials\Pages\ListRrMaterials::class)
+        Livewire::test(ListRrMaterials::class)
             ->callTableAction('requestCopy', $copy);
 
         $this->assertDatabaseHas('material_access_events', [
@@ -264,7 +266,7 @@ class MaterialCopiesTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\RrMaterials\Pages\ListRrMaterials::class)
+        Livewire::test(ListRrMaterials::class)
             ->callTableAction('delete', $copy);
 
         $this->assertSoftDeleted('rr_materials', ['id' => $copy->id]);
@@ -280,7 +282,7 @@ class MaterialCopiesTest extends TestCase
         $committee = $this->makeUser('committee');
         $this->actingAs($committee);
 
-        Livewire::test(\App\Filament\Resources\RrMaterials\Pages\ListRrMaterials::class)
+        Livewire::test(ListRrMaterials::class)
             ->filterTable('trashed', 'only')
             ->callTableAction('restore', $copy);
 

@@ -7,12 +7,13 @@ use App\Support\RoleViewMode;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Contracts\Support\Htmlable;
 
 class ViewRequests extends ViewRecord
 {
     protected static string $resource = RequestsResource::class;
 
-    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    public function getHeading(): string|Htmlable
     {
         return $this->record->material->parent->title;
     }

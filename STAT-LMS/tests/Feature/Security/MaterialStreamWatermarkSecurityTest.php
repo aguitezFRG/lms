@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Notification;
+use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -117,10 +118,10 @@ PDF;
 
             public function watermark(string $pdfPath, User $user, string $materialTitle, Carbon $accessedAt): string
             {
-                \PHPUnit\Framework\Assert::assertStringEndsWith('repo/watermark-test.pdf', $pdfPath);
-                \PHPUnit\Framework\Assert::assertTrue($user->is($this->expectedUser));
-                \PHPUnit\Framework\Assert::assertSame($this->expectedTitle, $materialTitle);
-                \PHPUnit\Framework\Assert::assertSame('Asia/Manila', $accessedAt->timezoneName);
+                Assert::assertStringEndsWith('repo/watermark-test.pdf', $pdfPath);
+                Assert::assertTrue($user->is($this->expectedUser));
+                Assert::assertSame($this->expectedTitle, $materialTitle);
+                Assert::assertSame('Asia/Manila', $accessedAt->timezoneName);
 
                 return $this->payload;
             }

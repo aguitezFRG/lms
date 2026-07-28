@@ -8,6 +8,7 @@ use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Translation\PotentiallyTranslatedString;
 
 class SDGTags implements DataAwareRule, ValidationRule, ValidatorAwareRule
 {
@@ -18,7 +19,7 @@ class SDGTags implements DataAwareRule, ValidationRule, ValidatorAwareRule
     /**
      * Run the validation rule.
      *
-     * @param  \Closure(string, ?string=): \Illuminate\Translation\PotentiallyTranslatedString  $fail
+     * @param  Closure(string, ?string=): PotentiallyTranslatedString  $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {

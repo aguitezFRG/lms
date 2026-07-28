@@ -3,10 +3,12 @@
 namespace Database\Factories;
 
 use App\Models\RrMaterialParents;
+use App\Models\RrMaterials;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\RrMaterials>
+ * @extends Factory<RrMaterials>
  */
 class RrMaterialsFactory extends Factory
 {
@@ -28,7 +30,7 @@ class RrMaterialsFactory extends Factory
                     .fake()->randomElement(['book', 'thesis', 'journal', 'dissertation', 'other'])
                     .'_'.fake()->slug(4)
                     .'-'.fake()->year()
-                    .'-'.\Illuminate\Support\Str::uuid()
+                    .'-'.Str::uuid()
                     .'-v1.pdf'
                 : null,
         ];

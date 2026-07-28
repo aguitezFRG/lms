@@ -66,7 +66,7 @@ class ExportTestResults extends Command
             return self::FAILURE;
         }
 
-        \Illuminate\Support\Facades\File::ensureDirectoryExists($tentativeDir);
+        File::ensureDirectoryExists($tentativeDir);
         $outputPath = $rawOutputPath;
 
         // Clean up any stale XML from a previous run

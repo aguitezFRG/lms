@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\UserRole;
 use App\Filament\Components\Admin\CommitteeFeatureCards;
 use App\Filament\Components\Admin\StaffFeatureCards;
 use App\Filament\Components\Admin\SuperAdminFeatureCards;
@@ -9,6 +10,7 @@ use App\Support\RoleViewMode;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Model;
 
 class AdminOnboarding extends Page
 {
@@ -32,10 +34,10 @@ class AdminOnboarding extends Page
     public static function canAccess(): bool
     {
         return auth()->check() && in_array(auth()->user()->role, [
-            \App\Enums\UserRole::SUPER_ADMIN,
-            \App\Enums\UserRole::COMMITTEE,
-            \App\Enums\UserRole::IT,
-            \App\Enums\UserRole::RR,
+            UserRole::SUPER_ADMIN,
+            UserRole::COMMITTEE,
+            UserRole::IT,
+            UserRole::RR,
         ]);
     }
 
@@ -43,7 +45,7 @@ class AdminOnboarding extends Page
         array $parameters = [],
         bool $isAbsolute = true,
         ?string $panel = null,
-        ?\Illuminate\Database\Eloquent\Model $tenant = null,
+        ?Model $tenant = null,
         bool $shouldGuessMissingParameters = false,
         ?string $configuration = null,
     ): string {

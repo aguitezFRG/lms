@@ -14,6 +14,7 @@ use App\Models\MaterialAccessEvents;
 use App\Models\RrMaterialParents;
 use App\Models\RrMaterials;
 use App\Support\RoleViewMode;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -244,7 +245,7 @@ class RoleViewModeTest extends TestCase
 
         $page = new class extends ListCatalogs
         {
-            public function publicQuery(): \Illuminate\Database\Eloquent\Builder
+            public function publicQuery(): Builder
             {
                 return $this->getQuery();
             }
@@ -267,7 +268,7 @@ class RoleViewModeTest extends TestCase
 
         $page = new class extends ListCatalogs
         {
-            public function publicQuery(): \Illuminate\Database\Eloquent\Builder
+            public function publicQuery(): Builder
             {
                 return $this->getQuery();
             }

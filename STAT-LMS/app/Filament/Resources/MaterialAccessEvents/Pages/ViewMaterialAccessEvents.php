@@ -6,12 +6,13 @@ use App\Filament\Resources\MaterialAccessEvents\MaterialAccessEventsResource;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Contracts\Support\Htmlable;
 
 class ViewMaterialAccessEvents extends ViewRecord
 {
     protected static string $resource = MaterialAccessEventsResource::class;
 
-    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    public function getHeading(): string|Htmlable
     {
         return $this->record->material->parent->title;
     }

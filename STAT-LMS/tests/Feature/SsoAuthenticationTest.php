@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Socialite\Contracts\Provider;
 use Laravel\Socialite\Facades\Socialite;
 use Mockery;
 use PHPUnit\Framework\Attributes\Test;
@@ -17,7 +18,7 @@ class SsoAuthenticationTest extends TestCase
     #[Test]
     public function redirect_route_returns_socialite_redirect(): void
     {
-        $provider = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
+        $provider = Mockery::mock(Provider::class);
         $provider->shouldReceive('redirect')->andReturn(redirect('https://accounts.google.com/oauth'));
 
         Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
@@ -35,7 +36,7 @@ class SsoAuthenticationTest extends TestCase
         $googleUser->shouldReceive('getName')->andReturn('New Student');
         $googleUser->shouldReceive('user')->andReturn(['given_name' => 'New', 'family_name' => 'Student']);
 
-        $provider = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
+        $provider = Mockery::mock(Provider::class);
         $provider->shouldReceive('user')->andReturn($googleUser);
 
         Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
@@ -72,7 +73,7 @@ class SsoAuthenticationTest extends TestCase
         $googleUser->shouldReceive('getName')->andReturn('Existing User');
         $googleUser->shouldReceive('user')->andReturn(['given_name' => 'Existing', 'family_name' => 'User']);
 
-        $provider = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
+        $provider = Mockery::mock(Provider::class);
         $provider->shouldReceive('user')->andReturn($googleUser);
 
         Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
@@ -101,7 +102,7 @@ class SsoAuthenticationTest extends TestCase
         $googleUser->shouldReceive('getName')->andReturn('Deleted User');
         $googleUser->shouldReceive('user')->andReturn(['given_name' => 'Deleted', 'family_name' => 'User']);
 
-        $provider = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
+        $provider = Mockery::mock(Provider::class);
         $provider->shouldReceive('user')->andReturn($googleUser);
 
         Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
@@ -116,7 +117,7 @@ class SsoAuthenticationTest extends TestCase
     #[Test]
     public function callback_handles_oauth_failure(): void
     {
-        $provider = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
+        $provider = Mockery::mock(Provider::class);
         $provider->shouldReceive('user')->andThrow(new \Exception('OAuth error'));
 
         Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
@@ -153,7 +154,7 @@ class SsoAuthenticationTest extends TestCase
         $googleUser->shouldReceive('getName')->andReturn('Newbie User');
         $googleUser->shouldReceive('user')->andReturn(['given_name' => 'Newbie', 'family_name' => 'User']);
 
-        $provider = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
+        $provider = Mockery::mock(Provider::class);
         $provider->shouldReceive('user')->andReturn($googleUser);
 
         Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
@@ -177,7 +178,7 @@ class SsoAuthenticationTest extends TestCase
         $googleUser->shouldReceive('getName')->andReturn('Complete User');
         $googleUser->shouldReceive('user')->andReturn(['given_name' => 'Complete', 'family_name' => 'User']);
 
-        $provider = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
+        $provider = Mockery::mock(Provider::class);
         $provider->shouldReceive('user')->andReturn($googleUser);
 
         Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
@@ -201,7 +202,7 @@ class SsoAuthenticationTest extends TestCase
         $googleUser->shouldReceive('getName')->andReturn('Admin User');
         $googleUser->shouldReceive('user')->andReturn(['given_name' => 'Admin', 'family_name' => 'User']);
 
-        $provider = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
+        $provider = Mockery::mock(Provider::class);
         $provider->shouldReceive('user')->andReturn($googleUser);
 
         Socialite::shouldReceive('driver')->with('google')->andReturn($provider);

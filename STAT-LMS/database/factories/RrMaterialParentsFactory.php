@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\RrMaterialParents;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\RrMaterialParents>
+ * @extends Factory<RrMaterialParents>
  */
 class RrMaterialParentsFactory extends Factory
 {
