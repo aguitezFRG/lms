@@ -60,9 +60,6 @@ jobs:
             STAT-LMS/package-lock.json
             STAT-LMS/client/package-lock.json
 
-      - name: Install system tools
-        run: sudo apt-get update && sudo apt-get install --yes ghostscript
-
       - name: Install dependencies
         run: |
           composer install --no-interaction --no-progress --prefer-dist
@@ -120,3 +117,7 @@ jobs:
       - name: Build Render container
         working-directory: .
         run: docker build --file STAT-LMS/Dockerfile.render --tag instat-shared-demo:test STAT-LMS
+
+      - name: Verify Render runtime dependencies
+        working-directory: .
+        run: docker run --rm --entrypoint sh instat-shared-demo:test -c 'php artisan --version && gs --version && composer check-platform-reqs --no-dev'
