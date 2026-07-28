@@ -10,10 +10,23 @@
     @include('filament.components.theme-bootstrap')
     <script>
         let lmsTurnstileWidgetId = null;
+        let lmsTurnstileSubmissionStarted = false;
 
         const getLmsTurnstileTheme = () => document.documentElement.classList.contains('dark')
             ? 'dark'
             : 'light';
+
+        const submitLmsTurnstileForm = () => {
+            if (lmsTurnstileSubmissionStarted) return;
+
+            const form = document.getElementById('turnstile-form');
+
+            if (! form) return;
+
+            lmsTurnstileSubmissionStarted = true;
+            document.getElementById('turnstile-status').textContent = 'Verification complete. Continuing…';
+            form.requestSubmit();
+        };
 
         const renderLmsTurnstile = () => {
             if (! window.turnstile) return;
@@ -27,6 +40,7 @@
                 action: @js($action),
                 theme: getLmsTurnstileTheme(),
                 size: 'flexible',
+                callback: submitLmsTurnstileForm,
             });
         };
 
@@ -45,13 +59,12 @@
         p { margin: 0 0 1.5rem; color: #475569; line-height: 1.55; }
         form { display: grid; gap: 1rem; }
         .cf-turnstile { width: 100%; min-height: 65px; }
-        button { width: 100%; border: 0; border-radius: .75rem; padding: .8rem 1rem; background: #014421; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
-        button:hover { background: #02582b; }
+        .status { min-height: 1.25rem; color: #475569; font-size: .9rem; }
         .error { padding: .75rem; border-radius: .75rem; background: #fff1f2; color: #9f1239; font-size: .9rem; }
         small { display: block; margin-top: 1.25rem; color: #64748b; }
         html.dark body { background: #020617; color: #f8fafc; }
         html.dark main { border-color: #334155; background: #0f172a; box-shadow: none; }
-        html.dark p, html.dark small { color: #cbd5e1; }
+        html.dark p, html.dark small, html.dark .status { color: #cbd5e1; }
         html.dark .error { background: #4c0519; color: #fecdd3; }
         html.dark.oled body { background: #000; }
         html.dark.oled main { border-color: #27272a; background: #030303; }
@@ -67,10 +80,10 @@
             <div class="error" role="alert">{{ $errors->first() }}</div>
         @endif
 
-        <form method="POST" action="{{ route('turnstile.verify') }}">
+        <form id="turnstile-form" method="POST" action="{{ route('turnstile.verify') }}">
             @csrf
             <div id="turnstile-widget"></div>
-            <button type="submit">Continue to LMS</button>
+            <div id="turnstile-status" class="status" role="status" aria-live="polite"></div>
         </form>
 
         <small>Protected by Cloudflare Turnstile</small>

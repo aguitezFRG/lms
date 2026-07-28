@@ -49,8 +49,12 @@ class TurnstileGateTest extends TestCase
             ->assertSee('action: \'demo_access\'', false)
             ->assertSee('lms-theme', false)
             ->assertSee('theme: getLmsTurnstileTheme()', false)
+            ->assertSee('callback: submitLmsTurnstileForm', false)
+            ->assertSee('form.requestSubmit()', false)
+            ->assertSee('Verification complete. Continuing…')
             ->assertSee('lms-theme:changed', false)
             ->assertSee('https://challenges.cloudflare.com/turnstile/v0/api.js?onload=lmsTurnstileReady&render=explicit', false)
+            ->assertDontSee('Continue to LMS')
             ->assertDontSee('data-theme="auto"', false)
             ->assertDontSee('1x0000000000000000000000000000000AA');
     }
