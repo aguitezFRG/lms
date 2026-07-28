@@ -126,4 +126,28 @@ jobs:
 
       - name: Verify Render runtime dependencies
         working-directory: .
-        run: docker run --rm --entrypoint sh instat-shared-demo:test -c 'php artisan --version && gs --version && composer check-platform-reqs --no-dev'
+        run: |
+          docker run --rm \
+            --network host \
+            --entrypoint sh \
+            --env APP_ENV=testing \
+            --env APP_KEY="$APP_KEY" \
+            --env APP_URL=http://localhost \
+            --env CACHE_STORE=array \
+            --env CF_ACCESS_ENFORCED=false \
+            --env DB_CONNECTION=pgsql \
+            --env DB_DATABASE=instat_test \
+            --env DB_HOST=127.0.0.1 \
+            --env DB_PASSWORD=instat \
+            --env DB_PORT=5432 \
+            --env DB_SCHEMA=public \
+            --env DB_SSLMODE=disable \
+            --env DB_USERNAME=instat \
+            --env DEMO_MATERIAL_DISK=local \
+            --env DEMO_MODE=true \
+            --env DEMO_RUNTIME=server \
+            --env FILESYSTEM_DISK=local \
+            --env QUEUE_CONNECTION=sync \
+            --env SESSION_DRIVER=array \
+            instat-shared-demo:test \
+            -c 'php artisan --version && gs --version && composer check-platform-reqs --no-dev && php artisan migrate:fresh --force && php artisan demo:bootstrap-shared --force && php artisan demo:health-shared --json'

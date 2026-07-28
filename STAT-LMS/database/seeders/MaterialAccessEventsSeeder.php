@@ -186,7 +186,8 @@ class MaterialAccessEventsSeeder extends Seeder
         ];
 
         foreach ($events as $data) {
-            MaterialAccessEvents::factory()->create($data);
+            $event = new MaterialAccessEvents;
+            $event->forceFill($data)->save();
         }
     }
 }

@@ -151,7 +151,8 @@ class RrMaterialParentsSeeder extends Seeder
         ];
 
         foreach ($parents as $data) {
-            RrMaterialParents::factory()->create($data);
+            $parent = new RrMaterialParents;
+            $parent->forceFill($data)->save();
         }
 
         // ── Additional random materials ────────────────────────────────────────

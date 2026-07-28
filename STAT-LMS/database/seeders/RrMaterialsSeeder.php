@@ -112,13 +112,14 @@ class RrMaterialsSeeder extends Seeder
             }
 
             // Create the RrMaterials record
-            RrMaterials::factory()->create([
+            $material = new RrMaterials;
+            $material->forceFill([
                 'id' => $copy['copy_id'],
                 'material_parent_id' => $copy['parent_id'],
                 'is_digital' => true,
                 'is_available' => true,
                 'file_name' => $targetPath,
-            ]);
+            ])->save();
         }
 
         // Create physical copies (includes physical-only and additional copies of digital parents)
@@ -156,13 +157,14 @@ class RrMaterialsSeeder extends Seeder
         ];
 
         foreach ($physicalCopies as $copy) {
-            RrMaterials::factory()->create([
+            $material = new RrMaterials;
+            $material->forceFill([
                 'id' => $copy['copy_id'],
                 'material_parent_id' => $copy['parent_id'],
                 'is_digital' => false,
                 'is_available' => true,
                 'file_name' => null,
-            ]);
+            ])->save();
         }
     }
 }
