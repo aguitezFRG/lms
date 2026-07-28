@@ -24,20 +24,20 @@ jobs:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_DB: instat_test
-          POSTGRES_USER: instat
-          POSTGRES_PASSWORD: instat
+          POSTGRES_DB: lms
+          POSTGRES_USER: lms
+          POSTGRES_PASSWORD: lms
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U instat -d instat_test"
+          --health-cmd "pg_isready -U lms -d lms"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
 
     defaults:
       run:
-        working-directory: STAT-LMS
+        working-directory: LMS
 
     steps:
       - name: Check out repository
@@ -57,8 +57,8 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: |
-            STAT-LMS/package-lock.json
-            STAT-LMS/client/package-lock.json
+            LMS/package-lock.json
+            LMS/client/package-lock.json
 
       - name: Install test runtime tools
         run: sudo apt-get update && sudo apt-get install --yes ghostscript
@@ -93,9 +93,9 @@ jobs:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
-          DB_DATABASE: instat_test
-          DB_USERNAME: instat
-          DB_PASSWORD: instat
+          DB_DATABASE: lms
+          DB_USERNAME: lms
+          DB_PASSWORD: lms
           DB_SCHEMA: public
           DB_SSLMODE: disable
           FILESYSTEM_DISK: local
@@ -122,7 +122,7 @@ jobs:
 
       - name: Build Render container
         working-directory: .
-        run: docker build --file STAT-LMS/Dockerfile.render --tag instat-shared-demo:test STAT-LMS
+        run: docker build --file LMS/Dockerfile.render --tag lms:test LMS
 
       - name: Verify Render runtime dependencies
         working-directory: .
@@ -136,13 +136,13 @@ jobs:
             --env CACHE_STORE=array \
             --env CF_ACCESS_ENFORCED=false \
             --env DB_CONNECTION=pgsql \
-            --env DB_DATABASE=instat_test \
+            --env DB_DATABASE=lms \
             --env DB_HOST=127.0.0.1 \
-            --env DB_PASSWORD=instat \
+            --env DB_PASSWORD=lms \
             --env DB_PORT=5432 \
             --env DB_SCHEMA=public \
             --env DB_SSLMODE=disable \
-            --env DB_USERNAME=instat \
+            --env DB_USERNAME=lms \
             --env DEMO_MATERIAL_DISK=local \
             --env DEMO_MODE=true \
             --env DEMO_RUNTIME=server \
@@ -150,5 +150,5 @@ jobs:
             --env QUEUE_CONNECTION=sync \
             --env SESSION_DRIVER=array \
             --env PORT=10000 \
-            instat-shared-demo:test \
+            lms:test \
             -c 'sed "s/\${PORT}/$PORT/" /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -t && php artisan --version && gs --version && composer check-platform-reqs --no-dev && test -s storage/app/keys/password_private.pem && test -s storage/app/keys/password_public.pem && php artisan migrate:fresh --force && php artisan demo:bootstrap-shared --force && php artisan demo:health-shared --json'

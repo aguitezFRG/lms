@@ -2,12 +2,12 @@
 
 ## Project Structure & Module Organization
 
-This repository contains the INSTAT Reading Room system. The Laravel application lives in `STAT-LMS/`; run commands there. Server-side code is in `STAT-LMS/app/` (models, policies, Filament, Livewire, services, and notifications). Routes are in `routes/`; database files are in `database/`; Blade, CSS, and JavaScript sources are in `resources/`. Public files belong in `public/`. Tests are split between `tests/Feature/` and `tests/Unit/`.
+This repository contains the LMS system. The Laravel application lives in `LMS/`; run commands there. Server-side code is in `LMS/app/` (models, policies, Filament, Livewire, services, and notifications). Routes are in `routes/`; database files are in `database/`; Blade, CSS, and JavaScript sources are in `resources/`. Public files belong in `public/`. Tests are split between `tests/Feature/` and `tests/Unit/`.
 
 ## Build, Test, and Development Commands
 
 ```bash
-cd STAT-LMS
+cd LMS
 composer setup                 # install dependencies, initialize .env, migrate, build assets
 composer dev                   # run Laravel, queue listener, logs, and Vite together
 composer test                  # clear config and run the full PHPUnit suite

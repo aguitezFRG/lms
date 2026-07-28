@@ -1,11 +1,11 @@
 services:
   - type: web
-    name: instat-lms-shared-demo
+    name: lms
     runtime: docker
     plan: free
     region: singapore
     branch: demo/render-supabase-vercel
-    rootDir: STAT-LMS
+    rootDir: LMS
     dockerfilePath: ./Dockerfile.render
     healthCheckPath: /up
     autoDeployTrigger: commit

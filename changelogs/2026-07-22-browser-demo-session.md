@@ -13,7 +13,7 @@ Date: 2026-07-22
 - Improved page rendering with build-time Laravel configuration, route, event, Filament component, and icon caches; browser-runtime file caching; and browser-local SQLite tuning.
 - Hid the Super Admin `View as` selector in the demo and cleared stale role-preview state when switching demo profiles.
 - Added a canonical static build that emits `client/dist/` and `.vercel/output/static`, validates payload checksums, rejects secret-bearing environment files, and remains within Vercel Hobby artifact limits.
-- Rewrote `STAT-LMS/README.md` with the current native Laravel setup, PHP-WASM demo build, local preview, static-host requirements, Vercel prebuilt deployment, testing commands, and runtime behavior.
+- Rewrote `LMS/README.md` with the current native Laravel setup, PHP-WASM demo build, local preview, static-host requirements, Vercel prebuilt deployment, testing commands, and runtime behavior.
 - Purged reproducible client staging payloads, compiled views, logs, test/build caches, and an accidental SQLite file; the canonical demo build now cleans its temporary client payload files automatically.
 - Added a repository-root Vercel deployment runbook covering prerequisites, canonical builds, local verification, project linking, preview and production prebuilt deployments, CI automation, and rollback.
 

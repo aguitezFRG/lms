@@ -1,0 +1,145 @@
+<?php
+
+namespace App\Providers\Filament;
+
+use App\Filament\Pages\AdminOnboarding;
+use App\Filament\Pages\Auth\AdminLogin;
+use App\Filament\Pages\Auth\AdminProfile;
+use App\Filament\Pages\Dashboard;
+use App\Http\Middleware\FilamentAuthenticate;
+use App\Http\Middleware\RedirectIfBanned;
+use Filament\Actions\Action;
+use Filament\Http\Middleware\AuthenticateSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
+use Filament\Panel;
+use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+use Filament\View\PanelsRenderHook;
+use Filament\Widgets\AccountWidget;
+use Filament\Widgets\FilamentInfoWidget;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            ->default()
+            ->id('admin')
+            ->path('admin')
+            ->homeUrl(fn () => AdminOnboarding::getUrl())
+            ->viteTheme('resources/css/filament/admin/theme.css')
+            ->font(null, preload: [])
+            ->favicon('/favicon.svg')
+            ->brandLogoHeight('2.5rem')
+            ->brandLogo(new HtmlString('
+                <div style="display: flex; align-items: center; gap: 16px; padding: 4px 0;">
+                    <img src="/images/lms.png" alt="LMS logo" style="height: 2.5rem; width: auto; flex-shrink: 0;" />
+                    <span style="font-family: ui-sans-serif, system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, Ubuntu, Cantarell, &quot;Noto Sans&quot;, sans-serif, BlinkMacSystemFont, &quot;Helvetica Neue&quot;, Arial, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;, &quot;Noto Color Emoji&quot;; font-size: 1.1rem; font-weight: 600; white-space: nowrap; letter-spacing: 0.01em;">
+                        LMS
+                    </span>
+                </div>
+            '))
+            ->brandName('LMS')
+            ->login(config('demo.enabled') && config('demo.runtime') === 'browser' ? null : AdminLogin::class)
+            ->colors([
+                'primary' => Color::hex('#8D1436'), // LMS primary
+                'success' => Color::hex('#014421'), // LMS success
+                'warning' => Color::hex('#f55536'), // LMS warning
+                'danger' => Color::hex('#8D1436'), // LMS danger
+                'info' => Color::hex('#014421'), // LMS info
+                'stat-yellow' => Color::hex('#F3AA2C'),
+                'stat-blue' => Color::hex('#1a3a8f'),
+                'gray' => Color::Slate,
+            ])
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
+            ->pages([
+                Dashboard::class,
+            ])
+            ->navigationGroups([
+                'Repository',
+                'Logs',
+            ])
+            ->userMenuItems([
+                'profile' => fn (Action $action): Action => $action
+                    ->url(fn (): string => AdminProfile::getUrl()),
+                MenuItem::make()
+                    ->label('Switch demo profile')
+                    ->url(fn (): string => route('demo.profiles.index'))
+                    ->icon(Heroicon::OutlinedArrowPath)
+                    ->visible(fn (): bool => config('demo.enabled') && config('demo.runtime') === 'browser'),
+                'logout' => fn (Action $action): Action => $action->visible(
+                    fn (): bool => ! config('demo.enabled') || config('demo.runtime') === 'server'
+                ),
+            ])
+            ->sidebarCollapsibleOnDesktop()
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
+            // ->widgets([
+            //     AccountWidget::class,
+            //     FilamentInfoWidget::class,
+            // ])
+            ->middleware([
+                EncryptCookies::class,
+                AddQueuedCookiesToResponse::class,
+                StartSession::class,
+                AuthenticateSession::class,
+                ShareErrorsFromSession::class,
+                VerifyCsrfToken::class,
+                SubstituteBindings::class,
+                DisableBladeIconComponents::class,
+                DispatchServingFilamentEvent::class,
+            ])
+            ->authMiddleware([
+                RedirectIfBanned::class,
+                FilamentAuthenticate::class,
+            ])
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn () => view('filament.components.theme-bootstrap'),
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn () => config('demo.enabled') && config('demo.runtime') === 'browser'
+                    ? ''
+                    : view('filament.components.password-encryption-script'),
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn () => config('demo.enabled') && config('demo.runtime') === 'browser'
+                    ? view('filament.components.demo-notification-bridge')
+                    : '',
+            )
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,
+                fn () => view('filament.components.session-flash'),
+            )
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
+                fn () => config('demo.enabled') && config('demo.runtime') === 'browser'
+                    ? ''
+                    : view('filament.components.google-sso-button'),
+            )
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,
+                fn () => config('demo.enabled') && config('demo.runtime') === 'server'
+                    ? view('filament.components.shared-demo-credentials', ['panel' => 'admin'])
+                    : '',
+            )
+            ->renderHook(
+                PanelsRenderHook::USER_MENU_PROFILE_AFTER,
+                fn () => view('filament.components.role-view-switcher'),
+            )
+            ->strictAuthorization()
+            ->globalSearch(false);
+    }
+}

@@ -1,5 +1,5 @@
 {
-  "name": "instat-vercel-cli",
+  "name": "lms",
   "private": true,
   "dependencies": {
     "vercel": "56.5.0"

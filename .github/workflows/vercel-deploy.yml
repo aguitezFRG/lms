@@ -40,11 +40,11 @@ jobs:
         run: sudo apt-get update && sudo apt-get install --yes ghostscript zip ripgrep
 
       - name: Install Laravel dependencies
-        working-directory: STAT-LMS
+        working-directory: LMS
         run: composer install --no-interaction --prefer-dist
 
       - name: Configure test environment
-        working-directory: STAT-LMS
+        working-directory: LMS
         run: |
           cp .env.example .env
           sed --in-place '/^DEMO_MODE=/d' .env
@@ -52,21 +52,21 @@ jobs:
           php artisan app:generate-password-keys --force --no-interaction
 
       - name: Install frontend dependencies
-        working-directory: STAT-LMS
+        working-directory: LMS
         run: |
           npm ci
           npm --prefix client ci
 
       - name: Build Laravel frontend
-        working-directory: STAT-LMS
+        working-directory: LMS
         run: npm run build
 
       - name: Run tests
-        working-directory: STAT-LMS
+        working-directory: LMS
         run: composer test
 
       - name: Check PHP formatting
-        working-directory: STAT-LMS
+        working-directory: LMS
         run: ./vendor/bin/pint --test
 
       - name: Install pinned Vercel CLI
@@ -74,24 +74,24 @@ jobs:
 
       - name: Link production environment
         if: github.ref == 'refs/heads/main'
-        working-directory: STAT-LMS
+        working-directory: LMS
         run: npm --prefix ../.github/vercel-cli exec -- vercel pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}"
 
       - name: Link preview environment
         if: github.ref != 'refs/heads/main'
-        working-directory: STAT-LMS
+        working-directory: LMS
         run: npm --prefix ../.github/vercel-cli exec -- vercel pull --yes --environment=preview --token="${{ secrets.VERCEL_TOKEN }}"
 
       - name: Build browser demo
-        working-directory: STAT-LMS
+        working-directory: LMS
         run: composer demo:build
 
       - name: Deploy production
         if: github.ref == 'refs/heads/main'
-        working-directory: STAT-LMS
+        working-directory: LMS
         run: npm --prefix ../.github/vercel-cli exec -- vercel deploy --prebuilt --prod --token="${{ secrets.VERCEL_TOKEN }}"
 
       - name: Deploy preview
         if: github.ref != 'refs/heads/main'
-        working-directory: STAT-LMS
+        working-directory: LMS
         run: npm --prefix ../.github/vercel-cli exec -- vercel deploy --prebuilt --token="${{ secrets.VERCEL_TOKEN }}"

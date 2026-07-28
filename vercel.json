@@ -1,7 +1,7 @@
 {
     "$schema": "https://openapi.vercel.sh/vercel.json",
-    "buildCommand": "cd STAT-LMS && composer demo:build",
-    "outputDirectory": "STAT-LMS/client/dist",
+    "buildCommand": "cd LMS && composer demo:build",
+    "outputDirectory": "LMS/client/dist",
     "headers": [
         {
             "source": "/assets/runtime-worker-(.*)\\.js",

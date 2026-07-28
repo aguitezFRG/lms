@@ -1,4 +1,4 @@
-# Browser-local static INSTAT demo deployment
+# Browser-local static LMS demo deployment
 
 ## Governance and contracts
 
@@ -7,7 +7,7 @@
 
 ## Static client foundation
 
-- Create a Vite, React, TypeScript PWA in `STAT-LMS/client/` with Cloudflare Pages configuration and SPA fallback.
+- Create a Vite, React, TypeScript PWA in `LMS/client/` with Cloudflare Pages configuration and SPA fallback.
 - Convert Laravel seed data to versioned static catalog and demo-profile JSON, and expose seeded PDFs as read-only hosted assets.
 - Precache only the app shell and seed metadata. Never cache PDFs; remove obsolete app caches.
 
@@ -16,7 +16,7 @@
 - Keep profile/role, mutable catalog data, requests, notifications, audit entries, preferences, and uploaded PDF blobs in IndexedDB.
 - Enforce a 100 MiB total application budget, with at most five PDFs and 10 MiB per PDF. Validate PDF type and signature.
 - Reject oversized uploads/imports atomically after projected-usage checks.
-- Export/import versioned `.instat-session.zip` archives, validating schema/version, PDF limits, and total projected usage before confirmed full replacement.
+- Export/import versioned `.lms-session.zip` archives, validating schema/version, PDF limits, and total projected usage before confirmed full replacement.
 
 ## Local demo workflow
 

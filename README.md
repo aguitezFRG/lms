@@ -1,12 +1,12 @@
-# INSTAT-RR-SPRIS
+# LMS
 
-Reading Room repository system for UP INSTAT.
+Repository system for managing LMS materials and access workflows.
 
-This repository's primary application is in `STAT-LMS/`. Manage research materials, physical/digital copies, borrow/access workflows, and immutable audit logs through role-based admin and user panels.
+This repository's primary application is in `LMS/`. Manage research materials, physical/digital copies, borrow/access workflows, and immutable audit logs through role-based admin and user panels.
 
 ## Project Structure
 
-- `STAT-LMS/` — Laravel + Filament application (main project)
+- `LMS/` — Laravel + Filament application (main project)
 
 ## Stack
 
@@ -25,8 +25,8 @@ This repository's primary application is in `STAT-LMS/`. Manage research materia
 
 Panel providers:
 
-- `STAT-LMS/app/Providers/Filament/AdminPanelProvider.php`
-- `STAT-LMS/app/Providers/Filament/UserPanelProvider.php`
+- `LMS/app/Providers/Filament/AdminPanelProvider.php`
+- `LMS/app/Providers/Filament/UserPanelProvider.php`
 
 ## Core Data Model
 
@@ -50,7 +50,7 @@ Access levels:
 | Role                   | Value             | Effective Access Level |
 | ---------------------- | ----------------- | ---------------------- |
 | Super Admin            | `super_admin`     | admin-level operations |
-| Reading Room Committee | `committee`       | 3                      |
+| LMS Committee | `committee`       | 3                      |
 | IT Administrator       | `it`              | 3                      |
 | Staff/Custodian        | `staff/custodian` | 2                      |
 | Faculty Member         | `faculty`         | 2                      |
@@ -165,10 +165,10 @@ Users have extended profile fields: `f_name`, `m_name`, `l_name`, `std_number` (
 
 ## Setup and Commands
 
-Run all project commands from `STAT-LMS/`.
+Run all project commands from `LMS/`.
 
 ```bash
-cd STAT-LMS
+cd LMS
 ```
 
 | Task                  | Command                              | Notes                                                                                        |
@@ -183,7 +183,7 @@ cd STAT-LMS
 
 ## Testing Defaults
 
-Testing uses in-memory SQLite via `STAT-LMS/phpunit.xml`:
+Testing uses in-memory SQLite via `LMS/phpunit.xml`:
 
 - `DB_CONNECTION=sqlite`
 - `DB_DATABASE=:memory:`
@@ -198,4 +198,4 @@ Testing uses in-memory SQLite via `STAT-LMS/phpunit.xml`:
 ## Notes
 
 - Keep command and behavior documentation in this root `README.md` as the canonical source.
-- Keep `STAT-LMS/README.md` concise to reduce duplication and drift.
+- Keep `LMS/README.md` concise to reduce duplication and drift.
