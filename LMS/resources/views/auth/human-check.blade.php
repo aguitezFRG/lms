@@ -7,9 +7,36 @@
     <title>Human verification | LMS</title>
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @include('filament.components.theme-bootstrap')
+    <script>
+        let lmsTurnstileWidgetId = null;
+
+        const getLmsTurnstileTheme = () => document.documentElement.classList.contains('dark')
+            ? 'dark'
+            : 'light';
+
+        const renderLmsTurnstile = () => {
+            if (! window.turnstile) return;
+
+            if (lmsTurnstileWidgetId !== null) {
+                window.turnstile.remove(lmsTurnstileWidgetId);
+            }
+
+            lmsTurnstileWidgetId = window.turnstile.render('#turnstile-widget', {
+                sitekey: @js($siteKey),
+                action: @js($action),
+                theme: getLmsTurnstileTheme(),
+                size: 'flexible',
+            });
+        };
+
+        window.lmsTurnstileReady = renderLmsTurnstile;
+        window.addEventListener('lms-theme:changed', renderLmsTurnstile);
+    </script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=lmsTurnstileReady&render=explicit" defer></script>
     <style>
-        :root { color-scheme: light dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        html.dark { color-scheme: dark; }
         * { box-sizing: border-box; }
         body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 1.5rem; background: #f1f5f9; color: #0f172a; }
         main { width: min(100%, 28rem); padding: 2rem; border: 1px solid #e2e8f0; border-radius: 1.25rem; background: #fff; box-shadow: 0 24px 60px rgba(15, 23, 42, .12); text-align: center; }
@@ -22,12 +49,12 @@
         button:hover { background: #02582b; }
         .error { padding: .75rem; border-radius: .75rem; background: #fff1f2; color: #9f1239; font-size: .9rem; }
         small { display: block; margin-top: 1.25rem; color: #64748b; }
-        @media (prefers-color-scheme: dark) {
-            body { background: #020617; color: #f8fafc; }
-            main { border-color: #334155; background: #0f172a; box-shadow: none; }
-            p, small { color: #cbd5e1; }
-            .error { background: #4c0519; color: #fecdd3; }
-        }
+        html.dark body { background: #020617; color: #f8fafc; }
+        html.dark main { border-color: #334155; background: #0f172a; box-shadow: none; }
+        html.dark p, html.dark small { color: #cbd5e1; }
+        html.dark .error { background: #4c0519; color: #fecdd3; }
+        html.dark.oled body { background: #000; }
+        html.dark.oled main { border-color: #27272a; background: #030303; }
     </style>
 </head>
 <body>
@@ -42,13 +69,7 @@
 
         <form method="POST" action="{{ route('turnstile.verify') }}">
             @csrf
-            <div
-                class="cf-turnstile"
-                data-sitekey="{{ $siteKey }}"
-                data-action="{{ $action }}"
-                data-theme="auto"
-                data-size="flexible"
-            ></div>
+            <div id="turnstile-widget"></div>
             <button type="submit">Continue to LMS</button>
         </form>
 
