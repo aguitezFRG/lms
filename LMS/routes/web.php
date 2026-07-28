@@ -8,10 +8,17 @@ use App\Http\Controllers\PasswordEncryptionKeyController;
 use App\Http\Controllers\RoleViewModeController;
 use App\Http\Controllers\SharedDemoHealthController;
 use App\Http\Controllers\SharedDemoResetController;
+use App\Http\Controllers\TurnstileController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 $usesBrowserProfiles = config('demo.enabled') && config('demo.runtime') === 'browser';
+
+Route::get('/human-check', [TurnstileController::class, 'show'])
+    ->name('turnstile.show');
+Route::post('/human-check', [TurnstileController::class, 'verify'])
+    ->middleware('throttle:10,1')
+    ->name('turnstile.verify');
 
 Route::get('/', function () {
     if (auth()->check()) {

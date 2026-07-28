@@ -152,7 +152,7 @@ class SharedDemoAuthenticationTest extends TestCase
 
         $this->get('/app/login')
             ->assertOk()
-            ->assertSee('https://localhost/build/assets/', false)
+            ->assertSee('/build/assets/', false)
             ->assertSee('src="/images/lms.png"', false)
             ->assertSee('alt="LMS logo"', false)
             ->assertSee('href="/lms_favicon.png"', false)

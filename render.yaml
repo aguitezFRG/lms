@@ -60,6 +60,16 @@ services:
         sync: false
       - key: CF_ACCESS_ENFORCED
         value: "false"
+      - key: TURNSTILE_ENABLED
+        value: "true"
+      - key: TURNSTILE_SITE_KEY
+        sync: false
+      - key: TURNSTILE_SECRET_KEY
+        sync: false
+      - key: TURNSTILE_HOSTNAME
+        value: render-demo-lms-staging.cntest.uk
+      - key: TURNSTILE_SESSION_LIFETIME
+        value: "7200"
       - key: DEMO_RESET_HMAC_SECRET
         sync: false
       - key: OAUTH_CLIENT_ID

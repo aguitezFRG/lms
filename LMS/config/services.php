@@ -41,4 +41,14 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
     ],
 
+    'turnstile' => [
+        'enabled' => (bool) env('TURNSTILE_ENABLED', false),
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+        'hostname' => env('TURNSTILE_HOSTNAME', parse_url((string) env('APP_URL', ''), PHP_URL_HOST)),
+        'action' => 'demo_access',
+        'session_key' => 'turnstile_verified_at',
+        'session_lifetime' => (int) env('TURNSTILE_SESSION_LIFETIME', 7200),
+    ],
+
 ];

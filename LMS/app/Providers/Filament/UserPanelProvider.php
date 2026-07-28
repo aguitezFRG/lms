@@ -6,6 +6,7 @@ use App\Filament\Pages\Auth\UserLogin;
 use App\Filament\Pages\Onboarding\CompleteProfile;
 use App\Filament\Pages\User\UserOnboarding;
 use App\Filament\Pages\User\UserProfile;
+use App\Http\Middleware\EnsureHumanVerification;
 use App\Http\Middleware\EnsureProfileComplete;
 use App\Http\Middleware\FilamentAuthenticate;
 use App\Http\Middleware\RedirectIfBanned;
@@ -89,6 +90,7 @@ class UserPanelProvider extends PanelProvider
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
+                EnsureHumanVerification::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,

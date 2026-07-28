@@ -6,6 +6,7 @@ use App\Filament\Pages\AdminOnboarding;
 use App\Filament\Pages\Auth\AdminLogin;
 use App\Filament\Pages\Auth\AdminProfile;
 use App\Filament\Pages\Dashboard;
+use App\Http\Middleware\EnsureHumanVerification;
 use App\Http\Middleware\FilamentAuthenticate;
 use App\Http\Middleware\RedirectIfBanned;
 use Filament\Actions\Action;
@@ -92,6 +93,7 @@ class AdminPanelProvider extends PanelProvider
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
+                EnsureHumanVerification::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,

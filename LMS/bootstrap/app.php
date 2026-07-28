@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\DecryptLivewirePasswords;
 use App\Http\Middleware\DemoAuthenticate;
+use App\Http\Middleware\EnsureHumanVerification;
 use App\Http\Middleware\EnsureProfileComplete;
 use App\Http\Middleware\SetSecurityHeaders;
 use App\Http\Middleware\TrackRequestTiming;
@@ -38,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             DecryptLivewirePasswords::class,
             DemoAuthenticate::class,
+            EnsureHumanVerification::class,
         ]);
         $middleware->prependToPriorityList(
             AuthenticatesRequests::class,
