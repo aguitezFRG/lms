@@ -1,7 +1,9 @@
 <x-filament-panels::page>
 
-    {{-- Auto-refresh polling (120s) --}}
-    <span wire:poll.120s class="hidden"></span>
+    @if (config('demo.polling_enabled'))
+        {{-- Auto-refresh polling (120s) --}}
+        <span wire:poll.120s class="hidden"></span>
+    @endif
 
     {{-- Stats Overview Widget --}}
     <div class="mb-6">

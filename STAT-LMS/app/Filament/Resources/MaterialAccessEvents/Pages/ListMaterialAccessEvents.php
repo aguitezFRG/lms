@@ -71,7 +71,7 @@ class ListMaterialAccessEvents extends ListRecords
 
     public function getTablePollingInterval(): ?string
     {
-        return '30s';
+        return config('demo.polling_enabled') ? '30s' : null;
     }
 
     protected function getHeaderActions(): array

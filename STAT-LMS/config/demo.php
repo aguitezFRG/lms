@@ -3,6 +3,10 @@
 return [
     'enabled' => (bool) env('DEMO_MODE', false),
     'runtime' => env('DEMO_RUNTIME', 'browser'),
+    'polling_enabled' => (bool) env(
+        'DEMO_POLLING_ENABLED',
+        ! ((bool) env('DEMO_MODE', false) && env('DEMO_RUNTIME', 'browser') === 'server')
+    ),
     'profile_session_key' => 'demo_profile_id',
     'database_path' => env('DEMO_DATABASE_PATH', '/persist/database/demo.sqlite'),
     'storage_path' => env('DEMO_STORAGE_PATH', '/persist/storage/app/private'),

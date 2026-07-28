@@ -26,6 +26,8 @@ services:
         value: "true"
       - key: DEMO_RUNTIME
         value: server
+      - key: DEMO_POLLING_ENABLED
+        value: "false"
       - key: DEMO_MATERIAL_DISK
         value: supabase
       - key: DB_CONNECTION

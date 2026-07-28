@@ -33,6 +33,11 @@ class StatsOverviewWidget extends BaseWidget
 
     protected ?string $pollingInterval = '60s';
 
+    protected function getPollingInterval(): ?string
+    {
+        return config('demo.polling_enabled') ? parent::getPollingInterval() : null;
+    }
+
     /* Exposed so the Dashboard page can toggle visibility */
     public bool $visible = true;
 

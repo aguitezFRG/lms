@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\Auth\UserLogin;
+use App\Filament\Pages\User\UserOnboarding;
 use App\Models\User;
 use Database\Seeders\DemoDatabaseSeeder;
 use Filament\Facades\Filament;
@@ -99,5 +100,33 @@ class SharedDemoAuthenticationTest extends TestCase
             ->assertOk()
             ->assertSee('http://localhost/build/assets/', false)
             ->assertDontSee('https://render-demo-lms-staging.cntest.uk/build/assets/', false);
+    }
+
+    #[Test]
+    public function server_demo_disables_automatic_livewire_polling(): void
+    {
+        app(DemoDatabaseSeeder::class)->run();
+
+        $student = User::query()->where('email', 'carlos.student@demo.lms')->firstOrFail();
+
+        $this->assertFalse(config('demo.polling_enabled'));
+
+        $this->actingAs($student)
+            ->get(UserOnboarding::getUrl())
+            ->assertOk()
+            ->assertDontSee('wire:poll', false);
+    }
+
+    #[Test]
+    public function server_demo_disables_admin_dashboard_polling(): void
+    {
+        app(DemoDatabaseSeeder::class)->run();
+
+        $committee = User::query()->where('email', 'committee@demo.lms')->firstOrFail();
+
+        $this->actingAs($committee)
+            ->get('/admin')
+            ->assertOk()
+            ->assertDontSee('wire:poll', false);
     }
 }

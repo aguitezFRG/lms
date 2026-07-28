@@ -113,7 +113,9 @@ class UserPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,
-                fn () => auth()->check() ? view('filament.components.request-status-toast-poller-hook') : '',
+                fn () => auth()->check() && config('demo.polling_enabled')
+                    ? view('filament.components.request-status-toast-poller-hook')
+                    : '',
             )
             ->renderHook(
                 PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,

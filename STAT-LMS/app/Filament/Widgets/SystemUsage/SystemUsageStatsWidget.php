@@ -26,6 +26,11 @@ class SystemUsageStatsWidget extends BaseWidget
 
     protected ?string $pollingInterval = '120s';
 
+    protected function getPollingInterval(): ?string
+    {
+        return config('demo.polling_enabled') ? parent::getPollingInterval() : null;
+    }
+
     public static function canView(): bool
     {
         return Gate::allows('viewAny', SystemUsagePolicy::class);

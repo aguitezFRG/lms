@@ -170,6 +170,9 @@ class SharedDemoLifecycleService
 
         try {
             DB::connection()->getPdo();
+            DB::table('notifications')
+                ->where('data->type', '__shared_demo_health_check__')
+                ->exists();
             $databaseConnected = true;
             $state = $this->runtimeState();
             $counts = $this->canonicalCounts();

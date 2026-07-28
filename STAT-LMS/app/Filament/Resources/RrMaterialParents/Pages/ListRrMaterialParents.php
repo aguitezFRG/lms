@@ -15,7 +15,7 @@ class ListRrMaterialParents extends ListRecords
 
     public function getTablePollingInterval(): ?string
     {
-        return '60s';
+        return config('demo.polling_enabled') ? '60s' : null;
     }
 
     protected function getHeaderActions(): array

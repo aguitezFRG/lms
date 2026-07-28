@@ -1,8 +1,10 @@
 <x-filament-panels::page>
 <style>[x-cloak] { display: none !important; }</style>
 
-{{-- Auto-refresh polling (60s) --}}
-<span wire:poll.60s class="hidden"></span>
+@if (config('demo.polling_enabled'))
+    {{-- Auto-refresh polling (60s) --}}
+    <span wire:poll.60s class="hidden"></span>
+@endif
 <div>
 
     <x-catalog.search-bar

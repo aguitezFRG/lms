@@ -32,7 +32,7 @@ class ListRequests extends ListRecords
 
     public function getTablePollingInterval(): ?string
     {
-        return '20s';
+        return config('demo.polling_enabled') ? '20s' : null;
     }
 
     protected function getHeaderActions(): array

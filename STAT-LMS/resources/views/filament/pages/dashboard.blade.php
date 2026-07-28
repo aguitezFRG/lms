@@ -1,7 +1,9 @@
 <x-filament-panels::page>
 
-    {{-- Auto-refresh polling (30s) --}}
-    <span wire:poll.30s class="hidden"></span>
+    @if (config('demo.polling_enabled'))
+        {{-- Auto-refresh polling (30s) --}}
+        <span wire:poll.30s class="hidden"></span>
+    @endif
 
     {{-- Tab Bar --}}
     <x-filament::tabs class="mb-6">
