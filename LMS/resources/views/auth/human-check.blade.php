@@ -58,8 +58,16 @@
         img { width: 5rem; height: 5rem; border-radius: 1rem; }
         h1 { margin: 1rem 0 .5rem; font-size: 1.65rem; }
         p { margin: 0 0 1.5rem; color: #475569; line-height: 1.55; }
-        form { display: grid; gap: 1rem; }
-        .cf-turnstile { width: 100%; min-height: 65px; }
+        form { display: grid; min-width: 0; gap: 1rem; }
+        #turnstile-widget,
+        #turnstile-widget > div,
+        #turnstile-widget iframe,
+        .cf-turnstile {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        #turnstile-widget { min-width: 0; min-height: 65px; overflow: hidden; }
+        #turnstile-widget iframe { display: block; }
         .status { min-height: 1.25rem; color: #475569; font-size: .9rem; }
         .error { padding: .75rem; border-radius: .75rem; background: #fff1f2; color: #9f1239; font-size: .9rem; }
         small { display: block; margin-top: 1.25rem; color: #64748b; }
