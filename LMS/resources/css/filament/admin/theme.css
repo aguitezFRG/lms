@@ -246,7 +246,7 @@
 /* Sidebar should slide from below topbar */
 .fi-sidebar {
     top: var(--rr-topbar-height);
-    height: calc(100dvh - var(--rr-topbar-height));
+    height: calc(100% - var(--rr-topbar-height));
 }
 
 /* Keep mobile sidebar compact at top. */
