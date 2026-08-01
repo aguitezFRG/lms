@@ -31,7 +31,7 @@
             inset: 0;
             height: fit-content;
             margin: auto;
-            max-height: calc(100dvh - 2rem);
+            max-height: calc(100% - 2rem);
         }
         .demo-profile-dialog::backdrop { background: rgb(15 23 42 / 0.58); }
         html.oled.dark .demo-profile-page { background: rgb(0 0 0); color: rgb(244 244 245); }
