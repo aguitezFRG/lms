@@ -11,15 +11,10 @@
     <script>
         let lmsTurnstileWidgetId = null;
         let lmsTurnstileSubmissionStarted = false;
-        const lmsTurnstileCompactQuery = window.matchMedia('(max-width: 480px)');
 
         const getLmsTurnstileTheme = () => document.documentElement.classList.contains('dark')
             ? 'dark'
             : 'light';
-
-        const getLmsTurnstileSize = () => lmsTurnstileCompactQuery.matches
-            ? 'compact'
-            : 'flexible';
 
         const submitLmsTurnstileForm = () => {
             if (lmsTurnstileSubmissionStarted) return;
@@ -44,14 +39,13 @@
                 sitekey: @js($siteKey),
                 action: @js($action),
                 theme: getLmsTurnstileTheme(),
-                size: getLmsTurnstileSize(),
+                size: 'flexible',
                 callback: submitLmsTurnstileForm,
             });
         };
 
         window.lmsTurnstileReady = renderLmsTurnstile;
         window.addEventListener('lms-theme:changed', renderLmsTurnstile);
-        lmsTurnstileCompactQuery.addEventListener('change', renderLmsTurnstile);
     </script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=lmsTurnstileReady&render=explicit" defer></script>
     <style>
@@ -65,10 +59,7 @@
         h1 { margin: 1rem 0 .5rem; font-size: 1.65rem; }
         p { margin: 0 0 1.5rem; color: #475569; line-height: 1.55; }
         form { display: grid; min-width: 0; gap: 1rem; }
-        #turnstile-widget { display: flex; width: 100%; min-width: 0; min-height: 65px; align-items: center; justify-content: center; }
-        #turnstile-widget > div,
-        #turnstile-widget iframe { max-width: 100%; }
-        #turnstile-widget iframe { display: block; }
+        #turnstile-widget { display: flex; width: 100%; min-height: 65px; align-items: center; justify-content: center; }
         .status { min-height: 1.25rem; color: #475569; font-size: .9rem; }
         .error { padding: .75rem; border-radius: .75rem; background: #fff1f2; color: #9f1239; font-size: .9rem; }
         small { display: block; margin-top: 1.25rem; color: #64748b; }
@@ -78,6 +69,11 @@
         html.dark .error { background: #4c0519; color: #fecdd3; }
         html.dark.oled body { background: #000; }
         html.dark.oled main { border-color: #27272a; background: #030303; }
+
+        @media (max-width: 480px) {
+            body { padding: 1rem; }
+            main { padding: 1.5rem; }
+        }
     </style>
 </head>
 <body>
