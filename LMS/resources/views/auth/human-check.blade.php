@@ -50,9 +50,10 @@
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=lmsTurnstileReady&render=explicit" defer></script>
     <style>
         :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        html { height: 100%; }
         html.dark { color-scheme: dark; }
         * { box-sizing: border-box; }
-        body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 1.5rem; background: #f1f5f9; color: #0f172a; }
+        body { min-height: 100%; margin: 0; display: grid; place-items: center; padding: 1.5rem; background: #f1f5f9; color: #0f172a; }
         main { width: min(100%, 28rem); padding: 2rem; border: 1px solid #e2e8f0; border-radius: 1.25rem; background: #fff; box-shadow: 0 24px 60px rgba(15, 23, 42, .12); text-align: center; }
         img { width: 5rem; height: 5rem; border-radius: 1rem; }
         h1 { margin: 1rem 0 .5rem; font-size: 1.65rem; }
