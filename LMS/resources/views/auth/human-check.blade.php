@@ -53,8 +53,8 @@
         html { height: 100%; }
         html.dark { color-scheme: dark; }
         * { box-sizing: border-box; }
-        body { min-height: 100%; margin: 0; display: grid; place-items: center; padding: 1.5rem; background: #f1f5f9; color: #0f172a; }
-        main { width: min(100%, 28rem); padding: 2rem; border: 1px solid #e2e8f0; border-radius: 1.25rem; background: #fff; box-shadow: 0 24px 60px rgba(15, 23, 42, .12); text-align: center; }
+        body { position: fixed; inset: 0; width: 100%; height: 100%; margin: 0; display: flex; overflow-y: auto; padding: 1.5rem; background: #f1f5f9; color: #0f172a; }
+        main { flex: 0 0 auto; width: min(100%, 28rem); margin: auto; padding: 2rem; border: 1px solid #e2e8f0; border-radius: 1.25rem; background: #fff; box-shadow: 0 24px 60px rgba(15, 23, 42, .12); text-align: center; }
         img { width: 5rem; height: 5rem; border-radius: 1rem; }
         h1 { margin: 1rem 0 .5rem; font-size: 1.65rem; }
         p { margin: 0 0 1.5rem; color: #475569; line-height: 1.55; }
