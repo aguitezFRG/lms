@@ -7,7 +7,7 @@ use App\Policies\SystemUsagePolicy;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 
 class TopUsersTableWidget extends BaseWidget
@@ -27,23 +27,22 @@ class TopUsersTableWidget extends BaseWidget
 
     public function table(Table $table): Table
     {
-        // Subquery to get top user IDs with their stats
-        $userStatsSubquery = DB::table('material_access_events')
-            ->select('user_id', DB::raw('COUNT(*) as request_count'), DB::raw('MAX(created_at) as last_activity'))
-            ->whereIn('event_type', ['request', 'borrow'])
-            ->groupBy('user_id')
-            ->orderByDesc('request_count')
-            ->limit(5);
+        $activityFilter = fn (Builder $query): Builder => $query
+            ->whereIn('event_type', ['request', 'borrow']);
 
-        // Main query: get User models with stats joined, ordered by request_count
         return $table
             ->query(
                 User::query()
-                    ->joinSub($userStatsSubquery, 'stats', function ($join) {
-                        $join->on('users.id', '=', 'stats.user_id');
-                    })
-                    ->select('users.*', 'stats.request_count', 'stats.last_activity')
-                    ->orderByDesc('stats.request_count')
+                    ->whereHas('materialAccessEvents', $activityFilter)
+                    ->withCount([
+                        'materialAccessEvents as request_count' => $activityFilter,
+                    ])
+                    ->withMax([
+                        'materialAccessEvents as last_activity' => $activityFilter,
+                    ], 'created_at')
+                    ->orderByDesc('request_count')
+                    ->orderByDesc('last_activity')
+                    ->limit(5)
             )
             ->columns([
                 TextColumn::make('rank')
