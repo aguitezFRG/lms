@@ -5,8 +5,6 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
-use PDOException;
-use Throwable;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -49,7 +47,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (Throwable $exception, Request $request) {
+        $exceptions->render(function (\Throwable $exception, Request $request) {
             $current = $exception;
             $messages = [];
             $hasDatabaseException = false;
@@ -58,11 +56,11 @@ return Application::configure(basePath: dirname(__DIR__))
             do {
                 $messages[] = strtolower($current->getMessage());
 
-                if ($current instanceof QueryException || $current instanceof PDOException) {
+                if ($current instanceof QueryException || $current instanceof \PDOException) {
                     $hasDatabaseException = true;
                 }
 
-                if ($current instanceof PDOException && is_string($current->getCode())) {
+                if ($current instanceof \PDOException && is_string($current->getCode())) {
                     $sqlState ??= strtoupper($current->getCode());
                 }
 
@@ -75,8 +73,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
             $message = implode(' ', $messages);
             $connectionSqlStates = ['08', '53', '57P01', '57P02', '57P03'];
-            $isConnectionSqlState = $sqlState !== null && collect($connectionSqlStates)
-                ->contains(fn (string $state): bool => str_starts_with($sqlState, $state));
+            $isConnectionSqlState = $sqlState !== null && array_any(
+                $connectionSqlStates,
+                fn (string $state): bool => str_starts_with($sqlState, $state),
+            );
             $isConnectionMessage = str_contains($message, 'connection refused')
                 || str_contains($message, 'could not connect to server')
                 || str_contains($message, 'server closed the connection unexpectedly')
