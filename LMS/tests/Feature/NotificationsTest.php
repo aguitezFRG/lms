@@ -934,10 +934,17 @@ class NotificationsTest extends TestCase
     {
         Notification::fake();
 
-        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
+        [$parent] = $this->makeParentAndCopy(1, digital: false);
         $student = $this->makeUser('student');
 
         foreach ([0, 1, 2, 3] as $days) {
+            $copy = $this->makeMaterialCopy([
+                'material_parent_id' => $parent->id,
+                'is_digital' => false,
+                'is_available' => false,
+                'file_name' => null,
+            ]);
+
             MaterialAccessEvents::create([
                 'user_id' => $student->id,
                 'rr_material_id' => $copy->id,
@@ -952,7 +959,8 @@ class NotificationsTest extends TestCase
         foreach ([0, 1, 2, 3] as $days) {
             Notification::assertSentTo(
                 $student,
-                fn (BorrowDueSoon $notification): bool => $notification->toDatabase($student)['days_until_due'] === $days
+                fn (BorrowDueSoon $notification): bool =>
+                    $notification->toDatabase($student)['days_until_due'] === $days
             );
         }
     }
