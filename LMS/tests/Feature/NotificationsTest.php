@@ -959,8 +959,7 @@ class NotificationsTest extends TestCase
         foreach ([0, 1, 2, 3] as $days) {
             Notification::assertSentTo(
                 $student,
-                fn (BorrowDueSoon $notification): bool =>
-                    $notification->toDatabase($student)['days_until_due'] === $days
+                fn (BorrowDueSoon $notification): bool => $notification->toDatabase($student)['days_until_due'] === $days
             );
         }
     }
