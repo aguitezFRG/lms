@@ -29,37 +29,20 @@
                 </x-filament::input.wrapper>
             </div>
 
-            @if (empty($frames))
-                <div class="flex flex-col gap-1">
-                    <label class="fi-fo-field-wrp-label inline-flex items-center gap-x-3 text-sm font-medium leading-6 text-gray-950 dark:text-white">
-                        End Year
-                    </label>
-                    <x-filament::input
-                        type="number"
-                        wire:model="inputEndYear"
-                        wire:keydown.enter="addTimeFrame"
-                        min="1900"
-                        max="{{ now()->year + 50 }}"
-                        placeholder="{{ now()->year }}"
-                        class="w-28"
-                    />
-                </div>
-            @else
-                @php
-                    $prev = last($frames);
-                    $inferred = $inputStartMonth > $prev['endMonth']
-                        ? $prev['endYear']
-                        : $prev['endYear'] + 1;
-                @endphp
-                <div class="flex flex-col gap-1">
-                    <label class="fi-fo-field-wrp-label inline-flex items-center gap-x-3 text-sm font-medium leading-6 text-gray-950 dark:text-white">
-                        End Year
-                    </label>
-                    <span class="inline-flex items-center h-9 px-3 text-sm text-gray-500 dark:text-gray-400">
-                        {{ $inferred }} <span class="ml-1 text-xs text-gray-400">(auto)</span>
-                    </span>
-                </div>
-            @endif
+            <div class="flex flex-col gap-1">
+                <label class="fi-fo-field-wrp-label inline-flex items-center gap-x-3 text-sm font-medium leading-6 text-gray-950 dark:text-white">
+                    End Year
+                </label>
+                <x-filament::input
+                    type="number"
+                    wire:model="inputEndYear"
+                    wire:keydown.enter="addTimeFrame"
+                    min="1900"
+                    max="{{ now()->year + 50 }}"
+                    placeholder="{{ now()->year }}"
+                    class="w-28"
+                />
+            </div>
 
             <x-filament::button
                 wire:click="addTimeFrame"
@@ -72,7 +55,7 @@
 
         {{-- Helper note --}}
         <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">
-            Note: Each time frame shows 5 yearly data points ending at the anchor year. Additional frames are placed chronologically after the previous one.
+            Note: Each time frame shows 5 yearly data points ending at the selected year. Exact duplicates and time frames fully nested inside another are not added.
         </p>
 
         {{-- Active time frame badges --}}
