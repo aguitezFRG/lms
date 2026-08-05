@@ -26,7 +26,6 @@ return Application::configure(basePath: dirname(__DIR__))
                  \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO
         );
 
-        // Decrypt RSA-encrypted password fields from Livewire update payloads
         $middleware->append(\App\Http\Middleware\SetSecurityHeaders::class);
         $middleware->append(\App\Http\Middleware\TrackRequestTiming::class);
 
@@ -72,11 +71,17 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             $message = implode(' ', $messages);
-            $connectionSqlStates = ['08', '53', '57P01', '57P02', '57P03'];
-            $isConnectionSqlState = $sqlState !== null && array_any(
-                $connectionSqlStates,
-                fn (string $state): bool => str_starts_with($sqlState, $state),
-            );
+            $isConnectionSqlState = false;
+
+            if ($sqlState !== null) {
+                foreach (['08', '53', '57P01', '57P02', '57P03'] as $state) {
+                    if (str_starts_with($sqlState, $state)) {
+                        $isConnectionSqlState = true;
+                        break;
+                    }
+                }
+            }
+
             $isConnectionMessage = str_contains($message, 'connection refused')
                 || str_contains($message, 'could not connect to server')
                 || str_contains($message, 'server closed the connection unexpectedly')
