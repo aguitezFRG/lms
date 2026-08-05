@@ -40,7 +40,7 @@ class MonthlyTrendTableWidget extends BaseWidget
             ->defaultKeySort(false)
             ->query(
                 MaterialAccessEvents::query()
-                    ->selectRaw("{$dateFormat} as month, COUNT(*) as count, MIN(id) as sort_id")
+                    ->selectRaw("{$dateFormat} as month, COUNT(*) as count")
                     ->whereIn('event_type', ['request', 'borrow'])
                     ->where('created_at', '>=', now()->subMonths(6))
                     ->groupByRaw($dateFormat)
