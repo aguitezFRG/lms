@@ -147,18 +147,10 @@ class MaterialStatisticsWidget extends Widget
 
         $multiFrame = count($this->frames) > 1;
         $yearExpr = $this->yearExpression();
-
-        if ($multiFrame) {
-            $labels = ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'];
-        } else {
-            $frame = $this->frames[0];
-            $monthAbbr = Carbon::create(2000, $frame['startMonth'])->format('M');
-            $labels = array_map(
-                fn ($i) => $monthAbbr.'–'.($frame['endYear'] - 4 + $i),
-                range(0, 4)
-            );
-        }
-
+        $minimumYear = min(array_map(fn (array $frame): int => $frame['endYear'] - 4, $this->frames));
+        $maximumYear = max(array_column($this->frames, 'endYear'));
+        $years = range($minimumYear, $maximumYear);
+        $labels = array_map(fn (int $year): string => (string) $year, $years);
         $datasets = [];
 
         foreach ($this->frames as $frameIndex => $frame) {
@@ -166,7 +158,7 @@ class MaterialStatisticsWidget extends Widget
             $endYear = $frame['endYear'];
             $monthAbbr = Carbon::create(2000, $frame['startMonth'])->format('M');
             $endMonthAbbr = Carbon::create(2000, $frame['endMonth'])->format('M');
-            $suffix = $multiFrame ? " ({$monthAbbr}–{$endMonthAbbr} {$endYear})" : '';
+            $suffix = $multiFrame ? " ({$monthAbbr}–{$endMonthAbbr} {$startYear}–{$endYear})" : '';
 
             $borderDash = match ($frameIndex % 3) {
                 1 => [6, 3],
@@ -176,10 +168,10 @@ class MaterialStatisticsWidget extends Widget
 
             $rows = RrMaterialParents::query()
                 ->selectRaw("{$yearExpr} as yr, material_type, COUNT(*) as cnt")
-                ->where(function ($q) use ($frame, $startYear, $endYear) {
+                ->where(function ($query) use ($frame, $startYear, $endYear) {
                     for ($year = $startYear; $year <= $endYear; $year++) {
-                        $q->orWhere(function ($sub) use ($year, $frame) {
-                            $sub->whereYear('created_at', $year)
+                        $query->orWhere(function ($subQuery) use ($year, $frame) {
+                            $subQuery->whereYear('created_at', $year)
                                 ->whereMonth('created_at', '>=', $frame['startMonth'])
                                 ->whereMonth('created_at', '<=', $frame['endMonth']);
                         });
@@ -188,11 +180,19 @@ class MaterialStatisticsWidget extends Widget
                 ->groupBy('yr', 'material_type')
                 ->get()
                 ->groupBy('material_type')
-                ->map(fn ($g) => $g->keyBy('yr'));
+                ->map(fn ($group) => $group->keyBy(fn ($row): int => (int) $row->yr));
 
-            $totalData = array_map(function ($offset) use ($rows, $startYear) {
-                return (int) $rows->flatten(1)->where('yr', $startYear + $offset)->sum('cnt');
-            }, range(0, 4));
+            $totalsByYear = $rows
+                ->flatten(1)
+                ->groupBy(fn ($row): int => (int) $row->yr)
+                ->map(fn ($group): int => (int) $group->sum('cnt'));
+
+            $totalData = array_map(
+                fn (int $year): ?int => $year < $startYear || $year > $endYear
+                    ? null
+                    : (int) $totalsByYear->get($year, 0),
+                $years
+            );
 
             $datasets[] = [
                 'label' => 'Total'.$suffix,
@@ -203,14 +203,17 @@ class MaterialStatisticsWidget extends Widget
                 'borderDash' => $borderDash,
                 'tension' => 0.3,
                 'pointRadius' => 4,
+                'spanGaps' => false,
             ];
 
             foreach (self::TYPE_MAP as $typeId => $typeName) {
                 $typeRows = $rows->get($typeId, collect());
 
                 $data = array_map(
-                    fn ($offset) => (int) ($typeRows->get($startYear + $offset)?->cnt ?? 0),
-                    range(0, 4)
+                    fn (int $year): ?int => $year < $startYear || $year > $endYear
+                        ? null
+                        : (int) ($typeRows->get($year)?->cnt ?? 0),
+                    $years
                 );
 
                 $datasets[] = [
@@ -222,6 +225,7 @@ class MaterialStatisticsWidget extends Widget
                     'borderDash' => $borderDash,
                     'tension' => 0.3,
                     'pointRadius' => 4,
+                    'spanGaps' => false,
                 ];
             }
         }
@@ -248,6 +252,12 @@ class MaterialStatisticsWidget extends Widget
                 ],
             ],
             'scales' => [
+                'x' => [
+                    'title' => [
+                        'display' => true,
+                        'text' => 'Year',
+                    ],
+                ],
                 'y' => [
                     'beginAtZero' => true,
                     'ticks' => ['precision' => 0],
