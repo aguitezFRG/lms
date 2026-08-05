@@ -12,8 +12,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use PDOException;
-use Throwable;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -75,7 +73,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 $current = $current->getPrevious();
             } while ($current !== null);
 
-            if (!$hasDatabaseException) {
+            if (! $hasDatabaseException) {
                 return null;
             }
 
@@ -102,7 +100,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 || str_contains($message, 'remaining connection slots are reserved')
                 || str_contains($message, 'too many connections');
 
-            if (!$isConnectionSqlState && !$isConnectionMessage) {
+            if (! $isConnectionSqlState && ! $isConnectionMessage) {
                 return null;
             }
 
