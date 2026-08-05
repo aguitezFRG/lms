@@ -2,12 +2,12 @@
 
 namespace App\Filament\Widgets\SystemUsage;
 
+use App\Filament\Pages\SystemUsage;
+use App\Models\MaterialAccessEvents;
 use App\Models\User;
-use App\Policies\SystemUsagePolicy;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 
 class TopUsersTableWidget extends BaseWidget
@@ -18,28 +18,38 @@ class TopUsersTableWidget extends BaseWidget
 
     protected static ?string $pollingInterval = '120s';
 
-    protected static bool $isLazy = true;
+    protected static bool $isLazy = false;
 
     public static function canView(): bool
     {
-        return Gate::allows('viewAny', SystemUsagePolicy::class);
+        return Gate::allows('viewAny', SystemUsage::class);
     }
 
     public function table(Table $table): Table
     {
-        $activityFilter = fn (Builder $query): Builder => $query
+        $requestCountSubquery = MaterialAccessEvents::query()
+            ->selectRaw('COUNT(*)')
+            ->whereColumn('material_access_events.user_id', 'users.id')
+            ->whereIn('event_type', ['request', 'borrow']);
+
+        $lastActivitySubquery = MaterialAccessEvents::query()
+            ->selectRaw('MAX(created_at)')
+            ->whereColumn('material_access_events.user_id', 'users.id')
             ->whereIn('event_type', ['request', 'borrow']);
 
         return $table
+            ->defaultKeySort(false)
             ->query(
                 User::query()
-                    ->whereHas('materialAccessEvents', $activityFilter)
-                    ->withCount([
-                        'materialAccessEvents as request_count' => $activityFilter,
-                    ])
-                    ->withMax([
-                        'materialAccessEvents as last_activity' => $activityFilter,
-                    ], 'created_at')
+                    ->select('users.*')
+                    ->selectSub($requestCountSubquery, 'request_count')
+                    ->selectSub($lastActivitySubquery, 'last_activity')
+                    ->whereExists(function ($query) {
+                        $query->selectRaw('1')
+                            ->from('material_access_events')
+                            ->whereColumn('material_access_events.user_id', 'users.id')
+                            ->whereIn('event_type', ['request', 'borrow']);
+                    })
                     ->orderByDesc('request_count')
                     ->orderByDesc('last_activity')
                     ->limit(5)
@@ -67,6 +77,7 @@ class TopUsersTableWidget extends BaseWidget
 
                 TextColumn::make('request_count')
                     ->label('Requests')
+                    ->numeric()
                     ->sortable()
                     ->alignment('center')
                     ->width('100px')
@@ -83,7 +94,6 @@ class TopUsersTableWidget extends BaseWidget
             ->emptyStateHeading('No active users found')
             ->emptyStateDescription('Once users start making requests, they will appear here.')
             ->emptyStateIcon('heroicon-o-users')
-            ->paginated(false)
-            ->deferLoading();
+            ->paginated(false);
     }
 }
