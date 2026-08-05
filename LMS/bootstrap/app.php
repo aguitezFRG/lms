@@ -12,6 +12,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use PDOException;
+use Throwable;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -53,7 +55,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (\Throwable $exception, Request $request) {
+        $exceptions->render(function (Throwable $exception, Request $request) {
             $current = $exception;
             $messages = [];
             $hasDatabaseException = false;
@@ -62,18 +64,18 @@ return Application::configure(basePath: dirname(__DIR__))
             do {
                 $messages[] = strtolower($current->getMessage());
 
-                if ($current instanceof QueryException || $current instanceof \PDOException) {
+                if ($current instanceof QueryException || $current instanceof PDOException) {
                     $hasDatabaseException = true;
                 }
 
-                if ($current instanceof \PDOException && is_string($current->getCode())) {
+                if ($current instanceof PDOException && is_string($current->getCode())) {
                     $sqlState ??= strtoupper($current->getCode());
                 }
 
                 $current = $current->getPrevious();
             } while ($current !== null);
 
-            if (! $hasDatabaseException) {
+            if (!$hasDatabaseException) {
                 return null;
             }
 
@@ -100,7 +102,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 || str_contains($message, 'remaining connection slots are reserved')
                 || str_contains($message, 'too many connections');
 
-            if (! $isConnectionSqlState && ! $isConnectionMessage) {
+            if (!$isConnectionSqlState && !$isConnectionMessage) {
                 return null;
             }
 
