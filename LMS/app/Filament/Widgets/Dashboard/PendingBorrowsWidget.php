@@ -10,6 +10,7 @@ use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -142,31 +143,47 @@ class PendingBorrowsWidget extends BaseWidget
 
     private function approvePendingBorrow(MaterialAccessEvents $record): string
     {
-        return DB::transaction(function () use ($record): string {
-            $pending = MaterialAccessEvents::query()
-                ->whereKey($record->getKey())
-                ->where('status', 'pending')
-                ->lockForUpdate()
-                ->first();
+        try {
+            return DB::transaction(function () use ($record): string {
+                $pending = MaterialAccessEvents::query()
+                    ->whereKey($record->getKey())
+                    ->where('status', 'pending')
+                    ->lockForUpdate()
+                    ->first();
 
-            if ($pending === null) {
-                return 'stale';
-            }
+                if ($pending === null) {
+                    return 'stale';
+                }
 
-            $copy = $pending->material()->lockForUpdate()->first();
-            if ($copy === null || ! $copy->is_available || $copy->trashed()) {
+                $copy = $pending->material()->lockForUpdate()->first();
+                if ($copy === null || ! $copy->is_available || $copy->trashed()) {
+                    return 'unavailable';
+                }
+
+                $pending->update([
+                    'status' => 'approved',
+                    'approver_id' => auth()->id(),
+                    'approved_at' => now(),
+                    'due_at' => now()->addDays(14)->endOfDay(),
+                ]);
+
+                return 'approved';
+            });
+        } catch (QueryException $exception) {
+            if ($this->isActiveBorrowConstraintViolation($exception)) {
                 return 'unavailable';
             }
 
-            $pending->update([
-                'status' => 'approved',
-                'approver_id' => auth()->id(),
-                'approved_at' => now(),
-                'due_at' => now()->addDays(14)->endOfDay(),
-            ]);
+            throw $exception;
+        }
+    }
 
-            return 'approved';
-        });
+    private function isActiveBorrowConstraintViolation(QueryException $exception): bool
+    {
+        return str_contains(
+            strtolower($exception->getMessage()),
+            'material_access_events_one_active_borrow_per_copy',
+        );
     }
 
     /**
