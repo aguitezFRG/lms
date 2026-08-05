@@ -50,15 +50,16 @@
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=lmsTurnstileReady&render=explicit" defer></script>
     <style>
         :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        html { height: 100%; }
         html.dark { color-scheme: dark; }
         * { box-sizing: border-box; }
-        body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 1.5rem; background: #f1f5f9; color: #0f172a; }
-        main { width: min(100%, 28rem); padding: 2rem; border: 1px solid #e2e8f0; border-radius: 1.25rem; background: #fff; box-shadow: 0 24px 60px rgba(15, 23, 42, .12); text-align: center; }
+        body { position: fixed; inset: 0; width: 100%; height: 100%; margin: 0; display: flex; overflow-y: auto; padding: 1.5rem; background: #f1f5f9; color: #0f172a; }
+        main { flex: 0 0 auto; width: min(100%, 28rem); margin: auto; padding: 2rem; border: 1px solid #e2e8f0; border-radius: 1.25rem; background: #fff; box-shadow: 0 24px 60px rgba(15, 23, 42, .12); text-align: center; }
         img { width: 5rem; height: 5rem; border-radius: 1rem; }
         h1 { margin: 1rem 0 .5rem; font-size: 1.65rem; }
         p { margin: 0 0 1.5rem; color: #475569; line-height: 1.55; }
-        form { display: grid; gap: 1rem; }
-        .cf-turnstile { width: 100%; min-height: 65px; }
+        form { display: grid; min-width: 0; gap: 1rem; }
+        #turnstile-widget { display: flex; width: 100%; min-height: 65px; align-items: center; justify-content: center; }
         .status { min-height: 1.25rem; color: #475569; font-size: .9rem; }
         .error { padding: .75rem; border-radius: .75rem; background: #fff1f2; color: #9f1239; font-size: .9rem; }
         small { display: block; margin-top: 1.25rem; color: #64748b; }
@@ -68,6 +69,11 @@
         html.dark .error { background: #4c0519; color: #fecdd3; }
         html.dark.oled body { background: #000; }
         html.dark.oled main { border-color: #27272a; background: #030303; }
+
+        @media (max-width: 480px) {
+            body { padding: 1rem; }
+            main { padding: 1.5rem; }
+        }
     </style>
 </head>
 <body>
