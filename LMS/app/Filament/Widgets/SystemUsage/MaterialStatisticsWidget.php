@@ -67,6 +67,7 @@ class MaterialStatisticsWidget extends Widget
     {
         $startMonth = (int) $this->inputStartMonth;
         $endMonth = (int) $this->inputEndMonth;
+        $endYear = (int) $this->inputEndYear;
 
         if ($startMonth < 1 || $startMonth > 12 || $endMonth < 1 || $endMonth > 12) {
             return;
@@ -76,27 +77,21 @@ class MaterialStatisticsWidget extends Widget
             return;
         }
 
-        if (empty($this->frames)) {
-            $endYear = (int) $this->inputEndYear;
-            if ($endYear < 1900 || $endYear > now()->year + 50) {
-                return;
-            }
-        } else {
-            $prev = last($this->frames);
-            $endYear = $this->inferNextEndYear($prev['endMonth'], $prev['endYear'], $startMonth);
+        if ($endYear < 1900 || $endYear > now()->year + 50) {
+            return;
         }
 
-        foreach ($this->frames as $f) {
-            if ($f['startMonth'] === $startMonth && $f['endMonth'] === $endMonth && $f['endYear'] === $endYear) {
-                return;
-            }
-        }
-
-        $this->frames[] = [
+        $candidate = [
             'startMonth' => $startMonth,
             'endMonth' => $endMonth,
             'endYear' => $endYear,
         ];
+
+        if ($this->isDuplicateOrNestedTimeFrame($candidate)) {
+            return;
+        }
+
+        $this->frames[] = $candidate;
 
         $this->dispatch('updateChartData', data: $this->getChartData());
     }
@@ -112,9 +107,36 @@ class MaterialStatisticsWidget extends Widget
         $this->dispatch('updateChartData', data: $this->getChartData());
     }
 
-    private function inferNextEndYear(int $prevEndMonth, int $prevEndYear, int $newStartMonth): int
+    private function isDuplicateOrNestedTimeFrame(array $candidate): bool
     {
-        return $newStartMonth > $prevEndMonth ? $prevEndYear : $prevEndYear + 1;
+        [$candidateStart, $candidateEnd] = $this->timeFrameBounds($candidate);
+
+        foreach ($this->frames as $frame) {
+            [$existingStart, $existingEnd] = $this->timeFrameBounds($frame);
+
+            $isDuplicate = $candidateStart->equalTo($existingStart)
+                && $candidateEnd->equalTo($existingEnd);
+
+            $candidateContainsExisting = $candidateStart->lessThanOrEqualTo($existingStart)
+                && $candidateEnd->greaterThanOrEqualTo($existingEnd);
+
+            $existingContainsCandidate = $existingStart->lessThanOrEqualTo($candidateStart)
+                && $existingEnd->greaterThanOrEqualTo($candidateEnd);
+
+            if ($isDuplicate || $candidateContainsExisting || $existingContainsCandidate) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function timeFrameBounds(array $frame): array
+    {
+        $start = Carbon::create($frame['endYear'] - 4, $frame['startMonth'], 1)->startOfMonth();
+        $end = Carbon::create($frame['endYear'], $frame['endMonth'], 1)->endOfMonth();
+
+        return [$start, $end];
     }
 
     public function getChartData(): array
