@@ -99,7 +99,7 @@ class UserLogin extends Login
                 'ip' => request()->ip(),
             ]);
             throw ValidationException::withMessages([
-                'data.email' => $genericMessage,
+                'data.email' => 'Your account is banned from accessing the system. Please contact the administrator.',
             ]);
         }
 
