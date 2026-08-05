@@ -1,80 +1,11 @@
-# retrigger
-name: Patch notification borrow fixture
+name: Disabled one-time fixture patch
 
 on:
-  push:
-    branches:
-      - demo/render-supabase-vercel
-    paths:
-      - .github/workflows/patch-notifications-test.yml
-
-permissions:
-  contents: write
+  workflow_dispatch:
 
 jobs:
-  patch:
+  disabled:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: demo/render-supabase-vercel
-
-      - name: Replace invalid shared-copy fixture
-        shell: bash
-        run: |
-          python <<'PY'
-          from pathlib import Path
-
-          path = Path('LMS/tests/Feature/NotificationsTest.php')
-          text = path.read_text()
-
-          old = '''        [$parent, $copy] = $this->makeParentAndCopy(1, digital: false);
-          $student = $this->makeUser('student');
-
-          foreach ([0, 1, 2, 3] as $days) {
-              MaterialAccessEvents::create([
-                  'user_id' => $student->id,
-                  'rr_material_id' => $copy->id,
-                  'event_type' => 'borrow',
-                  'status' => 'approved',
-                  'due_at' => now()->addDays($days)->endOfDay(),
-              ]);
-          }
-'''
-
-          new = '''        [$parent] = $this->makeParentAndCopy(1, digital: false);
-          $student = $this->makeUser('student');
-
-          foreach ([0, 1, 2, 3] as $days) {
-              $copy = $this->makeMaterialCopy([
-                  'material_parent_id' => $parent->id,
-                  'is_digital' => false,
-                  'is_available' => false,
-                  'file_name' => null,
-              ]);
-
-              MaterialAccessEvents::create([
-                  'user_id' => $student->id,
-                  'rr_material_id' => $copy->id,
-                  'event_type' => 'borrow',
-                  'status' => 'approved',
-                  'due_at' => now()->addDays($days)->endOfDay(),
-              ]);
-          }
-'''
-
-          if old not in text:
-              raise SystemExit('Target fixture was not found; no changes made.')
-
-          path.write_text(text.replace(old, new, 1))
-          PY
-
-      - name: Commit replacement and remove one-time workflow
-        shell: bash
-        run: |
-          rm .github/workflows/patch-notifications-test.yml
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add LMS/tests/Feature/NotificationsTest.php .github/workflows/patch-notifications-test.yml
-          git commit -m "Fix notification fixture for borrow uniqueness"
-          git push origin HEAD:demo/render-supabase-vercel
+      - run: echo "Disabled"
