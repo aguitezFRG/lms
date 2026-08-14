@@ -1,201 +1,114 @@
-# LMS
+# LMS shared demo
 
-Repository system for managing LMS materials and access workflows.
+This branch contains the server-hosted LMS shared demo: a native Laravel, Filament, Livewire, and Blade application deployed to Render. It uses Supabase PostgreSQL for shared state and private Supabase Storage for protected material files. It is deliberately separate from the browser-local PHP-WASM/Vercel demo on `main`.
 
-This repository's primary application is in `LMS/`. Manage research materials, physical/digital copies, borrow/access workflows, and immutable audit logs through role-based admin and user panels.
+The Render service is defined in [render.yaml](render.yaml) and deploys the `demo/render-supabase-vercel` branch. Its public application URL is `https://lms-demo.cntest.uk`.
 
-## Project Structure
-
-- `LMS/` — Laravel + Filament application (main project)
-
-## Stack
-
-- Laravel 12 + PHP 8.2
-- Filament v5 (locked to `v5.1.3` in current project state)
-- SQLite for dev/test
-- Vite + TailwindCSS v4
-- PHPUnit 11
-
-## Two Panels
-
-| Panel | Path     | Roles                                               |
-| ----- | -------- | --------------------------------------------------- |
-| Admin | `/admin` | `super_admin`, `committee`, `it`, `staff/custodian` |
-| User  | `/app`   | `faculty`, `student`                                |
-
-Panel providers:
-
-- `LMS/app/Providers/Filament/AdminPanelProvider.php`
-- `LMS/app/Providers/Filament/UserPanelProvider.php`
-
-## Core Data Model
+## Architecture
 
 ```text
-RrMaterialParents (title, abstract, access_level:1-3, SDGs...)
-  └── RrMaterials (is_digital, is_available, file_name)
-        ├── MaterialAccessEvents (borrow/request lifecycle)
-        └── RepositoryChangeLogs (immutable audit)
+Browser
+  -> Cloudflare Turnstile (human verification)
+  -> Render: nginx + PHP-FPM + Laravel/Filament/Livewire
+       -> Supabase PostgreSQL (schema: lms)
+       -> private Supabase Storage (protected PDFs)
+
+Supabase Edge Function (scheduled externally)
+  -> authenticated, signed Render reset endpoint
+  -> canonical shared-demo reseed and upload cleanup
 ```
 
-All core models use UUID primary keys and soft deletes.
+- `LMS/` is the Laravel 12 / Filament 5 application. Run application commands there.
+- Render builds `LMS/Dockerfile.render`, runs migrations and `demo:bootstrap-shared`, then starts nginx and PHP-FPM.
+- The shared demo requires `DEMO_MODE=true` and `DEMO_RUNTIME=server`; it uses normal server authentication rather than browser demo-profile routing.
+- Shared state is PostgreSQL-backed. Local files on Render are ephemeral, so finalized materials belong in the private `lms-materials` Supabase bucket. Livewire temporary uploads stay local before final storage.
+- The `reset-shared-demo` Supabase Edge Function invokes the signed `/internal/shared-demo/reset` endpoint with an idempotency key. Schedule it externally to reseed canonical data and remove shared uploads.
 
-Access levels:
+## Panels and roles
 
-- `1` = student
-- `2` = faculty/staff
-- `3` = committee/IT
+| Panel | Path | Roles |
+| --- | --- | --- |
+| Admin | `/admin` | Super Admin, LMS Committee, IT Administrator, Staff/Custodian |
+| User | `/app` | Faculty Member, Student User |
 
-## User Roles
+The application manages research materials, physical/digital copies, access and borrowing workflows, notifications, and immutable repository audit logs. All core models use UUID primary keys and soft deletes.
 
-| Role                   | Value             | Effective Access Level |
-| ---------------------- | ----------------- | ---------------------- |
-| Super Admin            | `super_admin`     | admin-level operations |
-| LMS Committee | `committee`       | 3                      |
-| IT Administrator       | `it`              | 3                      |
-| Staff/Custodian        | `staff/custodian` | 2                      |
-| Faculty Member         | `faculty`         | 2                      |
-| Student User           | `student`         | 1                      |
+```text
+RrMaterialParents
+  └── RrMaterials
+        ├── MaterialAccessEvents
+        └── RepositoryChangeLogs
+```
 
-## Authentication
+Access levels are student (1), faculty/staff (2), committee/IT (3), and super-admin (4).
 
-Both panels support standard email/password login.
+## Security and delivery
 
-### Google OAuth / SSO
+- Cloudflare Turnstile protects the server demo before application access. Siteverify validates success, action, and the exact configured hostname; a successful verification is stored for the configured session lifetime (two hours in Render).
+- Google SSO uses Laravel Socialite at `/auth/google/redirect` and `/auth/google/callback`. Configure the exact public callback URL with the Google OAuth client; local development can use normal email/password authentication.
+- PDF viewer and stream routes require an authenticated, authorized material-access event. PDFs are normalized and watermarked server-side before delivery, with a client-side fallback if that server operation fails.
+- Optional Cloudflare Access enforcement is configured by environment variables. The health and reset endpoints remain available to their authenticated infrastructure callers.
+- Never commit `.env`, database URLs, Supabase S3 credentials, Turnstile secrets, OAuth secrets, reset secrets, private uploads, or generated dependency directories.
 
-Google login is available via Laravel Socialite:
+## Local development
 
-- Redirect: `GET /auth/google/redirect`
-- Callback: `GET /auth/google/callback`
-- Existing accounts are linked automatically by matching email address
-- Soft-deleted accounts are detected and blocked at login
-- New users created via SSO are redirected to `/app/onboarding` to complete their profile before accessing the app
-
-> **Limitation:** Google OAuth requires a registered domain name. It does not work on the university's VM-hosted system (IP-only access) at this time.
-
-### User Model Fields
-
-Users have extended profile fields: `f_name`, `m_name`, `l_name`, `std_number` (unique), `google_id` (unique), `is_profile_complete`.
-
-## Admin Panel Features
-
-### Onboarding
-
-- Role-specific welcome page at `/admin/admin-onboarding`
-- Feature cards tailored per role: Super Admin, Committee/IT, Staff/Custodian
-
-### User Management
-
-- Full CRUD for user accounts at `/admin/users`
-- Role assignment and account status (ban/unban) controls
-
-### Repository Management
-
-- RR Materials catalog CRUD (title, abstract, keywords, SDGs, material type, publication date, author, adviser)
-- Per-copy tracking for digital and physical materials
-- Availability status and access-level controls
-
-### Access and Audit
-
-- Material access request/borrow workflow (approve/reject + reason)
-- Overdue tracking and approver assignment
-- Immutable `RepositoryChangeLogs` entries for model mutations
-
-### Dashboard (`/admin`)
-
-- Tabs: General, Borrow Requests, Access Requests
-- Pending requests widgets with inline approve/reject actions — 60s polling
-- Charts:
-  - **Visitor & Borrower trend** — daily/weekly/monthly/yearly filter
-  - **Physical vs Digital** — material type distribution
-
-### System Usage Analytics (`/admin/system-usage`)
-
-- 3 tabs: Materials, Trend, Users — 120s polling
-- Widgets: top materials by access, top active users, monthly usage trend, system-wide stats
-- Export action opens `/admin/system-usage/export-preview` (date-range filterable; not in sidebar nav)
-
-## User Panel Features
-
-### Onboarding
-
-- Role-specific welcome page at `/app/user-onboarding`
-- Feature cards tailored for Faculty and Student roles
-
-### Profile Completion (`/app/onboarding`)
-
-- New SSO users are gated here until they complete first name, last name, and optional student number
-- Enforced as a middleware-registered panel page; users cannot access any other page until complete
-
-### Catalog (`/app/user/catalogs`)
-
-- Role-filtered catalog browsing and search
-- Filtering for type/format/date/SDG and availability controls
-- Visibility logic includes materials the user can still access via approved or pending requests, even when general availability is constrained
-
-### Material Detail
-
-- Request digital access
-- Request physical borrow
-- Open digital viewer/stream when authorized
-
-### My Requests (`/app/user/requests`)
-
-- Tabbed interface: All, Pending, Approved, Closed — with badge counts per tab
-- View own request history and current statuses
-- Cancel pending requests
-- Status-toast polling at 20s
-
-### Profile
-
-- Account profile management and password update
-
-## Key Behaviors
-
-- Access-level updates notify impacted users via `AccessLevelChanged`
-- Request status transitions notify requesters via `RequestStatusChanged` for `approved`, `rejected`, and `revoked`
-- Due-soon borrow reminders are emitted by `BorrowDueSoon`; overdue borrows emit `BorrowOverdue`
-- `SendDueSoonOnLogin` listener fires all pending due-soon and overdue notifications on each login; session-based deduplication prevents repeats
-- `access:expire-digital` artisan command automatically revokes expired digital access requests (`due_at` passed), restores material availability, and notifies users via `RequestStatusChanged`
-- Digital access requests support a `due_at` expiry date managed by the scheduled command
-- Account edits can trigger `AccountDetailsChanged`
-- Banning a user revokes active access events
-- Digital file replacement removes the old file from storage
-- PDFs are served via `/materials/{id}/viewer` (browser viewer) and `/materials/{id}/stream` (authenticated stream) — both require valid approved access and apply security headers
-- **Server-side PDF watermarking**: `PdfWatermarkService` embeds a QR code containing user identity and timestamp into every served PDF before delivery; `PdfNormalizationService` handles format compatibility pre-watermark; client-side fallback applies if server-side watermarking fails
-
-## Setup and Commands
-
-Run all project commands from `LMS/`.
+Requirements: PHP 8.2+ with the extensions required by `LMS/composer.json`, Composer 2, Node.js/npm, and a supported database. PostgreSQL is the closest match to the hosted environment; SQLite is suitable for the normal local and test workflow.
 
 ```bash
 cd LMS
+cp .env.example .env
+# Configure APP_URL and the selected database, cache, session, queue, and mail drivers.
+composer setup
+composer dev
 ```
 
-| Task                  | Command                              | Notes                                                                                        |
-| --------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------- |
-| Initial setup         | `composer setup`                     | Runs install, env bootstrap, key generate, migration (`--force`), npm install, build         |
-| Start dev environment | `composer dev`                       | Runs server, queue listener, pail logs, Vite dev server, and local warmup curls concurrently |
-| Run all tests         | `composer test`                      | Clears config then runs `php artisan test`                                                   |
-| Run specific tests    | `php artisan test --filter=TestName` | Preferred filtered test run                                                                  |
-| Lint/format           | `./vendor/bin/pint`                  | Laravel Pint                                                                                 |
-| Frontend dev          | `npm run dev`                        | Vite dev server                                                                              |
-| Build assets          | `npm run build`                      | Vite production build                                                                        |
+For an isolated SQLite setup, create `LMS/database/database.sqlite`, then set `DB_CONNECTION=sqlite` and `DB_DATABASE` to its absolute path. Do not put a production `DB_URL` in a local test environment: PHPUnit uses in-memory SQLite by default.
 
-## Testing Defaults
+## Render and Supabase configuration
 
-Testing uses in-memory SQLite via `LMS/phpunit.xml`:
+`render.yaml` declares non-secret production settings, including `DB_CONNECTION=pgsql`, schema `lms`, database-backed sessions/cache, synchronous queueing, `DEMO_MATERIAL_DISK=supabase`, and `LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK=local`.
 
-- `DB_CONNECTION=sqlite`
-- `DB_DATABASE=:memory:`
-- `QUEUE_CONNECTION=sync`
-- `CACHE_STORE=array`
-- `SESSION_DRIVER=array`
+Set every `sync: false` variable in Render before deploying. In particular, the container refuses to start without application, database, demo-reset, OAuth, and Supabase Storage credentials. Configure these integration values consistently:
 
-## CI/CD
+- `APP_URL` and `GOOGLE_REDIRECT_URI` must match the public hostname and Google OAuth callback.
+- `TURNSTILE_HOSTNAME` must be the bare hostname `lms-demo.cntest.uk`; use a matching Turnstile site key and secret.
+- Supabase Storage must use a private S3-compatible bucket named by `SUPABASE_S3_BUCKET`.
+- The reset Edge Function needs its own cron secret, Cloudflare Access service credentials, Render reset URL, and the matching reset HMAC secret. Keep them in Supabase secrets, not this repository.
 
-- `.github/workflows/security-audit.yml` — runs `composer audit` on every push and pull request to check for known vulnerabilities in PHP dependencies
+Render Free instances may sleep and have ephemeral local storage. The app therefore persists records and finalized uploads remotely; use the external reset function instead of relying on a Render one-off job or local scheduler.
 
-## Notes
+## Commands and verification
 
-- Keep command and behavior documentation in this root `README.md` as the canonical source.
-- Keep `LMS/README.md` concise to reduce duplication and drift.
+Run these from `LMS/` unless noted otherwise.
+
+| Task | Command |
+| --- | --- |
+| Install, initialize, migrate, and build | `composer setup` |
+| Run Laravel, queue listener, logs, Vite, and local warmup | `composer dev` |
+| Full SQLite regression suite | `composer test` |
+| Focused test | `php artisan test --filter=TestName` |
+| Shared-demo route/runtime regression | `php artisan test tests/Feature/DemoModeTest.php` |
+| Laravel formatting check/fix | `./vendor/bin/pint --test` / `./vendor/bin/pint` |
+| Production assets | `npm run build` |
+| Fresh shared-demo bootstrap | `php artisan demo:bootstrap-shared --force` |
+| Shared-demo health output | `php artisan demo:health-shared --json` |
+
+The GitHub Actions workflow at `.github/workflows/shared-demo-ci.yml` runs dependency audits, Vite build, SQLite tests, a fresh PostgreSQL migration and canonical seed, Pint, production platform checks, and a Render Docker build/runtime verification for this branch.
+
+## Repository map
+
+| Path | Purpose |
+| --- | --- |
+| `LMS/config/demo.php` | Demo-runtime, storage, lifecycle, and upload-limit configuration |
+| `LMS/Dockerfile.render` | Render production image |
+| `LMS/docker/render/` | nginx, PHP, and container startup configuration |
+| `LMS/app/Services/SharedDemoLifecycleService.php` | Atomic bootstrap, reset, cleanup, and health logic |
+| `LMS/app/Http/Controllers/TurnstileController.php` | Human-verification flow |
+| `LMS/app/Http/Controllers/SharedDemoResetController.php` | Signed reset entry point |
+| `supabase/functions/reset-shared-demo/` | Scheduled reset caller |
+| `render.yaml` | Render service and environment declaration |
+| `LMS/README.md` | Concise Laravel-directory setup reference |
+
+## Contributing
+
+Follow [AGENTS.md](AGENTS.md). Keep Laravel code and tests in `LMS/`, add a focused regression test for behavior changes, run Pint after PHP edits, and preserve authorization and audit-log behavior. Do not apply browser-PHP-WASM/Vercel configuration to this server-runtime branch.
