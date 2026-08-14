@@ -86,11 +86,11 @@ class HardeningSecurityTest extends TestCase
     {
         $response = $this->get('/app/login');
 
-        $response->assertHeader('X-Frame-Options', 'SAMEORIGIN');
+        $response->assertHeaderMissing('X-Frame-Options');
         $response->assertHeader('X-Content-Type-Options', 'nosniff');
         $response->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-        $response->assertHeader('Content-Security-Policy');
+        $response->assertHeader('Content-Security-Policy', "frame-ancestors 'self' https://frgagz.com https://*.frgagz.com; object-src 'none'; base-uri 'self'");
     }
 
     #[Test]
